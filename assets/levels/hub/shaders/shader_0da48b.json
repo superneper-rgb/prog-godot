@@ -1,0 +1,98 @@
+{
+ "name": "shader_0da48b",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute vec2 aSeed; uniform float uTime; uniform float uScale; varying float vA; varying float vAge;\n#include <fog_pars_vertex>\nvoid main(){ float age = fract(aSeed.x + uTime * 0.045 + aSeed.y * 0.3); vAge = age;\n  vec3 p = position + vec3(age * 14.0 + sin(age * 6.0 + aSeed.y * 9.0) * 1.5, age * 26.0, age * 5.0 + cos(age * 5.0 + aSeed.y * 7.0) * 1.2);   // up and away on the wind\n  vec4 mvPosition = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mvPosition; gl_PointSize = (3.0 + age * 15.0) * uScale / -mvPosition.z;\n  vA = smoothstep(0.0, 0.08, age) * (1.0 - smoothstep(0.55, 1.0, age));\n#include <fog_vertex>\n}",
+ "fragmentShader": "uniform sampler2D map; varying float vA; varying float vAge;\n#include <fog_pars_fragment>\nvoid main(){ float a = texture2D(map, gl_PointCoord).a * vA * 0.42; vec3 c = mix(vec3(0.16, 0.12, 0.1), vec3(0.06, 0.065, 0.06), vAge);   // warm soot low (lit from the street), grey up high\n  gl_FragColor = vec4(c, a);\n#include <fog_fragment>\n}",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0034
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02609,
+    0.00699,
+    0.02238
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uTime": {
+   "type": "f",
+   "value": 69.3955
+  },
+  "uScale": {
+   "type": "f",
+   "value": 600
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uTime": {
+    "type": "f",
+    "value": 69.3955
+   },
+   "uScale": {
+    "type": "f",
+    "value": 600
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":600}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSeed"
+ ],
+ "uses": 1,
+ "nodes": [
+  "RoofSmoke"
+ ]
+}

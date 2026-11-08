@@ -1,0 +1,375 @@
+{
+ "name": "shader_20ce0d",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vW;\n#include <fog_pars_vertex>\nvoid main(){ vec4 wp = modelMatrix * vec4(position, 1.0); vW = wp.xyz; vec4 mvPosition = viewMatrix * wp; gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}",
+ "fragmentShader": "uniform sampler2D map; uniform sampler2D puddle; uniform sampler2D lightMap; uniform vec4 uLM; uniform float uScale; uniform float uWet; uniform vec3 uTint; uniform float uTime; varying vec3 vW;\n#include <fog_pars_fragment>\nfloat h21(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\nfloat n21(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }\nvoid main(){\n  vec2 p = vW.xz;\n  vec3 a = texture2D(map, p / uScale).rgb * uTint;\n  float filth = n21(p / 7.0) * 0.6 + n21(p / 1.7) * 0.4;                                                      // the city's filth: oily blotches and trodden-in dirt over every surface\n  a *= 0.68 + 0.32 * smoothstep(0.25, 0.75, filth); a = mix(a, a * vec3(0.9, 0.86, 0.78), smoothstep(0.55, 0.8, n21(p / 3.1 + 7.0)));\n  float wet = uWet * smoothstep(0.32, 0.78, texture2D(puddle, p / 23.0 + 0.37).r);\n  vec3 L = texture2D(lightMap, (p - uLM.xy) / uLM.zw).rgb;\n  vec3 v = normalize(cameraPosition - vW); float fres = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0);\n  vec3 col = a * (1.0 - 0.45 * wet) * 0.95 + a * L * 2.7 + L * (0.02 + 0.2 * wet * (0.3 + fres));\n  col += (0.25 + 0.75 * wet) * fres * vec3(0.04, 0.022, 0.045);                                                  // the wet ground mirrors the smog's neon glow\n  vec2 cell = floor(p * 3.0); float sp = h21(cell + floor(uTime * 7.0)); col += wet * step(0.992, sp) * (0.05 + L * 0.6);\n  gl_FragColor = vec4(col, 1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n#include <fog_fragment>\n}",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0034
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02609,
+    0.00699,
+    0.02238
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/aa0f65c4e90f5a4d_1024x1024.jpg",
+   "name": "",
+   "srgb": true
+  },
+  "puddle": {
+   "type": "t",
+   "file": "levels/_tex/efe4dd2361dd117c_512x512.jpg",
+   "name": "",
+   "srgb": false
+  },
+  "lightMap": {
+   "type": "t",
+   "file": "levels/_tex/ba154f4dc56cc13b_1040x1528.jpg",
+   "name": "",
+   "srgb": false
+  },
+  "uLM": {
+   "type": "v",
+   "value": [
+    -130,
+    166,
+    260,
+    382
+   ]
+  },
+  "uScale": {
+   "type": "f",
+   "value": 10
+  },
+  "uWet": {
+   "type": "f",
+   "value": 1
+  },
+  "uTint": {
+   "type": "c",
+   "value": [
+    0.5,
+    0.48,
+    0.62
+   ]
+  },
+  "uTime": {
+   "type": "f",
+   "value": 6.219
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/aa0f65c4e90f5a4d_1024x1024.jpg",
+    "name": "",
+    "srgb": true
+   },
+   "puddle": {
+    "type": "t",
+    "file": "levels/_tex/efe4dd2361dd117c_512x512.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "lightMap": {
+    "type": "t",
+    "file": "levels/_tex/ba154f4dc56cc13b_1040x1528.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "uLM": {
+    "type": "v",
+    "value": [
+     -130,
+     166,
+     260,
+     382
+    ]
+   },
+   "uScale": {
+    "type": "f",
+    "value": 10
+   },
+   "uWet": {
+    "type": "f",
+    "value": 1
+   },
+   "uTint": {
+    "type": "c",
+    "value": [
+     0.5,
+     0.48,
+     0.62
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 6.219
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/d7bd1ba5e07ac37b_1024x1024.jpg",
+    "name": "",
+    "srgb": true
+   },
+   "puddle": {
+    "type": "t",
+    "file": "levels/_tex/efe4dd2361dd117c_512x512.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "lightMap": {
+    "type": "t",
+    "file": "levels/_tex/ba154f4dc56cc13b_1040x1528.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "uLM": {
+    "type": "v",
+    "value": [
+     -130,
+     166,
+     260,
+     382
+    ]
+   },
+   "uScale": {
+    "type": "f",
+    "value": 6
+   },
+   "uWet": {
+    "type": "f",
+    "value": 0.45
+   },
+   "uTint": {
+    "type": "c",
+    "value": [
+     0.54,
+     0.52,
+     0.64
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 6.219
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02602,
+     0.007,
+     0.02247
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/d7bd1ba5e07ac37b_1024x1024.jpg",
+    "name": "",
+    "srgb": true
+   },
+   "puddle": {
+    "type": "t",
+    "file": "levels/_tex/efe4dd2361dd117c_512x512.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "lightMap": {
+    "type": "t",
+    "file": "levels/_tex/ba154f4dc56cc13b_1040x1528.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "uLM": {
+    "type": "v",
+    "value": [
+     -130,
+     166,
+     260,
+     382
+    ]
+   },
+   "uScale": {
+    "type": "f",
+    "value": 6
+   },
+   "uWet": {
+    "type": "f",
+    "value": 0.7
+   },
+   "uTint": {
+    "type": "c",
+    "value": [
+     0.46,
+     0.45,
+     0.56
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 6.219
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02602,
+     0.007,
+     0.02247
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/b1e205c3583fb107_1024x1024.jpg",
+    "name": "",
+    "srgb": true
+   },
+   "puddle": {
+    "type": "t",
+    "file": "levels/_tex/efe4dd2361dd117c_512x512.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "lightMap": {
+    "type": "t",
+    "file": "levels/_tex/ba154f4dc56cc13b_1040x1528.jpg",
+    "name": "",
+    "srgb": false
+   },
+   "uLM": {
+    "type": "v",
+    "value": [
+     -130,
+     166,
+     260,
+     382
+    ]
+   },
+   "uScale": {
+    "type": "f",
+    "value": 8
+   },
+   "uWet": {
+    "type": "f",
+    "value": 0.55
+   },
+   "uTint": {
+    "type": "c",
+    "value": [
+     0.52,
+     0.5,
+     0.63
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 6.219
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/aa0f65c4e90f5a4d_1024x1024.jpg\",\"name\":\"\",\"srgb\":true},\"puddle\":{\"type\":\"t\",\"file\":\"levels/_tex/efe4dd2361dd117c_512x512.jpg\",\"name\":\"\",\"srgb\":false},\"lightMap\":{\"type\":\"t\",\"file\":\"levels/_tex/ba154f4dc56cc13b_1040x1528.jpg\",\"name\":\"\",\"srgb\":false},\"uLM\":{\"type\":\"v\",\"value\":[-130,166,260,382]},\"uScale\":{\"type\":\"f\",\"value\":10},\"uWet\":{\"type\":\"f\",\"value\":1},\"uTint\":{\"type\":\"c\",\"value\":[0.5,0.48,0.62]}}",
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/d7bd1ba5e07ac37b_1024x1024.jpg\",\"name\":\"\",\"srgb\":true},\"puddle\":{\"type\":\"t\",\"file\":\"levels/_tex/efe4dd2361dd117c_512x512.jpg\",\"name\":\"\",\"srgb\":false},\"lightMap\":{\"type\":\"t\",\"file\":\"levels/_tex/ba154f4dc56cc13b_1040x1528.jpg\",\"name\":\"\",\"srgb\":false},\"uLM\":{\"type\":\"v\",\"value\":[-130,166,260,382]},\"uScale\":{\"type\":\"f\",\"value\":6},\"uWet\":{\"type\":\"f\",\"value\":0.45},\"uTint\":{\"type\":\"c\",\"value\":[0.54,0.52,0.64]}}",
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/d7bd1ba5e07ac37b_1024x1024.jpg\",\"name\":\"\",\"srgb\":true},\"puddle\":{\"type\":\"t\",\"file\":\"levels/_tex/efe4dd2361dd117c_512x512.jpg\",\"name\":\"\",\"srgb\":false},\"lightMap\":{\"type\":\"t\",\"file\":\"levels/_tex/ba154f4dc56cc13b_1040x1528.jpg\",\"name\":\"\",\"srgb\":false},\"uLM\":{\"type\":\"v\",\"value\":[-130,166,260,382]},\"uScale\":{\"type\":\"f\",\"value\":6},\"uWet\":{\"type\":\"f\",\"value\":0.7},\"uTint\":{\"type\":\"c\",\"value\":[0.46,0.45,0.56]}}",
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/b1e205c3583fb107_1024x1024.jpg\",\"name\":\"\",\"srgb\":true},\"puddle\":{\"type\":\"t\",\"file\":\"levels/_tex/efe4dd2361dd117c_512x512.jpg\",\"name\":\"\",\"srgb\":false},\"lightMap\":{\"type\":\"t\",\"file\":\"levels/_tex/ba154f4dc56cc13b_1040x1528.jpg\",\"name\":\"\",\"srgb\":false},\"uLM\":{\"type\":\"v\",\"value\":[-130,166,260,382]},\"uScale\":{\"type\":\"f\",\"value\":8},\"uWet\":{\"type\":\"f\",\"value\":0.55},\"uTint\":{\"type\":\"c\",\"value\":[0.52,0.5,0.63]}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 4,
+ "nodes": [
+  "CityRoads",
+  "CitySidewalks",
+  "CityYard",
+  "CityPlaza"
+ ]
+}

@@ -1,0 +1,83 @@
+{
+ "name": "shader_e36887",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aLife; attribute float aSeed; varying float vA;\n#include <fog_pars_vertex>\nvoid main(){ vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition; gl_PointSize = (2.0 + aLife * 7.0) * 220.0 / -mvPosition.z; vA = sin(aLife * 3.14159) * 0.16;\n#include <fog_vertex>\n}",
+ "fragmentShader": "uniform sampler2D map; varying float vA;\n#include <fog_pars_fragment>\nvoid main(){ float a = texture2D(map, gl_PointCoord).a * vA; gl_FragColor = vec4(vec3(0.55, 0.58, 0.62), a);\n#include <fog_fragment>\n}",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0034
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02609,
+    0.00699,
+    0.02238
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+   "name": "",
+   "srgb": true
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+    "name": "",
+    "srgb": true
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aLife",
+  "aSeed"
+ ],
+ "uses": 1,
+ "nodes": [
+  "ManholeSteam"
+ ]
+}

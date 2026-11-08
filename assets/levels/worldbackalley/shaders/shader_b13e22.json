@@ -1,0 +1,115 @@
+{
+ "name": "shader_b13e22",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iCol; varying vec2 vUv; varying vec4 vCol;\n      #include <fog_pars_vertex>\n      void main() { vUv = uv; vCol = iCol; vec4 mvPosition = modelViewMatrix * vec4(iPos, 1.); mvPosition.xy += position.xy * iSize; gl_Position = projectionMatrix * mvPosition;\n        #include <fog_vertex>\n      }",
+ "fragmentShader": "uniform sampler2D map; varying vec2 vUv; varying vec4 vCol;\n      #include <fog_pars_fragment>\n      void main() { vec4 t = texture2D(map, vUv); gl_FragColor = vec4(vCol.rgb * t.rgb, t.a * vCol.a);\n        #include <tonemapping_fragment>\n        #include <colorspace_fragment>\n        #include <fog_fragment>\n      }",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.022
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02745,
+    0.04315,
+    0.06668
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/f04454ecb3fbf48d_128x128.webp",
+   "name": "",
+   "srgb": false
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.022
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02745,
+     0.04315,
+     0.06668
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/f04454ecb3fbf48d_128x128.webp",
+    "name": "",
+    "srgb": false
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.022
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02745,
+     0.04315,
+     0.06668
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/ebdd77ad81869c28_64x64.webp",
+    "name": "",
+    "srgb": false
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/f04454ecb3fbf48d_128x128.webp\",\"name\":\"\",\"srgb\":false}}",
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/ebdd77ad81869c28_64x64.webp\",\"name\":\"\",\"srgb\":false}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "iPos",
+  "iSize",
+  "iCol"
+ ],
+ "uses": 3,
+ "nodes": [
+  "sprite field",
+  "sprite field",
+  "sprite field"
+ ]
+}

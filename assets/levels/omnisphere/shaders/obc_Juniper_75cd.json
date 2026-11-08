@@ -1,0 +1,34 @@
+{
+ "name": "obc_Juniper_75cd",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {                                               // the mint belly (the only green-dominant texels) glows from inside\n        sh.uniforms.uJunGlow = glow; sh.uniforms.uPower = U.uPower;\n        sh.fragmentShader = 'uniform float uJunGlow, uPower;\\n' + sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n          float junBelly = smoothstep(.02, .13, diffuseColor.g - max(diffuseColor.r, diffuseColor.b));\n          totalEmissiveRadiance += vec3(.2, .9, .55) * junBelly * uJunGlow * (.1 + (1. - uPower) * 1.2);`);\n      }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {},
+ "uses": 1,
+ "nodes": [
+  "Juniper"
+ ],
+ "variant_keys": [
+  "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {//FRAGuniform float uJunGlow, uPower;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n          float junBelly = smoothstep(.02, .13, diffuseColor.g - max(diffuseColor.r, diffuseColor.b));\n          totalEmissiveRadiance += vec3(.2, .9, .55) * junBelly * uJunGlow * (.1 + (1. - uPower) * 1.2);\n#include <opaque_fragment>\nvoid main() {{\"uJunGlow\":{\"type\":\"f\",\"value\":0.779136},\"uPower\":{\"type\":\"f\",\"value\":0.927056}}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform float uJunGlow, uPower;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n          float junBelly = smoothstep(.02, .13, diffuseColor.g - max(diffuseColor.r, diffuseColor.b));\n          totalEmissiveRadiance += vec3(.2, .9, .55) * junBelly * uJunGlow * (.1 + (1. - uPower) * 1.2);\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uJunGlow": {
+     "type": "f",
+     "value": 0.779136
+    },
+    "uPower": {
+     "type": "f",
+     "value": 0.927056
+    }
+   }
+  }
+ ]
+}

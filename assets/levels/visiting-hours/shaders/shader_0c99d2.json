@@ -1,0 +1,50 @@
+{
+ "name": "shader_0c99d2",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute vec3 aCell; varying vec2 vUv; varying vec3 vCell; void main(){ vUv = uv; vCell = aCell; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+ "fragmentShader": "uniform sampler2D map; uniform float uT; varying vec2 vUv; varying vec3 vCell; float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233)) + uT * 37.) * 43758.5453); }\n      void main(){ vec2 q = vUv; float n = h(floor(q * vec2(160., 120.)) + vCell.xy * 7.); vec3 c = vCell.z > .5 ? texture2D(map, (vCell.xy + q) * vec2(.25, .5)).rgb : vec3(n * .6);\n        float l = dot(c, vec3(.3, .59, .11)) * 1.9 + .03; l *= .82 + .18 * sin(q.y * 380.); l *= 1. - .55 * pow(length(q - .5) * 1.25, 2.); l += (n - .5) * .07;\n        gl_FragColor = vec4(vec3(.42, 1., .62) * l, 1.); }",
+ "uniforms": {
+  "map": {
+   "type": "t",
+   "file": null,
+   "name": "",
+   "srgb": true
+  },
+  "uT": {
+   "type": "f",
+   "value": 144.5258
+  }
+ },
+ "variants": [
+  {
+   "map": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": true
+   },
+   "uT": {
+    "type": "f",
+    "value": 144.5258
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":true},\"uT\":{\"type\":\"f\",\"value\":144.5258}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aCell"
+ ],
+ "uses": 1,
+ "nodes": [
+  "vh-monitors"
+ ]
+}

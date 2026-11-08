@@ -1,0 +1,60 @@
+{
+ "name": "shader_36eaf6",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+ "fragmentShader": "uniform float uT, uF; uniform sampler2D uRain; varying vec3 vW;\n      void main(){ vec2 q = vec2(vW.x + vW.z, vW.y) * .45; float r = texture2D(uRain, q + vec2(0., uT * .12)).r, r2 = texture2D(uRain, q * 1.7 + vec2(.31, uT * .27)).r;\n        vec3 c = mix(vec3(.03, .05, .08), vec3(.6, .66, .8), min(1., uF)); float a = .22 + uF * .4 + (r * .5 + r2 * .35) * .3;\n        gl_FragColor = vec4(c + vec3(.16, .2, .26) * (r + r2) * .55, a); }",
+ "uniforms": {
+  "uT": {
+   "type": "f",
+   "value": 91.3207
+  },
+  "uF": {
+   "type": "f",
+   "value": 0
+  },
+  "uRain": {
+   "type": "t",
+   "file": "levels/_tex/b09bff05560ffbcb_256x512.jpg",
+   "name": "",
+   "srgb": true
+  }
+ },
+ "variants": [
+  {
+   "uT": {
+    "type": "f",
+    "value": 91.3207
+   },
+   "uF": {
+    "type": "f",
+    "value": 0
+   },
+   "uRain": {
+    "type": "t",
+    "file": "levels/_tex/b09bff05560ffbcb_256x512.jpg",
+    "name": "",
+    "srgb": true
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uT\":{\"type\":\"f\",\"value\":91.3207},\"uF\":{\"type\":\"f\",\"value\":0},\"uRain\":{\"type\":\"t\",\"file\":\"levels/_tex/b09bff05560ffbcb_256x512.jpg\",\"name\":\"\",\"srgb\":true}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "double",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 5,
+ "nodes": [
+  "admin-f1",
+  "admin-f2",
+  "admin-f3",
+  "window-office",
+  "admin-f4"
+ ]
+}

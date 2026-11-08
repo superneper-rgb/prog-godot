@@ -1,0 +1,64 @@
+{
+ "name": "ReflectorShader_c6f6b0",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n\t\tuniform mat4 textureMatrix;\n\t\tvarying vec4 vUv;\n\n\t\t#include <common>\n\t\t#include <logdepthbuf_pars_vertex>\n\n\t\tvoid main() {\n\n\t\t\tvUv = textureMatrix * vec4( position, 1.0 );\n\n\t\t\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n\n\t\t\t#include <logdepthbuf_vertex>\n\n\t\t}",
+ "fragmentShader": "\n\t\tuniform vec3 color;\n\t\tuniform sampler2D tDiffuse;\n\t\tvarying vec4 vUv;\n\n\t\t#include <logdepthbuf_pars_fragment>\n\n\t\tfloat blendOverlay( float base, float blend ) {\n\n\t\t\treturn( base < 0.5 ? ( 2.0 * base * blend ) : ( 1.0 - 2.0 * ( 1.0 - base ) * ( 1.0 - blend ) ) );\n\n\t\t}\n\n\t\tvec3 blendOverlay( vec3 base, vec3 blend ) {\n\n\t\t\treturn vec3( blendOverlay( base.r, blend.r ), blendOverlay( base.g, blend.g ), blendOverlay( base.b, blend.b ) );\n\n\t\t}\n\n\t\tvoid main() {\n\n\t\t\t#include <logdepthbuf_fragment>\n\n\t\t\tvec4 base = texture2DProj( tDiffuse, vUv );\n\t\t\tgl_FragColor = vec4( blendOverlay( base.rgb, color ), 1.0 );\n\n\t\t\t#include <tonemapping_fragment>\n\t\t\t#include <colorspace_fragment>\n\n\t\t}",
+ "uniforms": {
+  "color": {
+   "type": "c",
+   "value": [
+    0.25818,
+    0.25415,
+    0.20156
+   ]
+  },
+  "tDiffuse": {
+   "type": "t",
+   "file": null,
+   "name": "",
+   "srgb": false
+  },
+  "textureMatrix": {
+   "type": "v",
+   "value": null
+  }
+ },
+ "variants": [
+  {
+   "color": {
+    "type": "c",
+    "value": [
+     0.25818,
+     0.25415,
+     0.20156
+    ]
+   },
+   "tDiffuse": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "textureMatrix": {
+    "type": "v",
+    "value": null
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"color\":{\"type\":\"c\",\"value\":[0.25818,0.25415,0.20156]},\"tDiffuse\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"textureMatrix\":{\"type\":\"v\",\"value\":null}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "AptMirror"
+ ]
+}

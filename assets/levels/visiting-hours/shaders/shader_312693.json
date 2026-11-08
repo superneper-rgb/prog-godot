@@ -1,0 +1,70 @@
+{
+ "name": "shader_312693",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aEnd; uniform float uTime; uniform vec3 uCam; varying float vA; varying float vEnd;\n      void main(){ vec3 p = position; float sp = 21. + fract(p.x * 13.1) * 6.; p.y = mod(p.y - uTime * sp, 34.); p.x += (34. - p.y) * .2;\n        vec3 w = vec3(mod(p.x - uCam.x + 35., 70.) - 35. + uCam.x, p.y - 12. + uCam.y, mod(p.z - uCam.z + 35., 70.) - 35. + uCam.z);\n        float e = floor(aEnd + .5); w += e * vec3(-.07, .62, 0.); vEnd = e;\n        float d = length(w - uCam); vA = smoothstep(34., 4., d) * smoothstep(.5, 2.5, d);\n        gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.); }",
+ "fragmentShader": "uniform float uFlash, uLit; varying float vA; varying float vEnd; void main(){ float a = vA * (.16 + uFlash * .5 + uLit * .2) * mix(1., .25, vEnd); gl_FragColor = vec4(vec3(.72,.8,.9) * (1. + uFlash * 2.), a); }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 145.8512
+  },
+  "uCam": {
+   "type": "v",
+   "value": [
+    209.86174,
+    22.6,
+    958.14322
+   ]
+  },
+  "uFlash": {
+   "type": "f",
+   "value": 0
+  },
+  "uLit": {
+   "type": "f",
+   "value": 1
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 145.8512
+   },
+   "uCam": {
+    "type": "v",
+    "value": [
+     209.86174,
+     22.6,
+     958.14322
+    ]
+   },
+   "uFlash": {
+    "type": "f",
+    "value": 0
+   },
+   "uLit": {
+    "type": "f",
+    "value": 1
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uCam\":{\"type\":\"v\",\"value\":[209.86174,22.6,958.14322]},\"uFlash\":{\"type\":\"f\",\"value\":0},\"uLit\":{\"type\":\"f\",\"value\":1}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aEnd"
+ ],
+ "uses": 1,
+ "nodes": [
+  "vh-rain"
+ ]
+}

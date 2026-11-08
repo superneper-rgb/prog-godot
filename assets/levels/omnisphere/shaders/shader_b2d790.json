@@ -1,0 +1,80 @@
+{
+ "name": "shader_b2d790",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute vec3 aBase; attribute vec4 aP; attribute vec4 aW; uniform float uTime; varying vec2 vUv; varying float vA, vSeed, vH, vSteam;\n  #include <fog_pars_vertex>\n  void main() {\n    float tt = fract(uTime / aP.y + aP.x), rise = aP.z;\n    vec3 c = aBase + vec3(aW.x * tt * tt * rise * .7 + sin(aP.x * 40.) * aW.z * tt, tt * rise, aW.y * tt * tt * rise * .7 + cos(aP.x * 31.) * aW.z * tt);\n    vec4 mv = viewMatrix * vec4(c, 1.); float sz = aP.w * (.3 + tt * 1.3), d = -mv.z, s = sin(aP.x * 9. + uTime * .03), co = cos(aP.x * 9. + uTime * .03);\n    vec4 mvPosition = mv + vec4(vec2(co * position.x - s * position.y, s * position.x + co * position.y) * sz, 0., 0.);\n    vUv = position.xy; vSeed = aP.x; vH = tt; vSteam = aW.w;\n    vA = smoothstep(0., .12, tt) * (1. - smoothstep(.55, 1., tt)) * smoothstep(sz * .3, sz * 1.2, d);\n    gl_Position = projectionMatrix * mvPosition;\n    #include <fog_vertex>\n  }",
+ "fragmentShader": "\n  uniform float uTime; varying vec2 vUv; varying float vA, vSeed, vH, vSteam;\n  #include <fog_pars_fragment>\n  float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n  float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + vec2(1., 1.)), f.x), f.y); }\n  void main() {\n    vec2 p = vUv * 2.; float r = length(p);\n    float f = .5 * n(p * 2.2 + vSeed * 17.) + .3 * n(p * 5.1 - vSeed * 5. + uTime * .03) + .2 * n(p * 10.7 + vSeed);\n    float a = smoothstep(1., .2, r + (f - .5) * 1.) * vA;\n    if (a < .004) discard;\n    float under = clamp(.55 - vUv.y * 1.1 + (f - .5) * .5, 0., 1.) * (1. - vH * .8);                 // the underside near the vent is lit by what is below it\n    vec3 ash = mix(vec3(.15, .12, .11), vec3(.95, .36, .1), under) * (.7 + .6 * f);\n    vec3 steam = mix(vec3(.32, .28, .27), vec3(.95, .5, .25), under * .7) * (.8 + .4 * f);\n    gl_FragColor = vec4(mix(ash, steam, vSteam), a * mix(.8, .45, vSteam));\n    #include <fog_fragment>\n  }",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.00042
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.14118,
+    0.07059,
+    0.05491
+   ]
+  },
+  "uTime": {
+   "type": "f",
+   "value": 87.7041
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 87.7041
+   }
+  }
+ ],
+ "variant_keys": [
+  "{}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aBase",
+  "aP",
+  "aW"
+ ],
+ "uses": 1,
+ "nodes": [
+  "volcano plumes"
+ ]
+}

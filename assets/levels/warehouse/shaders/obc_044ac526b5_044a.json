@@ -1,0 +1,65 @@
+{
+ "name": "obc_044ac526b5_044a",
+ "type": "onBeforeCompile",
+ "source": "s=>{\r\n    Object.assign(s.uniforms,{uWhVol:SURFACE.uWhVol,uWhVolMin:SURFACE.uWhVolMin,uWhVolInv:SURFACE.uWhVolInv});\r\n    s.vertexShader=VERT_HEAD+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\\n'+VERT_POS);\r\n    s.fragmentShader=FRAG_HEAD+s.fragmentShader.replace('#include <lights_fragment_end>',FRAG_LIGHT);\r\n  }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "wh-lit",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {
+  "whLit": true,
+  "mergeSafe": true
+ },
+ "uses": 790,
+ "nodes": [
+  "Security entrance / racks/0",
+  "Security entrance / racks/0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhShutter_racks_0",
+  "WhDoorRoller_racks_0",
+  "Warehouse / static fittings"
+ ],
+ "variant_keys": [
+  "varying vec3 vWhP;\n#include <common>\n#include <begin_vertex>\nvec4 whPos=vec4(transformed,1.0);\n  #ifdef USE_INSTANCING\n  whPos=instanceMatrix*whPos;\n  #endif\n  vWhP=(modelMatrix*whPos).xyz;\n#include <project_vertex>\nvoid main() {//FRAGvarying vec3 vWhP;\nuniform highp sampler3D uWhVol;uniform vec3 uWhVolMin,uWhVolInv;\nvec3 whVolume(vec3 n){vec3 v=texture(uWhVol,(vWhP+n*.9-uWhVolMin)*uWhVolInv).rgb;return v*v*4.;}\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uWhVol\":{\"type\":\"t\",\"file\":\"levels/_tex/f133bf217cdf5231_184x36.jpg\",\"srgb\":false},\"uWhVolMin\":{\"type\":\"v\",\"value\":[-38,-32,-54]},\"uWhVolInv\":{\"type\":\"v\",\"value\":[0.00276,0.01389,0.00357]}}"
+ ],
+ "variants": [
+  {
+   "vertex": "varying vec3 vWhP;\n#include <common>\n#include <begin_vertex>\nvec4 whPos=vec4(transformed,1.0);\n  #ifdef USE_INSTANCING\n  whPos=instanceMatrix*whPos;\n  #endif\n  vWhP=(modelMatrix*whPos).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "varying vec3 vWhP;\nuniform highp sampler3D uWhVol;uniform vec3 uWhVolMin,uWhVolInv;\nvec3 whVolume(vec3 n){vec3 v=texture(uWhVol,(vWhP+n*.9-uWhVolMin)*uWhVolInv).rgb;return v*v*4.;}\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uWhVol": {
+     "type": "t",
+     "file": "levels/_tex/f133bf217cdf5231_184x36.jpg",
+     "srgb": false
+    },
+    "uWhVolMin": {
+     "type": "v",
+     "value": [
+      -38,
+      -32,
+      -54
+     ]
+    },
+    "uWhVolInv": {
+     "type": "v",
+     "value": [
+      0.00276,
+      0.01389,
+      0.00357
+     ]
+    }
+   }
+  }
+ ]
+}

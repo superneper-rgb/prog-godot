@@ -1,0 +1,27 @@
+{
+ "name": "obc_spGust_9ba9",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\r\n    sh.uniforms.uTime = U.uTime;\r\n    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\\nattribute float aSeed;\\nuniform float uTime;')\r\n      .replace('#include <begin_vertex>', `#include <begin_vertex>\\nfloat sk = aSeed * 6.2831; transformed.x += sin(uTime * 0.23 + sk) * ${drift}; transformed.z += cos(uTime * 0.19 + sk * 1.3) * ${drift}; transformed.y += mod(uTime * ${rise} * (0.6 + 0.8 * aSeed) + aSeed * 97.0, ${H});`);\r\n  }",
+ "base": "PointsMaterial",
+ "cacheKey": "spore3.400.403.00",
+ "userData": {},
+ "uses": 1,
+ "nodes": [
+  "SpGust"
+ ],
+ "variant_keys": [
+  "#include <common>\nattribute float aSeed;\nuniform float uTime;\n#include <begin_vertex>\nfloat sk = aSeed * 6.2831; transformed.x += sin(uTime * 0.23 + sk) * 3.00; transformed.z += cos(uTime * 0.19 + sk * 1.3) * 3.00; transformed.y += mod(uTime * 0.40 * (0.6 + 0.8 * aSeed) + aSeed * 97.0, 3.40);\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uTime\":{\"type\":\"f\",\"value\":17.6028}}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\nattribute float aSeed;\nuniform float uTime;\n#include <begin_vertex>\nfloat sk = aSeed * 6.2831; transformed.x += sin(uTime * 0.23 + sk) * 3.00; transformed.z += cos(uTime * 0.19 + sk * 1.3) * 3.00; transformed.y += mod(uTime * 0.40 * (0.6 + 0.8 * aSeed) + aSeed * 97.0, 3.40);\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uTime": {
+     "type": "f",
+     "value": 17.6028
+    }
+   }
+  }
+ ]
+}

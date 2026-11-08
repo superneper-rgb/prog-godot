@@ -1,0 +1,36 @@
+{
+ "name": "shader_700d26",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 p;void main(){p=(modelMatrix*vec4(position,1.)).xyz;gl_Position=projectionMatrix*viewMatrix*vec4(p,1.);}",
+ "fragmentShader": "varying vec3 p;uniform float time;\n      void main(){float wave=sin(p.x*2.4+p.z*4.+time*2.)*.5+sin(p.x*5.-p.z*1.8-time*3.)*.3;\n        float bands=pow(max(0.,sin(p.x*.24+sin(p.z*.4+time)*.15)),22.);\n        float broken=smoothstep(.12,.8,sin(p.z*6.+wave*3.));\n        vec3 color=vec3(.004,.009,.016)+vec3(.025,.045,.065)*bands*broken;\n        color+=vec3(.09,.05,.015)*pow(max(0.,sin(p.x*.095)),38.)*broken*.4;\n        float haze=1.-exp(-length(cameraPosition-p)*.0018);color=mix(color,vec3(.012,.021,.034),haze);\n        gl_FragColor=vec4(color,1.);\n        #include <tonemapping_fragment>\n        #include <colorspace_fragment>\n      }",
+ "uniforms": {
+  "time": {
+   "type": "f",
+   "value": 14.276
+  }
+ },
+ "variants": [
+  {
+   "time": {
+    "type": "f",
+    "value": 14.276
+   }
+  }
+ ],
+ "variant_keys": [
+  "{}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "East river / rain surface"
+ ]
+}

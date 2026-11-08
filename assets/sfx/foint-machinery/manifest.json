@@ -1,0 +1,35 @@
+{
+  "model": "eleven_text_to_sound_v2",
+  "sounds": [
+    {
+      "id": "extend",
+      "loop": true,
+      "duration": 3,
+      "prompt": "Seamless heavy industrial hydraulic carriage extending outward along steel rails inside a huge arena. Deep powerful piston pressure, gritty geared motor drive, heavy metal rollers. Steady movement only, no start or stop impact, no voices or music."
+    },
+    {
+      "id": "retract",
+      "loop": true,
+      "duration": 3,
+      "prompt": "Seamless heavy industrial hydraulic carriage retracting into a wall on steel rails. Low strained winch motor, grinding gear teeth and hydraulic suction hiss. Steady movement only, no start or stop impact, no voices or music."
+    },
+    {
+      "id": "door-open",
+      "loop": true,
+      "duration": 2,
+      "prompt": "Seamless armored steel sci fi arena shutter rising on mechanical guide rails. Mid low electric servo whirr, textured metal sliding scrape, pneumatic air hiss. Steady movement only without a final slam, no alarms, no voices or music."
+    },
+    {
+      "id": "door-close",
+      "loop": true,
+      "duration": 2,
+      "prompt": "Seamless heavy armored steel shutter lowering on industrial guide rails. Low grinding motor and heavy metal sliding scrape, pneumatic pressure. Steady movement only without a final slam, no alarms, no voices or music."
+    },
+    {
+      "id": "latch",
+      "loop": false,
+      "duration": 0.6,
+      "prompt": "One short heavy industrial metal mechanism locking into place, a solid bassy mechanical clunk with a brief hydraulic pressure release, short enclosed arena echo. No voices, no music, no explosions."
+    }
+  ]
+}

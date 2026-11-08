@@ -1,0 +1,71 @@
+{
+ "name": "rain_streaks_e3b913",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n      uniform float uTime; uniform vec3 uWind; attribute float aEnd; attribute float aSpeed; varying float vA;\n      void main() {\n        float s = mod(position.y + uTime * aSpeed, 80.0);                 // distance fallen this cycle (drops start 25 m above the floor, end 55 m below)\n        vec3 p = vec3(position.x, 25.0, position.z) + uWind * s;\n        p -= uWind * aEnd * aSpeed * 0.09;                                 // the tail of the streak\n        vec4 mv = modelViewMatrix * vec4(p, 1.0);\n        vA = (1.0 - aEnd * 0.9) * clamp(1.5 - (-mv.z) / 25.0, 0.12, 1.0);\n        gl_Position = projectionMatrix * mv;\n      }",
+ "fragmentShader": "uniform vec3 uColor; varying float vA; void main() { gl_FragColor = vec4(uColor, 0.55 * vA); }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 20.7693
+  },
+  "uWind": {
+   "type": "v",
+   "value": [
+    0.21449,
+    -0.97497,
+    -0.0585
+   ]
+  },
+  "uColor": {
+   "type": "c",
+   "value": [
+    0.57758,
+    0.67244,
+    0.85499
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 20.7693
+   },
+   "uWind": {
+    "type": "v",
+    "value": [
+     0.21449,
+     -0.97497,
+     -0.0585
+    ]
+   },
+   "uColor": {
+    "type": "c",
+    "value": [
+     0.57758,
+     0.67244,
+     0.85499
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uWind\":{\"type\":\"v\",\"value\":[0.21449,-0.97497,-0.0585]},\"uColor\":{\"type\":\"c\",\"value\":[0.57758,0.67244,0.85499]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aEnd",
+  "aSpeed"
+ ],
+ "uses": 1,
+ "nodes": [
+  "rain outside"
+ ]
+}

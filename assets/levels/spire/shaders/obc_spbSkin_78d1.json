@@ -1,0 +1,78 @@
+{
+ "name": "obc_spbSkin_78d1",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\r\n    sh.uniforms.uSssC = { value: rimC }; sh.uniforms.uSssK = m.userData.sssK;\r\n    if (glowMap) { sh.uniforms.uGlowMap = { value: glowMap }; sh.uniforms.uGlow = m.userData.glow; sh.uniforms.uGlowC = { value: new THREE.Color(glowColor) }; }\r\n    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\\nuniform vec3 uSssC; uniform float uSssK;' + (glowMap ? '\\nuniform sampler2D uGlowMap; uniform float uGlow; uniform vec3 uGlowC;' : ''))\r\n      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\r\n        float skRim = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.6);\r\n        totalEmissiveRadiance += uSssC * skRim * uSssK * (0.6 + 0.6 * diffuseColor.r);\r\n        ${glowMap ? '#ifdef USE_MAP\\n totalEmissiveRadiance += uGlowC * texture2D(uGlowMap, vMapUv).r * uGlow;\\n#endif' : ''}`);\r\n  }",
+ "base": "MeshPhysicalMaterial",
+ "cacheKey": "wetSkin1G",
+ "defines": {
+  "STANDARD": "",
+  "PHYSICAL": ""
+ },
+ "userData": {
+  "sssK": {
+   "value": 0.55
+  },
+  "glow": {
+   "value": 0
+  }
+ },
+ "uses": 41,
+ "nodes": [
+  "SpbBody",
+  "SpbUpper",
+  "SpbEye0",
+  "SpbEyeLidU0",
+  "SpbEye1",
+  "SpbEyeLidU1",
+  "SpbEye2",
+  "SpbEyeLidU2",
+  "SpbEye3",
+  "SpbEyeLidU3",
+  "SpbEye4",
+  "SpbEyeLidU4",
+  "SpbLower",
+  "SpbFeeler0",
+  "SpbFeeler2",
+  "SpbFeeler4"
+ ],
+ "variant_keys": [
+  "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\nuniform vec3 uSssC; uniform float uSssK;\nuniform sampler2D uGlowMap; uniform float uGlow; uniform vec3 uGlowC;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n        float skRim = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.6);\n        totalEmissiveRadiance += uSssC * skRim * uSssK * (0.6 + 0.6 * diffuseColor.r);\n        #ifdef USE_MAP\n totalEmissiveRadiance += uGlowC * texture2D(uGlowMap, vMapUv).r * uGlow;\n#endif\n#include <opaque_fragment>\nvoid main() {{\"uSssC\":{\"type\":\"c\",\"value\":[0.32314,0.00368,0.00913]},\"uSssK\":{\"type\":\"f\",\"value\":0.55},\"uGlowMap\":{\"type\":\"t\",\"file\":\"levels/_tex/2151ab8317c3cc81_512x512.jpg\",\"srgb\":false},\"uGlow\":{\"type\":\"f\",\"value\":0},\"uGlowC\":{\"type\":\"c\",\"value\":[1,0.04231,0.01033]}}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\nuniform vec3 uSssC; uniform float uSssK;\nuniform sampler2D uGlowMap; uniform float uGlow; uniform vec3 uGlowC;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n        float skRim = pow(1.0 - abs(dot(normalize(vViewPosition), normal)), 2.6);\n        totalEmissiveRadiance += uSssC * skRim * uSssK * (0.6 + 0.6 * diffuseColor.r);\n        #ifdef USE_MAP\n totalEmissiveRadiance += uGlowC * texture2D(uGlowMap, vMapUv).r * uGlow;\n#endif\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uSssC": {
+     "type": "c",
+     "value": [
+      0.32314,
+      0.00368,
+      0.00913
+     ]
+    },
+    "uSssK": {
+     "type": "f",
+     "value": 0.55
+    },
+    "uGlowMap": {
+     "type": "t",
+     "file": "levels/_tex/2151ab8317c3cc81_512x512.jpg",
+     "srgb": false
+    },
+    "uGlow": {
+     "type": "f",
+     "value": 0
+    },
+    "uGlowC": {
+     "type": "c",
+     "value": [
+      1,
+      0.04231,
+      0.01033
+     ]
+    }
+   }
+  }
+ ]
+}

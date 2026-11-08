@@ -1,0 +1,30 @@
+{
+ "name": "obc_67047db111_6704",
+ "type": "onBeforeCompile",
+ "source": "(shader) => {\n    shader.uniforms.npcBlink = blink;\n    shader.vertexShader = 'varying vec3 npcFacePosition;\\n' + shader.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\\nnpcFacePosition=position;');\n    shader.fragmentShader = 'uniform float npcBlink;\\nvarying vec3 npcFacePosition;\\n' + shader.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>\n     if(npcBlink>0.0 && npcFacePosition.z>.08){\n      float eyeX=npcFacePosition.x<0.0?-.093:.085;\n      vec2 eye=(npcFacePosition.xy-vec2(eyeX,1.434))/vec2(.043,.044);\n      float area=1.0-smoothstep(.88,1.0,length(eye));\n      float opening=(1.0-npcBlink)*1.12;\n      float lid=smoothstep(opening-.045,opening+.045,abs(eye.y));\n      lid=mix(lid,1.0,smoothstep(.95,1.0,npcBlink));\n      vec3 skin=vec3(.55,.43,.32);\n      float crease=(1.0-smoothstep(.015,.085,abs(eye.y)))*smoothstep(.9,1.0,npcBlink);\n      skin*=1.0-crease*.38;\n      diffuseColor.rgb=mix(diffuseColor.rgb,skin,area*lid);\n     }`);\n  }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "pale-punk-eyelids-v1",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {},
+ "uses": 1,
+ "nodes": [
+  "PalePunk"
+ ],
+ "variant_keys": [
+  "varying vec3 npcFacePosition;\n#include <common>\n#include <begin_vertex>\nnpcFacePosition=position;\n#include <project_vertex>\nvoid main() {//FRAGuniform float npcBlink;\nvarying vec3 npcFacePosition;\n#include <common>\n#include <map_fragment>\n     if(npcBlink>0.0 && npcFacePosition.z>.08){\n      float eyeX=npcFacePosition.x<0.0?-.093:.085;\n      vec2 eye=(npcFacePosition.xy-vec2(eyeX,1.434))/vec2(.043,.044);\n      float area=1.0-smoothstep(.88,1.0,length(eye));\n      float opening=(1.0-npcBlink)*1.12;\n      float lid=smoothstep(opening-.045,opening+.045,abs(eye.y));\n      lid=mix(lid,1.0,smoothstep(.95,1.0,npcBlink));\n      vec3 skin=vec3(.55,.43,.32);\n      float crease=(1.0-smoothstep(.015,.085,abs(eye.y)))*smoothstep(.9,1.0,npcBlink);\n      skin*=1.0-crease*.38;\n      diffuseColor.rgb=mix(diffuseColor.rgb,skin,area*lid);\n     }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"npcBlink\":{\"type\":\"f\",\"value\":0}}"
+ ],
+ "variants": [
+  {
+   "vertex": "varying vec3 npcFacePosition;\n#include <common>\n#include <begin_vertex>\nnpcFacePosition=position;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform float npcBlink;\nvarying vec3 npcFacePosition;\n#include <common>\n#include <map_fragment>\n     if(npcBlink>0.0 && npcFacePosition.z>.08){\n      float eyeX=npcFacePosition.x<0.0?-.093:.085;\n      vec2 eye=(npcFacePosition.xy-vec2(eyeX,1.434))/vec2(.043,.044);\n      float area=1.0-smoothstep(.88,1.0,length(eye));\n      float opening=(1.0-npcBlink)*1.12;\n      float lid=smoothstep(opening-.045,opening+.045,abs(eye.y));\n      lid=mix(lid,1.0,smoothstep(.95,1.0,npcBlink));\n      vec3 skin=vec3(.55,.43,.32);\n      float crease=(1.0-smoothstep(.015,.085,abs(eye.y)))*smoothstep(.9,1.0,npcBlink);\n      skin*=1.0-crease*.38;\n      diffuseColor.rgb=mix(diffuseColor.rgb,skin,area*lid);\n     }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "npcBlink": {
+     "type": "f",
+     "value": 0
+    }
+   }
+  }
+ ]
+}

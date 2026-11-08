@@ -1,0 +1,68 @@
+{
+ "name": "shader_ea8496",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv; varying vec3 vW; void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+ "fragmentShader": "uniform float uTime; uniform vec3 uCol, uCam; varying vec2 vUv; varying vec3 vW;\n        float h(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n        float n(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1, 0)), f.x), mix(h(i + vec2(0, 1)), h(i + 1.), f.x), f.y); }\n        void main(){ vec2 p = vW.xz * .035 + vec2(uTime * .012, uTime * .004); float m = n(p) * .6 + n(p * 2.3 + 5.) * .4;\n          float edge = smoothstep(.5, .15, length(vUv - .5)); float d = distance(vW, uCam), near = smoothstep(4., 22., d) * smoothstep(520., 180., d);\n          float a = smoothstep(.35, .85, m) * edge * near * .3; gl_FragColor = vec4(uCol, a); }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 144.9427
+  },
+  "uCol": {
+   "type": "c",
+   "value": [
+    0.09142,
+    0.0421,
+    0.03571
+   ]
+  },
+  "uCam": {
+   "type": "v",
+   "value": [
+    209.86174,
+    22.6,
+    958.14322
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 144.9427
+   },
+   "uCol": {
+    "type": "c",
+    "value": [
+     0.09142,
+     0.0421,
+     0.03571
+    ]
+   },
+   "uCam": {
+    "type": "v",
+    "value": [
+     209.86174,
+     22.6,
+     958.14322
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uCol\":{\"type\":\"c\",\"value\":[0.09142,0.0421,0.03571]},\"uCam\":{\"type\":\"v\",\"value\":[209.86174,22.6,958.14322]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "vhp-dressing"
+ ]
+}

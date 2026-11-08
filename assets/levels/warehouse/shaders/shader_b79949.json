@@ -1,0 +1,38 @@
+{
+ "name": "shader_b79949",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+ "fragmentShader": "varying vec2 vUv;uniform float strength;\n      void main(){float d=abs(vUv.y-.5)*2.;float hot=exp(-d*d*180.);\n        float aura=exp(-d*d*7.)*pow(1.-d,2.);\n        vec3 c=mix(vec3(.035,.28,1.),vec3(.75,1.,1.),hot);\n        gl_FragColor=vec4(c,(hot*.95+aura*.48)*strength);}",
+ "uniforms": {
+  "strength": {
+   "type": "f",
+   "value": 1
+  }
+ },
+ "variants": [
+  {
+   "strength": {
+    "type": "f",
+    "value": 1
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"strength\":{\"type\":\"f\",\"value\":1}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "double",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 3,
+ "nodes": [
+  "Purge electrical discharge",
+  "Purge electrical discharge",
+  "Foreman eye impact electricity"
+ ]
+}

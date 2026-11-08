@@ -1,0 +1,101 @@
+{
+ "name": "shader_a09ff2",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute vec4 aSeed; attribute float aSrc; uniform float uTime, uH, uAlive[8]; varying float vA;\n  void main() {\n    float life = aSeed.w, tt = fract(uTime / life + aSeed.x) ;\n    vec3 p = position + vec3(sin(aSeed.y * 40. + tt * 3.) * 4. * tt, tt * aSeed.z, cos(aSeed.y * 33. + tt * 2.) * 4. * tt) + vec3(tt * tt * 18., 0., tt * tt * 6.);\n    vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;\n    gl_PointSize = min((6. + 26. * tt) * projectionMatrix[1][1] * uH * .5 / max(-mv.z, 1.), 400.);\n    vA = smoothstep(0., .12, tt) * (1. - smoothstep(.55, 1., tt)) * uAlive[int(aSrc + .5)];\n  }",
+ "fragmentShader": "\n  uniform sampler2D map; uniform vec3 uCol; varying float vA;\n  void main() { vec4 t = texture2D(map, gl_PointCoord); gl_FragColor = vec4(uCol, t.a * vA * .55);\n    #include <colorspace_fragment>\n  }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 87.7041
+  },
+  "uH": {
+   "type": "f",
+   "value": 540
+  },
+  "uAlive": {
+   "type": "v",
+   "value": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/e2352c7a8f4f0582_64x64.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uCol": {
+   "type": "c",
+   "value": [
+    0.55,
+    0.45,
+    0.42
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 87.7041
+   },
+   "uH": {
+    "type": "f",
+    "value": 540
+   },
+   "uAlive": {
+    "type": "v",
+    "value": [
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1,
+     1
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/e2352c7a8f4f0582_64x64.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uCol": {
+    "type": "c",
+    "value": [
+     0.55,
+     0.45,
+     0.42
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uH\":{\"type\":\"f\",\"value\":540},\"uAlive\":{\"type\":\"v\",\"value\":[1,1,1,1,1,1,1,1]},\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/e2352c7a8f4f0582_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uCol\":{\"type\":\"c\",\"value\":[0.55,0.45,0.42]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSeed",
+  "aSrc"
+ ],
+ "uses": 1,
+ "nodes": [
+  "om-puffs"
+ ]
+}

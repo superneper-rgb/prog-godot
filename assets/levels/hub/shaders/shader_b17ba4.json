@@ -1,0 +1,80 @@
+{
+ "name": "shader_b17ba4",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute vec3 aC; attribute vec3 aCol; attribute vec2 aSize; varying vec2 vQ; varying vec3 vCol; varying float vF;\n#include <fog_pars_vertex>\nvoid main(){\n  vec2 d = cameraPosition.xz - aC.xz; float dl = length(d); d = dl > 0.01 ? d / dl : vec2(0.0, 1.0); vec2 n = vec2(-d.y, d.x);\n  float L = aSize.x * (0.6 + 0.8 * clamp(dl / 40.0, 0.0, 1.0));\n  vec3 wp = vec3(aC.x + d.x * position.y * L + n.x * position.x * aSize.y, aC.y, aC.z + d.y * position.y * L + n.y * position.x * aSize.y);\n  vQ = position.xy; vCol = aCol; vec3 vd = normalize(cameraPosition - wp); vF = pow(1.0 - clamp(vd.y, 0.0, 1.0), 2.0);\n  vec4 mvPosition = viewMatrix * vec4(wp, 1.0); gl_Position = projectionMatrix * mvPosition;\n#include <fog_vertex>\n}",
+ "fragmentShader": "uniform float uK; varying vec2 vQ; varying vec3 vCol; varying float vF;\n#include <fog_pars_fragment>\nvoid main(){ float a = exp(-vQ.x * vQ.x * 4.0) * (1.0 - vQ.y) * smoothstep(0.0, 0.08, vQ.y); gl_FragColor = vec4(vCol * a * vF * uK, 1.0);\n#include <tonemapping_fragment>\n#include <colorspace_fragment>\n#include <fog_fragment>\n}",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0034
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02609,
+    0.00699,
+    0.02238
+   ]
+  },
+  "uK": {
+   "type": "f",
+   "value": 1
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "uK": {
+    "type": "f",
+    "value": 1
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uK\":{\"type\":\"f\",\"value\":1}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aC",
+  "aCol",
+  "aSize"
+ ],
+ "uses": 1,
+ "nodes": [
+  "WetReflections"
+ ]
+}

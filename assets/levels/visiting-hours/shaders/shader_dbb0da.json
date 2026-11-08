@@ -1,0 +1,158 @@
+{
+ "name": "shader_dbb0da",
+ "type": "ShaderMaterial",
+ "vertexShader": "#include <fog_pars_vertex>\n      varying vec3 vW; varying vec2 vUv;\n      void main(){ vUv = uv; vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;\n        #include <fog_vertex>\n      }",
+ "fragmentShader": "#include <fog_pars_fragment>\n      uniform float uTime, uFlash, uShore; uniform vec3 uSky; varying vec3 vW; varying vec2 vUv;\n      float hh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n      float rings(vec2 p, float s){ vec2 c = floor(p / s), f = fract(p / s) - .5; float r = 0.;\n        for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) { vec2 o = vec2(float(x), float(y)), id = c + o; vec2 ctr = o + vec2(hh(id), hh(id + 7.)) - .5;\n          float t = fract(uTime * (.7 + hh(id + 3.) * .6) + hh(id + 11.)), d = length(f - ctr) * s, R = t * .45 * s;\n          r += (1. - smoothstep(0., .035, abs(d - R))) * (1. - t); }\n        return r; }\n      void main(){\n        vec3 V = normalize(cameraPosition - vW); float fr = pow(1. - max(V.y, 0.), 4.);\n        float rp = rings(vW.xz, 1.1) + rings(vW.xz + 13.7, .7) * .7;\n        float wob = sin(atan(vUv.y - .5, vUv.x - .5) * 7. + vW.x * .3) * .025, edge = mix(1., smoothstep(.5, .36, length(vUv - .5) + wob), uShore);   // a ragged, soft shore\n        float ns = hh(floor(vW.xz * .25)) * .5 + hh(floor(vW.xz * .07)) * .5;   // painted blotches of deeper and shallower water\n        vec3 c = mix(vec3(.012, .03, .045), vec3(.025, .06, .07), ns) + uSky * (fr * .45 + rp * .14 + .03) + vec3(.7, .78, .95) * uFlash * (fr * .7 + .04 + rp * .25);\n        gl_FragColor = vec4(c, edge * .92);\n        #include <fog_fragment>\n      }",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.00357
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.31234,
+    0.21092,
+    0.19328
+   ]
+  },
+  "uSky": {
+   "type": "c",
+   "value": [
+    0.06848,
+    0.17465,
+    0.43415
+   ]
+  },
+  "uShore": {
+   "type": "f",
+   "value": 1
+  },
+  "uTime": {
+   "type": "f",
+   "value": 142.7503
+  },
+  "uFlash": {
+   "type": "f",
+   "value": 0
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00357
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.31234,
+     0.21092,
+     0.19328
+    ]
+   },
+   "uSky": {
+    "type": "c",
+    "value": [
+     0.06848,
+     0.17465,
+     0.43415
+    ]
+   },
+   "uShore": {
+    "type": "f",
+    "value": 1
+   },
+   "uTime": {
+    "type": "f",
+    "value": 142.7503
+   },
+   "uFlash": {
+    "type": "f",
+    "value": 0
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00357
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.31234,
+     0.21092,
+     0.19328
+    ]
+   },
+   "uSky": {
+    "type": "c",
+    "value": [
+     0.06848,
+     0.17465,
+     0.43415
+    ]
+   },
+   "uShore": {
+    "type": "f",
+    "value": 0
+   },
+   "uTime": {
+    "type": "f",
+    "value": 143.1839
+   },
+   "uFlash": {
+    "type": "f",
+    "value": 0
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uSky\":{\"type\":\"c\",\"value\":[0.06848,0.17465,0.43415]},\"uShore\":{\"type\":\"f\",\"value\":1},\"uFlash\":{\"type\":\"f\",\"value\":0}}",
+  "{\"uSky\":{\"type\":\"c\",\"value\":[0.06848,0.17465,0.43415]},\"uShore\":{\"type\":\"f\",\"value\":0},\"uFlash\":{\"type\":\"f\",\"value\":0}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 8,
+ "nodes": [
+  "vhp-scenery",
+  "vhp-prison",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-approach",
+  "vhp-approach",
+  "vhp-approach",
+  "vhp-approach"
+ ]
+}

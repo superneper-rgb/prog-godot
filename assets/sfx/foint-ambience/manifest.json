@@ -1,0 +1,17 @@
+{
+  "model": "eleven_text_to_sound_v2",
+  "sounds": [
+    {
+      "id": "crowd",
+      "duration": 22,
+      "loop": true,
+      "prompt": "Seamless steady background ambience of a large enclosed science fiction gladiator arena packed with a distant audience. Hundreds of spectators murmuring, restless low chatter, scattered indistinct calls, subdued rustling, spacious indoor stadium reverberation. Consistent quiet crowd walla without a big swell. Heard from the arena floor far below the stands. No intelligible words, no announcer, no music, no fighting, no close voices."
+    },
+    {
+      "id": "hum",
+      "duration": 12,
+      "loop": true,
+      "prompt": "Seamless steady deep ventilation and electrical machinery hum inside a vast enclosed futuristic arena. Soft distant air handling fans and a restrained low mechanical rumble, cavernous room tone. Consistent quiet industrial ambience. No alarms, no voices, no music, no impacts, no high pitched whine."
+    }
+  ]
+}

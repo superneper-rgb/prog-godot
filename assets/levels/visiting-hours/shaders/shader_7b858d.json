@@ -1,0 +1,47 @@
+{
+ "name": "shader_7b858d",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aS; attribute float aA; varying float vA; void main(){ vA = aA; vec4 mv = modelViewMatrix * vec4(position, 1.); gl_PointSize = aS * 700. / max(.5, -mv.z); gl_Position = projectionMatrix * mv; }",
+ "fragmentShader": "uniform vec3 uC; varying float vA; void main(){ float d = length(gl_PointCoord - .5) * 2.; float a = vA * smoothstep(1., .2, d); if (a < .01) discard; gl_FragColor = vec4(uC, a); }",
+ "uniforms": {
+  "uC": {
+   "type": "c",
+   "value": [
+    0.32314,
+    0.33245,
+    0.37124
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uC": {
+    "type": "c",
+    "value": [
+     0.32314,
+     0.33245,
+     0.37124
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uC\":{\"type\":\"c\",\"value\":[0.32314,0.33245,0.37124]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aS",
+  "aA"
+ ],
+ "uses": 1,
+ "nodes": [
+  "vh-sn-smoke"
+ ]
+}

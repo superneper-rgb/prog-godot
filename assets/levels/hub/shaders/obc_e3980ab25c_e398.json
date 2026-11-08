@@ -1,0 +1,949 @@
+{
+ "name": "obc_e3980ab25c_e398",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\r\n    sh.uniforms.uTime = { value: 0 }; mat.userData.shader = sh;\r\n    sh.vertexShader = `attribute vec4 aB4; attribute vec3 aPivot; attribute vec2 aTile; attribute vec4 aAnim; attribute float aLook; attribute vec3 aCol; attribute vec4 aSeat; uniform float uTime; varying vec2 vTile;\r\n#define aBone aB4.x\r\n#define aTint aB4.y\r\n#define aMode aB4.z\r\n#define aJoint aB4.w\r\nmat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c); }\r\nmat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c); }\r\nmat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0); }\r\n` + sh.vertexShader\r\n      .replace('#include <beginnormal_vertex>', `\r\n  float ph = aAnim.x, wk = aAnim.y, sd = aAnim.z, amp = aAnim.w; int bn = int(aBone + 0.5);\r\n  float sw = sin(ph) * wk * amp, idle = 1.0 - wk;\r\n  mat3 R = mat3(1.0);\r\n  if (bn == 1) R = rY(aLook + idle * 0.25 * sin(uTime * 0.37 + sd * 13.0)) * rX(0.05 * sin(ph * 2.0) * wk + idle * 0.04 * sin(uTime * 0.9 + sd * 4.0));\r\n  else if (bn == 2) R = rX(-sw * 0.95 + idle * 0.05 * sin(uTime * 1.3 + sd * 9.0)) * rZ(-0.06);\r\n  else if (bn == 3) R = rX(sw * 0.95 + idle * 0.05 * sin(uTime * 1.1 + sd * 7.0)) * rZ(0.06);\r\n  else if (bn == 4 || bn == 9) R = rX(sw * 0.75);\r\n  else if (bn == 5 || bn == 8) R = rX(-sw * 0.75);\r\n  else if (bn == 7) R = rZ(0.14 * sin(uTime * 4.0 + sd * 5.0) + sw * 0.2) * rX(0.1 * sin(uTime * 3.1 + sd));\r\n  if (aMode > 2.5 && aMode < 4.5) {                                                                                                   // aliens: 3 talks with its hands, 4 plays chess\r\n    float tA = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0)), tB = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0 + 2.1));\r\n    if (aMode < 3.5) {\r\n      if (bn == 1) R = rY(aLook + 0.55 * sin(uTime * 0.35 + sd * 13.0)) * rX(0.07 * sin(uTime * 2.6 + sd * 5.0) * (tA + tB));\r\n      else if (bn == 2) R = rX(-0.3 - tA * (0.5 + 0.5 * sin(uTime * 4.1 + sd * 9.0)) * 0.9) * rZ(-0.08 - 0.2 * tA);\r\n      else if (bn == 3) R = rX(-0.3 - tB * (0.5 + 0.5 * sin(uTime * 3.7 + sd * 11.0)) * 0.9) * rZ(0.08 + 0.2 * tB);\r\n    } else {\r\n      float fr = fract(uTime * 0.07 + sd * 3.0), mv = smoothstep(0.82, 0.9, fr) * (1.0 - smoothstep(0.96, 1.0, fr));\r\n      if (bn == 1) R = rY(aLook + 0.12 * sin(uTime * 0.5 + sd * 4.0)) * rX(0.3 + 0.05 * sin(uTime * 0.8 + sd * 3.0) + 0.12 * mv);\r\n      else if (bn == 2) R = rX(-0.55 + 0.03 * sin(uTime * 1.2 + sd * 7.0));\r\n      else if (bn == 3) R = rY(0.3 * sin(mv * 6.28 + sd)) * rX(-1.15 - 0.3 * mv);\r\n    }\r\n  }\r\n  mat3 sR1 = mat3(1.0), sR2 = mat3(1.0); float sW = -1.0;\r\n  float jw = smoothstep(aJoint - 0.045, aJoint + 0.045, aPivot.y - position.y);                                                   // 0 above the elbow / knee, 1 below it\r\n  if (aMode < 2.5 && aJoint > 0.0 && bn >= 2 && bn <= 5) {                                                                           // walking: knees fold through the swing, elbows bend on the forward swing\r\n    float cp = cos(ph), sp = sin(ph);\r\n    if (bn == 4) sR2 = rX((0.12 + 0.95 * pow(max(0.0, -cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\r\n    else if (bn == 5) sR2 = rX((0.12 + 0.95 * pow(max(0.0, cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\r\n    else if (bn == 2) sR2 = rX(-(0.22 + 0.55 * max(0.0, sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.8 + sd * 3.0)));\r\n    else sR2 = rX(-(0.22 + 0.55 * max(0.0, -sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.7 + sd * 5.0)));\r\n    sR1 = R; sW = jw;\r\n  }\r\n  if (aMode > 4.5) {                                                                                                                  // 5: sitting at a steering wheel. aSeat = (steer, arm direction, elbow bend, thigh angle); aJoint = elbow / knee depth below the shoulder / hip\r\n    float st = aSeat.x, dir = aSeat.y, bend = aSeat.z, thigh = aSeat.w, sdx = (bn == 2 || bn == 4) ? 1.0 : -1.0;\r\n    R = mat3(1.0);\r\n    if (bn == 1) R = rY(aLook + 0.3 * st) * rX(0.04 + 0.02 * sin(uTime * 0.9 + sd * 4.0));\r\n    else if (bn == 2 || bn == 3) { sR1 = rY(0.3 * st) * rX(-(dir - bend)) * rZ(sdx * -0.16 * min(1.0, dir)); sR2 = rX(-2.0 * bend); R = sR1; sW = jw; }\r\n    else if (bn == 4 || bn == 5) { sR1 = rX(-thigh) * rZ(sdx * 0.07 * min(1.0, thigh)); sR2 = rX(thigh - 0.1 * min(1.0, thigh)); R = sR1; sW = jw; }\r\n  }\r\n  // the upper body turns against the stride (shoulders follow the arm swing), and breathes when it stands\r\n  mat3 Tw = (aMode < 2.5 && bn != 4 && bn != 5 && bn != 8 && bn != 9) ? rY(-0.085 * sin(ph) * wk * min(amp, 1.2)) : mat3(1.0);\r\n  float bob = abs(cos(ph)) * 0.045 * wk * amp + idle * 0.008 * sin(uTime * 1.6 + sd * 6.0);\r\n  vec3 objectNormal = R * vec3(normal);\r\n  if (sW >= 0.0) objectNormal = normalize(mix(sR1 * vec3(normal), (sR1 * sR2) * vec3(normal), sW));\r\n  objectNormal = Tw * objectNormal;\r\n#ifdef USE_TANGENT\r\n  vec3 objectTangent = vec3(tangent.xyz);\r\n#endif`)\r\n      .replace('#include <begin_vertex>', `vec3 transformed = aPivot + R * (vec3(position) - aPivot);\r\n  if (sW >= 0.0) {                                                                                                                    // a two-bone limb bent at its elbow / knee: the part below the joint turns about it\r\n    vec3 K = aPivot - vec3(0.0, aJoint, 0.0), p1 = aPivot + sR1 * (vec3(position) - aPivot), p2 = aPivot + sR1 * (K - aPivot) + (sR1 * sR2) * (vec3(position) - K);\r\n    transformed = mix(p1, p2, sW);\r\n  }\r\n  transformed = Tw * transformed;\r\n  if (bn == 0 || bn == 1) transformed.y += idle * 0.006 * sin(uTime * 1.9 + sd * 7.0) * smoothstep(0.6, 1.3, position.y);   // breathing\r\n  if (aMode > 0.5 && aMode < 1.5) transformed.y += 0.07 * sin(uTime * 2.1 + sd * 6.0);                                              // hovering / gliding\r\n  else if (aMode > 1.5 && aMode < 2.5) { float q = abs(sin(ph)) * wk * 0.12 + idle * 0.03 * (0.5 + 0.5 * sin(uTime * 2.0 + sd * 5.0)); transformed.y *= 1.0 - q; transformed.xz *= 1.0 + q * 0.6; }   // squash and stretch\r\n  transformed.y += bob; vTile = aTile;\r\n  float glowPart = step(1.01, max(color.r, max(color.g, color.b))); vColor.rgb /= 1.0 + glowPart * 1.2;   // restore marked hardware to its base colour; scene lights shade it like the rest of the person\r\n  vColor.rgb = mix(vColor.rgb, aCol * (0.35 + 1.4 * dot(vColor.rgb, vec3(0.3, 0.59, 0.11))), aTint);                            // clothes take this person's colour`);\r\n    sh.fragmentShader = 'varying vec2 vTile;\\n' + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sampledDiffuseColor = texture2D(map, vTile + fract(vMapUv) * 0.25); diffuseColor *= sampledDiffuseColor;`);\r\n  }",
+ "base": "MeshLambertMaterial",
+ "cacheKey": "",
+ "userData": {
+  "shader": {
+   "isWebGL2": true,
+   "shaderID": "lambert",
+   "shaderType": "MeshLambertMaterial",
+   "shaderName": "",
+   "vertexShader": "attribute vec4 aB4; attribute vec3 aPivot; attribute vec2 aTile; attribute vec4 aAnim; attribute float aLook; attribute vec3 aCol; attribute vec4 aSeat; uniform float uTime; varying vec2 vTile;\n#define aBone aB4.x\n#define aTint aB4.y\n#define aMode aB4.z\n#define aJoint aB4.w\nmat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c); }\nmat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c); }\nmat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0); }\n#define LAMBERT\nvarying vec3 vViewPosition;\n#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <normal_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <color_vertex>\n\t#include <morphcolor_vertex>\n\t#include <batching_vertex>\n\t\n  float ph = aAnim.x, wk = aAnim.y, sd = aAnim.z, amp = aAnim.w; int bn = int(aBone + 0.5);\n  float sw = sin(ph) * wk * amp, idle = 1.0 - wk;\n  mat3 R = mat3(1.0);\n  if (bn == 1) R = rY(aLook + idle * 0.25 * sin(uTime * 0.37 + sd * 13.0)) * rX(0.05 * sin(ph * 2.0) * wk + idle * 0.04 * sin(uTime * 0.9 + sd * 4.0));\n  else if (bn == 2) R = rX(-sw * 0.95 + idle * 0.05 * sin(uTime * 1.3 + sd * 9.0)) * rZ(-0.06);\n  else if (bn == 3) R = rX(sw * 0.95 + idle * 0.05 * sin(uTime * 1.1 + sd * 7.0)) * rZ(0.06);\n  else if (bn == 4 || bn == 9) R = rX(sw * 0.75);\n  else if (bn == 5 || bn == 8) R = rX(-sw * 0.75);\n  else if (bn == 7) R = rZ(0.14 * sin(uTime * 4.0 + sd * 5.0) + sw * 0.2) * rX(0.1 * sin(uTime * 3.1 + sd));\n  if (aMode > 2.5 && aMode < 4.5) {                                                                                                   // aliens: 3 talks with its hands, 4 plays chess\n    float tA = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0)), tB = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0 + 2.1));\n    if (aMode < 3.5) {\n      if (bn == 1) R = rY(aLook + 0.55 * sin(uTime * 0.35 + sd * 13.0)) * rX(0.07 * sin(uTime * 2.6 + sd * 5.0) * (tA + tB));\n      else if (bn == 2) R = rX(-0.3 - tA * (0.5 + 0.5 * sin(uTime * 4.1 + sd * 9.0)) * 0.9) * rZ(-0.08 - 0.2 * tA);\n      else if (bn == 3) R = rX(-0.3 - tB * (0.5 + 0.5 * sin(uTime * 3.7 + sd * 11.0)) * 0.9) * rZ(0.08 + 0.2 * tB);\n    } else {\n      float fr = fract(uTime * 0.07 + sd * 3.0), mv = smoothstep(0.82, 0.9, fr) * (1.0 - smoothstep(0.96, 1.0, fr));\n      if (bn == 1) R = rY(aLook + 0.12 * sin(uTime * 0.5 + sd * 4.0)) * rX(0.3 + 0.05 * sin(uTime * 0.8 + sd * 3.0) + 0.12 * mv);\n      else if (bn == 2) R = rX(-0.55 + 0.03 * sin(uTime * 1.2 + sd * 7.0));\n      else if (bn == 3) R = rY(0.3 * sin(mv * 6.28 + sd)) * rX(-1.15 - 0.3 * mv);\n    }\n  }\n  mat3 sR1 = mat3(1.0), sR2 = mat3(1.0); float sW = -1.0;\n  float jw = smoothstep(aJoint - 0.045, aJoint + 0.045, aPivot.y - position.y);                                                   // 0 above the elbow / knee, 1 below it\n  if (aMode < 2.5 && aJoint > 0.0 && bn >= 2 && bn <= 5) {                                                                           // walking: knees fold through the swing, elbows bend on the forward swing\n    float cp = cos(ph), sp = sin(ph);\n    if (bn == 4) sR2 = rX((0.12 + 0.95 * pow(max(0.0, -cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\n    else if (bn == 5) sR2 = rX((0.12 + 0.95 * pow(max(0.0, cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\n    else if (bn == 2) sR2 = rX(-(0.22 + 0.55 * max(0.0, sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.8 + sd * 3.0)));\n    else sR2 = rX(-(0.22 + 0.55 * max(0.0, -sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.7 + sd * 5.0)));\n    sR1 = R; sW = jw;\n  }\n  if (aMode > 4.5) {                                                                                                                  // 5: sitting at a steering wheel. aSeat = (steer, arm direction, elbow bend, thigh angle); aJoint = elbow / knee depth below the shoulder / hip\n    float st = aSeat.x, dir = aSeat.y, bend = aSeat.z, thigh = aSeat.w, sdx = (bn == 2 || bn == 4) ? 1.0 : -1.0;\n    R = mat3(1.0);\n    if (bn == 1) R = rY(aLook + 0.3 * st) * rX(0.04 + 0.02 * sin(uTime * 0.9 + sd * 4.0));\n    else if (bn == 2 || bn == 3) { sR1 = rY(0.3 * st) * rX(-(dir - bend)) * rZ(sdx * -0.16 * min(1.0, dir)); sR2 = rX(-2.0 * bend); R = sR1; sW = jw; }\n    else if (bn == 4 || bn == 5) { sR1 = rX(-thigh) * rZ(sdx * 0.07 * min(1.0, thigh)); sR2 = rX(thigh - 0.1 * min(1.0, thigh)); R = sR1; sW = jw; }\n  }\n  // the upper body turns against the stride (shoulders follow the arm swing), and breathes when it stands\n  mat3 Tw = (aMode < 2.5 && bn != 4 && bn != 5 && bn != 8 && bn != 9) ? rY(-0.085 * sin(ph) * wk * min(amp, 1.2)) : mat3(1.0);\n  float bob = abs(cos(ph)) * 0.045 * wk * amp + idle * 0.008 * sin(uTime * 1.6 + sd * 6.0);\n  vec3 objectNormal = R * vec3(normal);\n  if (sW >= 0.0) objectNormal = normalize(mix(sR1 * vec3(normal), (sR1 * sR2) * vec3(normal), sW));\n  objectNormal = Tw * objectNormal;\n#ifdef USE_TANGENT\n  vec3 objectTangent = vec3(tangent.xyz);\n#endif\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <normal_vertex>\n\tvec3 transformed = aPivot + R * (vec3(position) - aPivot);\n  if (sW >= 0.0) {                                                                                                                    // a two-bone limb bent at its elbow / knee: the part below the joint turns about it\n    vec3 K = aPivot - vec3(0.0, aJoint, 0.0), p1 = aPivot + sR1 * (vec3(position) - aPivot), p2 = aPivot + sR1 * (K - aPivot) + (sR1 * sR2) * (vec3(position) - K);\n    transformed = mix(p1, p2, sW);\n  }\n  transformed = Tw * transformed;\n  if (bn == 0 || bn == 1) transformed.y += idle * 0.006 * sin(uTime * 1.9 + sd * 7.0) * smoothstep(0.6, 1.3, position.y);   // breathing\n  if (aMode > 0.5 && aMode < 1.5) transformed.y += 0.07 * sin(uTime * 2.1 + sd * 6.0);                                              // hovering / gliding\n  else if (aMode > 1.5 && aMode < 2.5) { float q = abs(sin(ph)) * wk * 0.12 + idle * 0.03 * (0.5 + 0.5 * sin(uTime * 2.0 + sd * 5.0)); transformed.y *= 1.0 - q; transformed.xz *= 1.0 + q * 0.6; }   // squash and stretch\n  transformed.y += bob; vTile = aTile;\n  float glowPart = step(1.01, max(color.r, max(color.g, color.b))); vColor.rgb /= 1.0 + glowPart * 1.2;   // restore marked hardware to its base colour; scene lights shade it like the rest of the person\n  vColor.rgb = mix(vColor.rgb, aCol * (0.35 + 1.4 * dot(vColor.rgb, vec3(0.3, 0.59, 0.11))), aTint);                            // clothes take this person's colour\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}",
+   "fragmentShader": "varying vec2 vTile;\n#define LAMBERT\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_common_pars_fragment>\n#include <envmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <normal_pars_fragment>\n#include <lights_lambert_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\tvec4 sampledDiffuseColor = texture2D(map, vTile + fract(vMapUv) * 0.25); diffuseColor *= sampledDiffuseColor;\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <alphahash_fragment>\n\t#include <specularmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_lambert_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\t#include <opaque_fragment>\n\t#include <tonemapping_fragment>\n\t#include <colorspace_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n}",
+   "isRawShaderMaterial": false,
+   "precision": "highp",
+   "batching": false,
+   "instancing": true,
+   "instancingColor": false,
+   "supportsVertexTextures": true,
+   "outputColorSpace": "srgb",
+   "map": true,
+   "matcap": false,
+   "envMap": false,
+   "envMapMode": false,
+   "envMapCubeUVHeight": null,
+   "aoMap": false,
+   "lightMap": false,
+   "bumpMap": false,
+   "normalMap": false,
+   "displacementMap": false,
+   "emissiveMap": false,
+   "normalMapObjectSpace": false,
+   "normalMapTangentSpace": false,
+   "metalnessMap": false,
+   "roughnessMap": false,
+   "anisotropy": false,
+   "anisotropyMap": false,
+   "clearcoat": false,
+   "clearcoatMap": false,
+   "clearcoatNormalMap": false,
+   "clearcoatRoughnessMap": false,
+   "iridescence": false,
+   "iridescenceMap": false,
+   "iridescenceThicknessMap": false,
+   "sheen": false,
+   "sheenColorMap": false,
+   "sheenRoughnessMap": false,
+   "specularMap": false,
+   "specularColorMap": false,
+   "specularIntensityMap": false,
+   "transmission": false,
+   "transmissionMap": false,
+   "thicknessMap": false,
+   "gradientMap": false,
+   "opaque": true,
+   "alphaMap": false,
+   "alphaTest": false,
+   "alphaHash": false,
+   "combine": 0,
+   "mapUv": "uv",
+   "aoMapUv": false,
+   "lightMapUv": false,
+   "bumpMapUv": false,
+   "normalMapUv": false,
+   "displacementMapUv": false,
+   "emissiveMapUv": false,
+   "metalnessMapUv": false,
+   "roughnessMapUv": false,
+   "anisotropyMapUv": false,
+   "clearcoatMapUv": false,
+   "clearcoatNormalMapUv": false,
+   "clearcoatRoughnessMapUv": false,
+   "iridescenceMapUv": false,
+   "iridescenceThicknessMapUv": false,
+   "sheenColorMapUv": false,
+   "sheenRoughnessMapUv": false,
+   "specularMapUv": false,
+   "specularColorMapUv": false,
+   "specularIntensityMapUv": false,
+   "transmissionMapUv": false,
+   "thicknessMapUv": false,
+   "alphaMapUv": false,
+   "vertexTangents": false,
+   "vertexColors": true,
+   "vertexAlphas": false,
+   "vertexUv1s": false,
+   "vertexUv2s": false,
+   "vertexUv3s": false,
+   "pointsUvs": false,
+   "fog": true,
+   "useFog": true,
+   "fogExp2": true,
+   "flatShading": false,
+   "sizeAttenuation": false,
+   "logarithmicDepthBuffer": false,
+   "skinning": false,
+   "morphTargets": false,
+   "morphNormals": false,
+   "morphColors": false,
+   "morphTargetsCount": 0,
+   "morphTextureStride": 0,
+   "numDirLights": 1,
+   "numPointLights": 32,
+   "numSpotLights": 0,
+   "numSpotLightMaps": 0,
+   "numRectAreaLights": 0,
+   "numHemiLights": 1,
+   "numDirLightShadows": 1,
+   "numPointLightShadows": 0,
+   "numSpotLightShadows": 0,
+   "numSpotLightShadowsWithMaps": 0,
+   "numLightProbes": 0,
+   "numClippingPlanes": 0,
+   "numClipIntersection": 0,
+   "dithering": false,
+   "shadowMapEnabled": true,
+   "shadowMapType": 1,
+   "toneMapping": 4,
+   "useLegacyLights": false,
+   "decodeVideoTexture": false,
+   "premultipliedAlpha": false,
+   "doubleSided": false,
+   "flipSided": false,
+   "useDepthPacking": false,
+   "depthPacking": 0,
+   "extensionDerivatives": false,
+   "extensionFragDepth": false,
+   "extensionDrawBuffers": false,
+   "extensionShaderTextureLOD": false,
+   "extensionClipCullDistance": false,
+   "rendererExtensionFragDepth": true,
+   "rendererExtensionDrawBuffers": true,
+   "rendererExtensionShaderTextureLod": true,
+   "rendererExtensionParallelShaderCompile": true,
+   "customProgramCacheKey": "(sh) => {\r\n    sh.uniforms.uTime = { value: 0 }; mat.userData.shader = sh;\r\n    sh.vertexShader = `attribute vec4 aB4; attribute vec3 aPivot; attribute vec2 aTile; attribute vec4 aAnim; attribute float aLook; attribute vec3 aCol; attribute vec4 aSeat; uniform float uTime; varying vec2 vTile;\r\n#define aBone aB4.x\r\n#define aTint aB4.y\r\n#define aMode aB4.z\r\n#define aJoint aB4.w\r\nmat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c); }\r\nmat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c); }\r\nmat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0); }\r\n` + sh.vertexShader\r\n      .replace('#include <beginnormal_vertex>', `\r\n  float ph = aAnim.x, wk = aAnim.y, sd = aAnim.z, amp = aAnim.w; int bn = int(aBone + 0.5);\r\n  float sw = sin(ph) * wk * amp, idle = 1.0 - wk;\r\n  mat3 R = mat3(1.0);\r\n  if (bn == 1) R = rY(aLook + idle * 0.25 * sin(uTime * 0.37 + sd * 13.0)) * rX(0.05 * sin(ph * 2.0) * wk + idle * 0.04 * sin(uTime * 0.9 + sd * 4.0));\r\n  else if (bn == 2) R = rX(-sw * 0.95 + idle * 0.05 * sin(uTime * 1.3 + sd * 9.0)) * rZ(-0.06);\r\n  else if (bn == 3) R = rX(sw * 0.95 + idle * 0.05 * sin(uTime * 1.1 + sd * 7.0)) * rZ(0.06);\r\n  else if (bn == 4 || bn == 9) R = rX(sw * 0.75);\r\n  else if (bn == 5 || bn == 8) R = rX(-sw * 0.75);\r\n  else if (bn == 7) R = rZ(0.14 * sin(uTime * 4.0 + sd * 5.0) + sw * 0.2) * rX(0.1 * sin(uTime * 3.1 + sd));\r\n  if (aMode > 2.5 && aMode < 4.5) {                                                                                                   // aliens: 3 talks with its hands, 4 plays chess\r\n    float tA = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0)), tB = smoothstep(0.0, 0.5, sin(uTime * 0.45 + sd * 17.0 + 2.1));\r\n    if (aMode < 3.5) {\r\n      if (bn == 1) R = rY(aLook + 0.55 * sin(uTime * 0.35 + sd * 13.0)) * rX(0.07 * sin(uTime * 2.6 + sd * 5.0) * (tA + tB));\r\n      else if (bn == 2) R = rX(-0.3 - tA * (0.5 + 0.5 * sin(uTime * 4.1 + sd * 9.0)) * 0.9) * rZ(-0.08 - 0.2 * tA);\r\n      else if (bn == 3) R = rX(-0.3 - tB * (0.5 + 0.5 * sin(uTime * 3.7 + sd * 11.0)) * 0.9) * rZ(0.08 + 0.2 * tB);\r\n    } else {\r\n      float fr = fract(uTime * 0.07 + sd * 3.0), mv = smoothstep(0.82, 0.9, fr) * (1.0 - smoothstep(0.96, 1.0, fr));\r\n      if (bn == 1) R = rY(aLook + 0.12 * sin(uTime * 0.5 + sd * 4.0)) * rX(0.3 + 0.05 * sin(uTime * 0.8 + sd * 3.0) + 0.12 * mv);\r\n      else if (bn == 2) R = rX(-0.55 + 0.03 * sin(uTime * 1.2 + sd * 7.0));\r\n      else if (bn == 3) R = rY(0.3 * sin(mv * 6.28 + sd)) * rX(-1.15 - 0.3 * mv);\r\n    }\r\n  }\r\n  mat3 sR1 = mat3(1.0), sR2 = mat3(1.0); float sW = -1.0;\r\n  float jw = smoothstep(aJoint - 0.045, aJoint + 0.045, aPivot.y - position.y);                                                   // 0 above the elbow / knee, 1 below it\r\n  if (aMode < 2.5 && aJoint > 0.0 && bn >= 2 && bn <= 5) {                                                                           // walking: knees fold through the swing, elbows bend on the forward swing\r\n    float cp = cos(ph), sp = sin(ph);\r\n    if (bn == 4) sR2 = rX((0.12 + 0.95 * pow(max(0.0, -cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\r\n    else if (bn == 5) sR2 = rX((0.12 + 0.95 * pow(max(0.0, cp), 1.3)) * wk * min(amp, 1.2) + idle * 0.05);\r\n    else if (bn == 2) sR2 = rX(-(0.22 + 0.55 * max(0.0, sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.8 + sd * 3.0)));\r\n    else sR2 = rX(-(0.22 + 0.55 * max(0.0, -sp)) * wk - idle * (0.14 + 0.03 * sin(uTime * 0.7 + sd * 5.0)));\r\n    sR1 = R; sW = jw;\r\n  }\r\n  if (aMode > 4.5) {                                                                                                                  // 5: sitting at a steering wheel. aSeat = (steer, arm direction, elbow bend, thigh angle); aJoint = elbow / knee depth below the shoulder / hip\r\n    float st = aSeat.x, dir = aSeat.y, bend = aSeat.z, thigh = aSeat.w, sdx = (bn == 2 || bn == 4) ? 1.0 : -1.0;\r\n    R = mat3(1.0);\r\n    if (bn == 1) R = rY(aLook + 0.3 * st) * rX(0.04 + 0.02 * sin(uTime * 0.9 + sd * 4.0));\r\n    else if (bn == 2 || bn == 3) { sR1 = rY(0.3 * st) * rX(-(dir - bend)) * rZ(sdx * -0.16 * min(1.0, dir)); sR2 = rX(-2.0 * bend); R = sR1; sW = jw; }\r\n    else if (bn == 4 || bn == 5) { sR1 = rX(-thigh) * rZ(sdx * 0.07 * min(1.0, thigh)); sR2 = rX(thigh - 0.1 * min(1.0, thigh)); R = sR1; sW = jw; }\r\n  }\r\n  // the upper body turns against the stride (shoulders follow the arm swing), and breathes when it stands\r\n  mat3 Tw = (aMode < 2.5 && bn != 4 && bn != 5 && bn != 8 && bn != 9) ? rY(-0.085 * sin(ph) * wk * min(amp, 1.2)) : mat3(1.0);\r\n  float bob = abs(cos(ph)) * 0.045 * wk * amp + idle * 0.008 * sin(uTime * 1.6 + sd * 6.0);\r\n  vec3 objectNormal = R * vec3(normal);\r\n  if (sW >= 0.0) objectNormal = normalize(mix(sR1 * vec3(normal), (sR1 * sR2) * vec3(normal), sW));\r\n  objectNormal = Tw * objectNormal;\r\n#ifdef USE_TANGENT\r\n  vec3 objectTangent = vec3(tangent.xyz);\r\n#endif`)\r\n      .replace('#include <begin_vertex>', `vec3 transformed = aPivot + R * (vec3(position) - aPivot);\r\n  if (sW >= 0.0) {                                                                                                                    // a two-bone limb bent at its elbow / knee: the part below the joint turns about it\r\n    vec3 K = aPivot - vec3(0.0, aJoint, 0.0), p1 = aPivot + sR1 * (vec3(position) - aPivot), p2 = aPivot + sR1 * (K - aPivot) + (sR1 * sR2) * (vec3(position) - K);\r\n    transformed = mix(p1, p2, sW);\r\n  }\r\n  transformed = Tw * transformed;\r\n  if (bn == 0 || bn == 1) transformed.y += idle * 0.006 * sin(uTime * 1.9 + sd * 7.0) * smoothstep(0.6, 1.3, position.y);   // breathing\r\n  if (aMode > 0.5 && aMode < 1.5) transformed.y += 0.07 * sin(uTime * 2.1 + sd * 6.0);                                              // hovering / gliding\r\n  else if (aMode > 1.5 && aMode < 2.5) { float q = abs(sin(ph)) * wk * 0.12 + idle * 0.03 * (0.5 + 0.5 * sin(uTime * 2.0 + sd * 5.0)); transformed.y *= 1.0 - q; transformed.xz *= 1.0 + q * 0.6; }   // squash and stretch\r\n  transformed.y += bob; vTile = aTile;\r\n  float glowPart = step(1.01, max(color.r, max(color.g, color.b))); vColor.rgb /= 1.0 + glowPart * 1.2;   // restore marked hardware to its base colour; scene lights shade it like the rest of the person\r\n  vColor.rgb = mix(vColor.rgb, aCol * (0.35 + 1.4 * dot(vColor.rgb, vec3(0.3, 0.59, 0.11))), aTint);                            // clothes take this person's colour`);\r\n    sh.fragmentShader = 'varying vec2 vTile;\\n' + sh.fragmentShader.replace('#include <map_fragment>', `vec4 sampledDiffuseColor = texture2D(map, vTile + fract(vMapUv) * 0.25); diffuseColor *= sampledDiffuseColor;`);\r\n  }",
+   "uniforms": {
+    "diffuse": {
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "opacity": {
+     "value": 1
+    },
+    "map": {},
+    "mapTransform": {},
+    "alphaMap": {
+     "value": null
+    },
+    "alphaMapTransform": {},
+    "alphaTest": {
+     "value": 0
+    },
+    "specularMap": {
+     "value": null
+    },
+    "specularMapTransform": {},
+    "envMap": {
+     "value": null
+    },
+    "flipEnvMap": {
+     "value": -1
+    },
+    "reflectivity": {
+     "value": 1
+    },
+    "ior": {
+     "value": 1.5
+    },
+    "refractionRatio": {
+     "value": 0.98
+    },
+    "aoMap": {
+     "value": null
+    },
+    "aoMapIntensity": {
+     "value": 1
+    },
+    "aoMapTransform": {},
+    "lightMap": {
+     "value": null
+    },
+    "lightMapIntensity": {
+     "value": 1
+    },
+    "lightMapTransform": {},
+    "emissiveMap": {
+     "value": null
+    },
+    "emissiveMapTransform": {},
+    "bumpMap": {
+     "value": null
+    },
+    "bumpMapTransform": {},
+    "bumpScale": {
+     "value": 1
+    },
+    "normalMap": {
+     "value": null
+    },
+    "normalMapTransform": {},
+    "normalScale": {
+     "value": [
+      1,
+      1
+     ]
+    },
+    "displacementMap": {
+     "value": null
+    },
+    "displacementMapTransform": {},
+    "displacementScale": {
+     "value": 1
+    },
+    "displacementBias": {
+     "value": 0
+    },
+    "fogDensity": {
+     "value": 0.0034
+    },
+    "fogNear": {
+     "value": 1
+    },
+    "fogFar": {
+     "value": 2000
+    },
+    "fogColor": {
+     "value": [
+      0.02609,
+      0.00699,
+      0.02238
+     ]
+    },
+    "ambientLightColor": {
+     "value": [
+      0,
+      0,
+      0
+     ],
+     "needsUpdate": true
+    },
+    "lightProbe": {
+     "value": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "needsUpdate": true
+    },
+    "directionalLights": {
+     "value": [
+      {
+       "direction": [
+        -0.48666,
+        0.86866,
+        -0.09268
+       ],
+       "color": [
+        0.08936,
+        0.15264,
+        0.29718
+       ]
+      }
+     ],
+     "properties": {
+      "direction": {},
+      "color": {}
+     },
+     "needsUpdate": true
+    },
+    "directionalLightShadows": {
+     "value": [
+      {
+       "shadowBias": -0.0006,
+       "shadowNormalBias": 0.04,
+       "shadowRadius": 1,
+       "shadowMapSize": [
+        2176,
+        2176
+       ]
+      }
+     ],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {}
+     },
+     "needsUpdate": true
+    },
+    "directionalShadowMap": {
+     "value": [
+      null
+     ]
+    },
+    "directionalShadowMatrix": {
+     "value": [
+      null
+     ]
+    },
+    "spotLights": {
+     "value": [],
+     "properties": {
+      "color": {},
+      "position": {},
+      "direction": {},
+      "distance": {},
+      "coneCos": {},
+      "penumbraCos": {},
+      "decay": {}
+     },
+     "needsUpdate": true
+    },
+    "spotLightShadows": {
+     "value": [],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {}
+     },
+     "needsUpdate": true
+    },
+    "spotLightMap": {
+     "value": []
+    },
+    "spotShadowMap": {
+     "value": []
+    },
+    "spotLightMatrix": {
+     "value": []
+    },
+    "pointLights": {
+     "value": [
+      {
+       "position": [
+        0,
+        1.15517,
+        0.32495
+       ],
+       "color": [
+        7.14161,
+        11.28799,
+        18.22865
+       ],
+       "distance": 20,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        -0.32554,
+        8.89426
+       ],
+       "color": [
+        74.166,
+        33.01879,
+        10.68943
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        28.91963,
+        -95.07073
+       ],
+       "color": [
+        26.54319,
+        46.11447,
+        79.84078
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        5.30686,
+        -11.12862
+       ],
+       "color": [
+        26.54319,
+        46.11447,
+        79.84078
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        8.3397,
+        -21.91018
+       ],
+       "color": [
+        74.166,
+        33.01879,
+        10.68943
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        12.67231,
+        -37.3124
+       ],
+       "color": [
+        25.85146,
+        80,
+        54.93482
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        20.79597,
+        -66.19157
+       ],
+       "color": [
+        26.54319,
+        46.11447,
+        79.84078
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        20.25439,
+        -64.26629
+       ],
+       "color": [
+        74.166,
+        33.01879,
+        10.68943
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        26.75332,
+        -87.36962
+       ],
+       "color": [
+        74.166,
+        33.01879,
+        10.68943
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.2,
+        9.54337,
+        -29.88208
+       ],
+       "color": [
+        0.76848,
+        17.85382,
+        26
+       ],
+       "distance": 18,
+       "decay": 2
+      },
+      {
+       "position": [
+        -6.2,
+        5.01822,
+        -14.53402
+       ],
+       "color": [
+        24,
+        0.55568,
+        6.09965
+       ],
+       "distance": 18,
+       "decay": 2
+      },
+      {
+       "position": [
+        -14,
+        15.63923,
+        -54.1376
+       ],
+       "color": [
+        100,
+        80.69523,
+        63.75969
+       ],
+       "distance": 20,
+       "decay": 2
+      },
+      {
+       "position": [
+        -19.5,
+        15.35044,
+        -54.21884
+       ],
+       "color": [
+        9.47642,
+        25.07321,
+        27.35976
+       ],
+       "distance": 14,
+       "decay": 2
+      },
+      {
+       "position": [
+        -6.3,
+        15.7355,
+        -54.11052
+       ],
+       "color": [
+        25.24455,
+        1.06813,
+        0.6897
+       ],
+       "distance": 13,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.5,
+        11.37595,
+        -41.93619
+       ],
+       "color": [
+        22.8833,
+        8.96047,
+        0.96822
+       ],
+       "distance": 10,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.7,
+        2.84596,
+        -8.28891
+       ],
+       "color": [
+        9.30987,
+        0.79951,
+        9.68343
+       ],
+       "distance": 7,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.95,
+        1.11321,
+        -8.77633
+       ],
+       "color": [
+        6.52081,
+        0.1138,
+        0.38755
+       ],
+       "distance": 9,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.95,
+        0.13837,
+        -5.31083
+       ],
+       "color": [
+        4.73979,
+        0.41848,
+        13.47194
+       ],
+       "distance": 9,
+       "decay": 2
+      },
+      {
+       "position": [
+        5.5,
+        -1.721,
+        0.19123
+       ],
+       "color": [
+        18.47264,
+        3.5951,
+        0.4277
+       ],
+       "distance": 13,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.66,
+        5.55928,
+        -24.98808
+       ],
+       "color": [
+        1.3,
+        0.70132,
+        0.253
+       ],
+       "distance": 3.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.79,
+        6.21632,
+        -25.88362
+       ],
+       "color": [
+        0.06163,
+        0.35242,
+        0.9
+       ],
+       "distance": 2.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -77.22963,
+        69.79087,
+        -455.46772
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 17,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.66,
+        5.55928,
+        -24.98808
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 3.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.79,
+        6.21632,
+        -25.88362
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 2.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      }
+     ],
+     "properties": {
+      "color": {},
+      "position": {},
+      "decay": {},
+      "distance": {}
+     },
+     "needsUpdate": true
+    },
+    "pointLightShadows": {
+     "value": [],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {},
+      "shadowCameraNear": {},
+      "shadowCameraFar": {}
+     },
+     "needsUpdate": true
+    },
+    "pointShadowMap": {
+     "value": []
+    },
+    "pointShadowMatrix": {
+     "value": []
+    },
+    "hemisphereLights": {
+     "value": [
+      {
+       "direction": [
+        0,
+        0.96264,
+        0.27079
+       ],
+       "skyColor": [
+        0.05077,
+        0.10639,
+        0.22538
+       ],
+       "groundColor": [
+        0.00364,
+        0.00483,
+        0.00726
+       ]
+      }
+     ],
+     "properties": {
+      "direction": {},
+      "skyColor": {},
+      "groundColor": {}
+     },
+     "needsUpdate": true
+    },
+    "rectAreaLights": {
+     "value": [],
+     "properties": {
+      "color": {},
+      "position": {},
+      "width": {},
+      "height": {}
+     },
+     "needsUpdate": true
+    },
+    "ltc_1": {
+     "value": null
+    },
+    "ltc_2": {
+     "value": null
+    },
+    "emissive": {
+     "value": [
+      0,
+      0,
+      0
+     ]
+    },
+    "uTime": {
+     "value": 6.219
+    },
+    "clippingPlanes": {
+     "value": null,
+     "needsUpdate": false
+    }
+   }
+  }
+ },
+ "uses": 41,
+ "nodes": [
+  "Folk-wanderer",
+  "Folk-blob",
+  "Folk-crane",
+  "Folk-tvbot",
+  "Folk-frog",
+  "Folk-mantis",
+  "Folk-cratebot",
+  "Folk-rhino",
+  "Folk-skelly",
+  "Folk-moleboss",
+  "Folk-snail",
+  "Folk-gremlin",
+  "Folk-conehat",
+  "Folk-fishbowl",
+  "Folk-binocular",
+  "Folk-agent"
+ ],
+ "variant_keys": [
+  "attribute vec4 aB4; attribute vec3 aPivot; attribute vec2 aTile; attribute vec4 aAnim; attribute float aLook; attribute vec3 aCol; attribute vec4 aSeat; uniform float uTime; varying vec2 vTile;\n#define aBone aB4.x\n#define aTint aB4.y\n#define aMode aB4.z\n#define aJoint aB4.w\nmat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c); }\nmat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c); }\nmat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0); }\n#include <common>\nvec3 transformed = aPivot + R * (vec3(position) - aPivot);\n  if (sW >= 0.0) {                                                                                                                    // a two-bone limb bent at its elbow / knee: the part below the joint turns about it\n    vec3 K = aPivot - vec3(0.0, aJoint, 0.0), p1 = aPivot + sR1 * (vec3(position) - aPivot), p2 = aPivot + sR1 * (K - aPivot) + (sR1 * sR2) * (vec3(position) - K);\n    transformed = mix(p1, p2, sW);\n  }\n  transformed = Tw * transformed;\n  if (bn == 0 || bn == 1) transformed.y += idle * 0.006 * sin(uTime * 1.9 + sd * 7.0) * smoothstep(0.6, 1.3, position.y);   // breathing\n  if (aMode > 0.5 && aMode < 1.5) transformed.y += 0.07 * sin(uTime * 2.1 + sd * 6.0);                                              // hovering / gliding\n  else if (aMode > 1.5 && aMode < 2.5) { float q = abs(sin(ph)) * wk * 0.12 + idle * 0.03 * (0.5 + 0.5 * sin(uTime * 2.0 + sd * 5.0)); transformed.y *= 1.0 - q; transformed.xz *= 1.0 + q * 0.6; }   // squash and stretch\n  transformed.y += bob; vTile = aTile;\n  float glowPart = step(1.01, max(color.r, max(color.g, color.b))); vColor.rgb /= 1.0 + glowPart * 1.2;   // restore marked hardware to its base colour; scene lights shade it like the rest of the person\n  vColor.rgb = mix(vColor.rgb, aCol * (0.35 + 1.4 * dot(vColor.rgb, vec3(0.3, 0.59, 0.11))), aTint);                            // clothes take this person's colour\n#include <project_vertex>\nvoid main() {//FRAGvarying vec2 vTile;\n#include <common>\nvec4 sampledDiffuseColor = texture2D(map, vTile + fract(vMapUv) * 0.25); diffuseColor *= sampledDiffuseColor;\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uTime\":{\"type\":\"f\",\"value\":0}}"
+ ],
+ "variants": [
+  {
+   "vertex": "attribute vec4 aB4; attribute vec3 aPivot; attribute vec2 aTile; attribute vec4 aAnim; attribute float aLook; attribute vec3 aCol; attribute vec4 aSeat; uniform float uTime; varying vec2 vTile;\n#define aBone aB4.x\n#define aTint aB4.y\n#define aMode aB4.z\n#define aJoint aB4.w\nmat3 rX(float a){ float c = cos(a), s = sin(a); return mat3(1.0,0.0,0.0, 0.0,c,s, 0.0,-s,c); }\nmat3 rY(float a){ float c = cos(a), s = sin(a); return mat3(c,0.0,-s, 0.0,1.0,0.0, s,0.0,c); }\nmat3 rZ(float a){ float c = cos(a), s = sin(a); return mat3(c,s,0.0, -s,c,0.0, 0.0,0.0,1.0); }\n#include <common>\nvec3 transformed = aPivot + R * (vec3(position) - aPivot);\n  if (sW >= 0.0) {                                                                                                                    // a two-bone limb bent at its elbow / knee: the part below the joint turns about it\n    vec3 K = aPivot - vec3(0.0, aJoint, 0.0), p1 = aPivot + sR1 * (vec3(position) - aPivot), p2 = aPivot + sR1 * (K - aPivot) + (sR1 * sR2) * (vec3(position) - K);\n    transformed = mix(p1, p2, sW);\n  }\n  transformed = Tw * transformed;\n  if (bn == 0 || bn == 1) transformed.y += idle * 0.006 * sin(uTime * 1.9 + sd * 7.0) * smoothstep(0.6, 1.3, position.y);   // breathing\n  if (aMode > 0.5 && aMode < 1.5) transformed.y += 0.07 * sin(uTime * 2.1 + sd * 6.0);                                              // hovering / gliding\n  else if (aMode > 1.5 && aMode < 2.5) { float q = abs(sin(ph)) * wk * 0.12 + idle * 0.03 * (0.5 + 0.5 * sin(uTime * 2.0 + sd * 5.0)); transformed.y *= 1.0 - q; transformed.xz *= 1.0 + q * 0.6; }   // squash and stretch\n  transformed.y += bob; vTile = aTile;\n  float glowPart = step(1.01, max(color.r, max(color.g, color.b))); vColor.rgb /= 1.0 + glowPart * 1.2;   // restore marked hardware to its base colour; scene lights shade it like the rest of the person\n  vColor.rgb = mix(vColor.rgb, aCol * (0.35 + 1.4 * dot(vColor.rgb, vec3(0.3, 0.59, 0.11))), aTint);                            // clothes take this person's colour\n#include <project_vertex>\nvoid main() {",
+   "fragment": "varying vec2 vTile;\n#include <common>\nvec4 sampledDiffuseColor = texture2D(map, vTile + fract(vMapUv) * 0.25); diffuseColor *= sampledDiffuseColor;\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uTime": {
+     "type": "f",
+     "value": 0
+    }
+   }
+  }
+ ]
+}

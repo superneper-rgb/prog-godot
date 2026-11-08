@@ -1,0 +1,54 @@
+{
+ "name": "shader_f5b5f4",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute vec4 aSeed; uniform float uTime; uniform vec3 uCam; varying float vEmber; varying float vA;\n  void main() {\n    vec3 box = vec3(90., 46., 90.);\n    float ember = step(.93, aSeed.w);\n    vec3 drift = ember > .5 ? vec3(.011, .034, .006) : vec3(.016, -.011, .009);                // ash falls and drifts, embers rise\n    vec3 q = fract(aSeed.xyz + drift * uTime * (.6 + aSeed.w * .8) + vec3(sin(uTime * .7 + aSeed.w * 40.) * .004, 0., cos(uTime * .5 + aSeed.x * 30.) * .004));\n    vec3 w = uCam + (fract(q - uCam / box + .5) - .5) * box;                                // wrapped around the camera\n    vec4 mv = viewMatrix * vec4(w, 1.); gl_Position = projectionMatrix * mv;\n    float d = -mv.z;\n    gl_PointSize = clamp((ember > .5 ? .09 : .05 + aSeed.w * .05) * projectionMatrix[1][1] * 400. / max(d, .1), 1., 5.);\n    vEmber = ember; vA = smoothstep(46., 20., d) * smoothstep(2.5, 5., d) * (ember > .5 ? .5 + .5 * sin(uTime * 6. + aSeed.y * 60.) : 1.);\n  }",
+ "fragmentShader": "\n  varying float vEmber; varying float vA;\n  void main() { float r = length(gl_PointCoord - .5); if (r > .5) discard;\n    vec3 c = vEmber > .5 ? vec3(2.2, .8, .2) : vec3(.16, .15, .15);\n    gl_FragColor = vec4(c, (1. - smoothstep(.2, .5, r)) * vA * (vEmber > .5 ? 1. : .55));\n    #include <colorspace_fragment>\n  }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 87.7041
+  },
+  "uCam": {
+   "type": "v",
+   "value": [
+    771.29599,
+    1318.64418,
+    708.11936
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 87.7041
+   },
+   "uCam": {
+    "type": "v",
+    "value": [
+     771.29599,
+     1318.64418,
+     708.11936
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uCam\":{\"type\":\"v\",\"value\":[771.29599,1318.64418,708.11936]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSeed"
+ ],
+ "uses": 1,
+ "nodes": [
+  "ash"
+ ]
+}

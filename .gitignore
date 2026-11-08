@@ -1,0 +1,9 @@
+# Godot's import cache: every machine rebuilds it on first open
+.godot/
+*.translation
+# Export output
+/build/
+# Godot editor/user leftovers
+*.tmp
+export_credentials.cfg
+godot.path

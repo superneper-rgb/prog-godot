@@ -1,0 +1,55 @@
+{
+ "name": "shader_7cdfd9",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying float vL; varying vec3 vN; varying vec3 vV; void main(){ vL = uv.y; vec4 w = modelViewMatrix * vec4(position, 1.); vV = normalize(-w.xyz); vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * w; }",
+ "fragmentShader": "uniform float uA; uniform vec3 uCol; varying float vL; varying vec3 vN; varying vec3 vV; void main(){ float rim = pow(abs(dot(vN, vV)), 1.6); float a = uA * rim * pow(vL, 1.4); gl_FragColor = vec4(uCol * a, 1.); }",
+ "uniforms": {
+  "uA": {
+   "type": "f",
+   "value": 0.32
+  },
+  "uCol": {
+   "type": "c",
+   "value": [
+    0.73791,
+    0.80695,
+    1
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uA": {
+    "type": "f",
+    "value": 0.32
+   },
+   "uCol": {
+    "type": "c",
+    "value": [
+     0.73791,
+     0.80695,
+     1
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uA\":{\"type\":\"f\",\"value\":0.32},\"uCol\":{\"type\":\"c\",\"value\":[0.73791,0.80695,1]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "double",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 4,
+ "nodes": [
+  "vh-beam-0",
+  "vh-beam-1",
+  "vh-beam-2",
+  "vh-beam-3"
+ ]
+}

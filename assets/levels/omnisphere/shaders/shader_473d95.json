@@ -1,0 +1,94 @@
+{
+ "name": "shader_473d95",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute vec3 iPos; attribute vec3 iCol; attribute float iSize; attribute float iOp; varying vec2 vUv; varying vec3 vCol; varying float vOp;\n        #include <fog_pars_vertex>\n        void main() { vUv = uv; vCol = iCol; vOp = iOp; vec4 mvPosition = modelViewMatrix * vec4(iPos, 1.); mvPosition.xy += position.xy * iSize; gl_Position = projectionMatrix * mvPosition;\n          #include <fog_vertex>\n        }",
+ "fragmentShader": "uniform sampler2D map; uniform float uOp; varying vec2 vUv; varying vec3 vCol; varying float vOp;\n        #include <fog_pars_fragment>\n        void main() { vec4 t = texture2D(map, vUv); gl_FragColor = vec4(vCol * t.rgb, t.a * vOp * uOp);\n          #include <tonemapping_fragment>\n          #include <colorspace_fragment>\n          #include <fog_fragment>\n        }",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.00042
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.14118,
+    0.07059,
+    0.05491
+   ]
+  },
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/5184e9a87a4e5dd6_64x64.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uOp": {
+   "type": "f",
+   "value": 0.850532
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   },
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/5184e9a87a4e5dd6_64x64.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uOp": {
+    "type": "f",
+    "value": 0.850532
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/5184e9a87a4e5dd6_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uOp\":{\"type\":\"f\",\"value\":0.850532}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "iPos",
+  "iCol",
+  "iSize",
+  "iOp"
+ ],
+ "uses": 2,
+ "nodes": [
+  "om-glow",
+  "om-glow"
+ ]
+}

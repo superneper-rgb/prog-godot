@@ -1,0 +1,111 @@
+{
+ "name": "shader_af7477",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute vec3 aPos; attribute vec4 aData; varying vec2 vUv; varying float vA, vSeed, vLit;\n  #include <fog_pars_vertex>\n  void main() {\n    vUv = position.xy; vSeed = aData.z; vLit = aData.w;\n    vec4 c = viewMatrix * vec4(aPos, 1.); float d = -c.z, r = aData.y, s = sin(aData.x), co = cos(aData.x);\n    vec2 corner = vec2(co * position.x - s * position.y, s * position.x + co * position.y) * aData.y;\n    vec4 mvPosition = c + vec4(corner, 0., 0.);\n    vA = smoothstep(r * .15, r * .9, d) * (1. - smoothstep(2600., 3400., d));\n    gl_Position = projectionMatrix * mvPosition;\n    #include <fog_vertex>\n  }",
+ "fragmentShader": "\n  uniform float uTime; uniform vec3 uLow, uHigh; varying vec2 vUv; varying float vA, vSeed, vLit;\n  #include <fog_pars_fragment>\n  float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\n  float n(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f); return mix(mix(h(i), h(i + vec2(1., 0.)), f.x), mix(h(i + vec2(0., 1.)), h(i + vec2(1., 1.)), f.x), f.y); }\n  void main() {\n    vec2 p = vUv * 2.; float r = length(p);\n    float f = .55 * n(p * 2.1 + vSeed * 13.) + .3 * n(p * 4.7 - vSeed * 7. + uTime * .02) + .15 * n(p * 9.3 + vSeed);\n    float a = smoothstep(1., .25, r + (f - .5) * .9) * vA;\n    if (a < .004) discard;\n    float lit = clamp(.5 - vUv.y * .9 + (f - .5) * .6, 0., 1.);                                        // the bottom of each puff catches the magma glow\n    vec3 col = mix(uHigh, uLow, lit * vLit) * (.75 + .5 * f);\n    gl_FragColor = vec4(col, a * .62);\n    #include <fog_fragment>\n  }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 17.0273
+  },
+  "uLow": {
+   "type": "c",
+   "value": [
+    0.63076,
+    0.11697,
+    0.02956
+   ]
+  },
+  "uHigh": {
+   "type": "c",
+   "value": [
+    0.04519,
+    0.03434,
+    0.03689
+   ]
+  },
+  "fogDensity": {
+   "type": "f",
+   "value": 0.00042
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.14118,
+    0.07059,
+    0.05491
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 17.0273
+   },
+   "uLow": {
+    "type": "c",
+    "value": [
+     0.63076,
+     0.11697,
+     0.02956
+    ]
+   },
+   "uHigh": {
+    "type": "c",
+    "value": [
+     0.04519,
+     0.03434,
+     0.03689
+    ]
+   },
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uLow\":{\"type\":\"c\",\"value\":[0.63076,0.11697,0.02956]},\"uHigh\":{\"type\":\"c\",\"value\":[0.04519,0.03434,0.03689]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aPos",
+  "aData"
+ ],
+ "uses": 1,
+ "nodes": [
+  "freefall air"
+ ]
+}

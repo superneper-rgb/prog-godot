@@ -1,0 +1,57 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://bl57xr8gvna0x"]
+
+[sub_resource type="AudioEffectLimiter" id="limit"]
+ceiling_db = -0.3
+threshold_db = -0.3
+
+[sub_resource type="AudioEffectAmplify" id="master_gain"]
+volume_db = -1.938
+
+[sub_resource type="AudioEffectCompressor" id="comp"]
+threshold = -1.0
+ratio = 1.25
+gain = 0.73
+attack_us = 2000.0
+release_ms = 200.0
+
+[sub_resource type="AudioEffectReverb" id="verb"]
+predelay_msec = 1.0
+predelay_feedback = 0.0
+room_size = 0.6
+damping = 0.2
+dry = 0.0
+wet = 0.0615
+
+[resource]
+bus/0/effect/0/effect = SubResource("limit")
+bus/0/effect/0/enabled = true
+bus/1/name = &"SFX"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/1/effect/0/effect = SubResource("master_gain")
+bus/1/effect/0/enabled = true
+bus/1/effect/1/effect = SubResource("comp")
+bus/1/effect/1/enabled = true
+bus/2/name = &"Music"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = 0.0
+bus/2/send = &"Master"
+bus/3/name = &"Voice"
+bus/3/solo = false
+bus/3/mute = false
+bus/3/bypass_fx = false
+bus/3/volume_db = 0.0
+bus/3/send = &"SFX"
+bus/4/name = &"Reverb"
+bus/4/solo = false
+bus/4/mute = false
+bus/4/bypass_fx = false
+bus/4/volume_db = 0.0
+bus/4/send = &"SFX"
+bus/4/effect/0/effect = SubResource("verb")
+bus/4/effect/0/enabled = true

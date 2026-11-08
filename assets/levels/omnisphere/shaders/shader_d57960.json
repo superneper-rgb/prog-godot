@@ -1,0 +1,52 @@
+{
+ "name": "shader_d57960",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aSize; attribute vec4 aCol; varying vec4 vC; uniform float uScale; void main(){ vC=aCol; vec4 mv=modelViewMatrix*vec4(position,1.); gl_PointSize=aSize*uScale/max(0.1,-mv.z); gl_Position=projectionMatrix*mv; }",
+ "fragmentShader": "uniform sampler2D uMap; varying vec4 vC; void main(){ vec4 t=texture2D(uMap,gl_PointCoord); gl_FragColor=vec4(vC.rgb,vC.a*t.a); }",
+ "uniforms": {
+  "uMap": {
+   "type": "t",
+   "file": "levels/_tex/9875fca3aa7b46a1_64x64.webp",
+   "name": "",
+   "srgb": false
+  },
+  "uScale": {
+   "type": "f",
+   "value": 620
+  }
+ },
+ "variants": [
+  {
+   "uMap": {
+    "type": "t",
+    "file": "levels/_tex/9875fca3aa7b46a1_64x64.webp",
+    "name": "",
+    "srgb": false
+   },
+   "uScale": {
+    "type": "f",
+    "value": 620
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/9875fca3aa7b46a1_64x64.webp\",\"name\":\"\",\"srgb\":false},\"uScale\":{\"type\":\"f\",\"value\":620}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSize",
+  "aCol"
+ ],
+ "uses": 2,
+ "nodes": [
+  "",
+  ""
+ ]
+}

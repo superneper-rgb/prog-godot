@@ -1,0 +1,66 @@
+{
+ "name": "shader_34e20b",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aSize; uniform float uScale; uniform float uPulse; uniform float uSkyNear; varying vec3 vC; void main(){ vC = color; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; vec4 mvSky = mv; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (0.99992 + 0.00006 * skyK) * gl_Position.w; gl_PointSize = aSize * (aSize > 1.0 ? uPulse : 1.0) * uScale / -mv.z; }",
+ "fragmentShader": "uniform sampler2D map; varying vec3 vC; void main(){ gl_FragColor = vec4(vC * texture2D(map, gl_PointCoord).a, 1.0); }",
+ "uniforms": {
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uScale": {
+   "type": "f",
+   "value": 15552
+  },
+  "uPulse": {
+   "type": "f",
+   "value": 0.903851
+  },
+  "uSkyNear": {
+   "type": "f",
+   "value": 1300
+  }
+ },
+ "variants": [
+  {
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uScale": {
+    "type": "f",
+    "value": 15552
+   },
+   "uPulse": {
+    "type": "f",
+    "value": 0.903851
+   },
+   "uSkyNear": {
+    "type": "f",
+    "value": 1300
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":15552},\"uPulse\":{\"type\":\"f\",\"value\":0.903851},\"uSkyNear\":{\"type\":\"f\",\"value\":1300}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSize"
+ ],
+ "uses": 1,
+ "nodes": [
+  ""
+ ]
+}

@@ -1,0 +1,352 @@
+{
+ "name": "shader_60a91f",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv;\n        #include <fog_pars_vertex>\n        void main(){vUv=uv;vec4 mvPosition=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mvPosition;\n        #include <fog_vertex>\n        }",
+ "fragmentShader": "uniform sampler2D feed;uniform float time;uniform int mode;uniform vec3 tint;varying vec2 vUv;\n        #include <fog_pars_fragment>\n        float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n        void main(){vec2 edge=abs(vUv-.5)*2.;if(pow(edge.x,7.)+pow(edge.y,7.)>1.)discard;\n          vec2 uv=.5+(vUv-.5)*(1.+.085*dot(vUv-.5,vUv-.5));\n          float grain=hash(floor(uv*vec2(320.,240.))+floor(time*13.));\n          float tear=step(.982,sin(uv.y*7.+time*.8));uv.x+=tear*.012*sin(time*31.);\n          float luma=dot(texture2D(feed,uv).rgb,vec3(.299,.587,.114));\n          vec3 col=tint*(luma*.78+.012)+(grain-.5)*.055;\n          if(mode==3){float bar=floor(uv.x*7.);col=vec3(.33);\n            if(bar<1.)col=vec3(.65);else if(bar<2.)col=vec3(.55,.47,.12);else if(bar<3.)col=vec3(.08,.42,.42);\n            else if(bar<4.)col=vec3(.1,.39,.14);else if(bar<5.)col=vec3(.40,.12,.40);else if(bar<6.)col=vec3(.47,.10,.08);else col=vec3(.08,.12,.42);\n            if(uv.y<.24)col=vec3(floor(uv.x*7.)/9.);col+=(grain-.5)*.06;}\n          if(mode==4)col=tint*(grain*.37+step(.67,grain)*.1);\n          if(mode==5)col=vec3(.008,.012,.012)+tint*.01*pow(1.-uv.y,4.);\n          col*=.83+.17*sin(vUv.y*820.);col*=1.-.55*pow(length(edge)*.707,2.);\n          col+=tint*.018*exp(-pow((fract(uv.y+time*.07)-.5)*40.,2.));\n          // Broad soft reflection on the curved face, never an opaque white rectangle.\n          col+=vec3(.018,.022,.024)*exp(-pow((uv.x+uv.y*.4-.45)*8.,2.));\n          gl_FragColor=vec4(max(col,vec3(0.)),1.);\n          #include <tonemapping_fragment>\n          #include <colorspace_fragment>\n          #include <fog_fragment>\n        }",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0145
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.03922,
+    0.06667,
+    0.09804
+   ]
+  },
+  "feed": {
+   "type": "t",
+   "file": null,
+   "name": "",
+   "srgb": false
+  },
+  "time": {
+   "type": "f",
+   "value": 0
+  },
+  "mode": {
+   "type": "f",
+   "value": 0
+  },
+  "tint": {
+   "type": "c",
+   "value": [
+    0.49102,
+    0.55201,
+    0.49102
+   ]
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 0
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.49102,
+     0.55201,
+     0.49102
+    ]
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 1
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.40198,
+     0.3564,
+     0.2705
+    ]
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 2
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.31855,
+     0.47353,
+     0.6105
+    ]
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 3
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.4452,
+     0.39676,
+     0.30947
+    ]
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 4
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.3564,
+     0.47353,
+     0.72306
+    ]
+   }
+  },
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0145
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.03922,
+     0.06667,
+     0.09804
+    ]
+   },
+   "feed": {
+    "type": "t",
+    "file": null,
+    "name": "",
+    "srgb": false
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "mode": {
+    "type": "f",
+    "value": 5
+   },
+   "tint": {
+    "type": "c",
+    "value": [
+     0.17465,
+     0.21586,
+     0.17144
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":0},\"tint\":{\"type\":\"c\",\"value\":[0.49102,0.55201,0.49102]}}",
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":1},\"tint\":{\"type\":\"c\",\"value\":[0.40198,0.3564,0.2705]}}",
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":2},\"tint\":{\"type\":\"c\",\"value\":[0.31855,0.47353,0.6105]}}",
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":3},\"tint\":{\"type\":\"c\",\"value\":[0.4452,0.39676,0.30947]}}",
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":4},\"tint\":{\"type\":\"c\",\"value\":[0.3564,0.47353,0.72306]}}",
+  "{\"feed\":{\"type\":\"t\",\"file\":null,\"name\":\"\",\"srgb\":false},\"mode\":{\"type\":\"f\",\"value\":5},\"tint\":{\"type\":\"c\",\"value\":[0.17465,0.21586,0.17144]}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 19,
+ "nodes": [
+  "Vintage TV 0 / curved glass",
+  "Vintage TV 1 / curved glass",
+  "Vintage TV 2 / curved glass",
+  "Vintage TV 3 / curved glass",
+  "Vintage TV 4 / curved glass",
+  "Vintage TV 5 / curved glass",
+  "Vintage TV 6 / curved glass",
+  "Vintage TV 7 / curved glass",
+  "Vintage TV 8 / curved glass",
+  "Vintage TV 9 / curved glass",
+  "Vintage TV 10 / curved glass",
+  "Vintage TV 11 / curved glass",
+  "Vintage TV 12 / curved glass",
+  "Vintage TV 13 / curved glass",
+  "Vintage TV 14 / curved glass",
+  "Vintage TV 15 / curved glass"
+ ]
+}

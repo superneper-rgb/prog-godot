@@ -1,0 +1,407 @@
+{
+ "name": "obc_Material_0_6e89",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\r\n    Object.assign(sh.uniforms, U);\r\n    sh.vertexShader = 'uniform mat4 uToModel; varying vec3 vRest;\\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\\n vRest = (uToModel * vec4(position, 1.0)).xyz;');\r\n    sh.fragmentShader = 'uniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\\n' + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>\r\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\r\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\r\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\r\n        float emblem = (1.0 - grey) * (1.0 - skin);\r\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\r\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\r\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\r\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\r\n        if (uSplit.w > 0.5) {\r\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\r\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\r\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\r\n          t = mix(cloth * k, c * 0.85, keep);\r\n        }\r\n        c = mix(c, t, grey);\r\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\r\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }`);\r\n  }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "goint-recolour",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {},
+ "uses": 5,
+ "nodes": [
+  "goon_security_1",
+  "goon_security_1",
+  "goon_security_1",
+  "goon_security_1",
+  "goon_security_1"
+ ],
+ "variant_keys": [
+  "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAGuniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uDark\":{\"type\":\"v\",\"value\":[1,1,1]},\"uLight\":{\"type\":\"v\",\"value\":[1,1,1]},\"uBand\":{\"type\":\"v\",\"value\":[0.05,0.3,0,0.05]},\"uLed\":{\"type\":\"v\",\"value\":[0,0,0,0]},\"uSplit\":{\"type\":\"v\",\"value\":[0.745,0.235,0.83,1]},\"uShirt\":{\"type\":\"v\",\"value\":[0.33,0.5,0.72]},\"uPants\":{\"type\":\"v\",\"value\":[0.024,0.034,0.075]},\"uPrintA\":{\"type\":\"v\",\"value\":[[0,0.84,-9],[0.42,1,-9]]},\"uPrintB\":{\"type\":\"v\",\"value\":[[0.3,1.27,-0.16],[0.82,1.42,9]]}}",
+  "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAGuniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uDark\":{\"type\":\"v\",\"value\":[1,1,1]},\"uLight\":{\"type\":\"v\",\"value\":[1,1,1]},\"uBand\":{\"type\":\"v\",\"value\":[0.05,0.3,0,0.15]},\"uLed\":{\"type\":\"v\",\"value\":[0,0,0,0]},\"uSplit\":{\"type\":\"v\",\"value\":[0.745,0.235,0.83,1]},\"uShirt\":{\"type\":\"v\",\"value\":[0.2,0.17,0.13]},\"uPants\":{\"type\":\"v\",\"value\":[0.17,0.145,0.11]},\"uPrintA\":{\"type\":\"v\",\"value\":[[0,0.84,-9],[0.42,1,-9]]},\"uPrintB\":{\"type\":\"v\",\"value\":[[0.3,1.27,-0.16],[0.82,1.42,9]]}}",
+  "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAGuniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uDark\":{\"type\":\"v\",\"value\":[1,1,1]},\"uLight\":{\"type\":\"v\",\"value\":[1,1,1]},\"uBand\":{\"type\":\"v\",\"value\":[0.05,0.3,0,0.15]},\"uLed\":{\"type\":\"v\",\"value\":[0,0,0,0]},\"uSplit\":{\"type\":\"v\",\"value\":[0.745,0.235,0.83,1]},\"uShirt\":{\"type\":\"v\",\"value\":[0.72,0.7,0.62]},\"uPants\":{\"type\":\"v\",\"value\":[0.03,0.04,0.09]},\"uPrintA\":{\"type\":\"v\",\"value\":[[0,0.84,-9],[0.42,1,-9]]},\"uPrintB\":{\"type\":\"v\",\"value\":[[0.3,1.27,-0.16],[0.82,1.42,9]]}}",
+  "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAGuniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"uDark\":{\"type\":\"v\",\"value\":[1,1,1]},\"uLight\":{\"type\":\"v\",\"value\":[1,1,1]},\"uBand\":{\"type\":\"v\",\"value\":[0.05,0.3,0,0.15]},\"uLed\":{\"type\":\"v\",\"value\":[0,0,0,0]},\"uSplit\":{\"type\":\"v\",\"value\":[0.745,0.235,0.83,1]},\"uShirt\":{\"type\":\"v\",\"value\":[0.03,0.03,0.035]},\"uPants\":{\"type\":\"v\",\"value\":[0.025,0.025,0.03]},\"uPrintA\":{\"type\":\"v\",\"value\":[[0,0.84,-9],[0.42,1,-9]]},\"uPrintB\":{\"type\":\"v\",\"value\":[[0.3,1.27,-0.16],[0.82,1.42,9]]}}"
+ ],
+ "variants": [
+  {
+   "vertex": "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uDark": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uLight": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uBand": {
+     "type": "v",
+     "value": [
+      0.05,
+      0.3,
+      0,
+      0.05
+     ]
+    },
+    "uLed": {
+     "type": "v",
+     "value": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "uSplit": {
+     "type": "v",
+     "value": [
+      0.745,
+      0.235,
+      0.83,
+      1
+     ]
+    },
+    "uShirt": {
+     "type": "v",
+     "value": [
+      0.33,
+      0.5,
+      0.72
+     ]
+    },
+    "uPants": {
+     "type": "v",
+     "value": [
+      0.024,
+      0.034,
+      0.075
+     ]
+    },
+    "uPrintA": {
+     "type": "v",
+     "value": [
+      [
+       0,
+       0.84,
+       -9
+      ],
+      [
+       0.42,
+       1,
+       -9
+      ]
+     ]
+    },
+    "uPrintB": {
+     "type": "v",
+     "value": [
+      [
+       0.3,
+       1.27,
+       -0.16
+      ],
+      [
+       0.82,
+       1.42,
+       9
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "vertex": "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uDark": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uLight": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uBand": {
+     "type": "v",
+     "value": [
+      0.05,
+      0.3,
+      0,
+      0.15
+     ]
+    },
+    "uLed": {
+     "type": "v",
+     "value": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "uSplit": {
+     "type": "v",
+     "value": [
+      0.745,
+      0.235,
+      0.83,
+      1
+     ]
+    },
+    "uShirt": {
+     "type": "v",
+     "value": [
+      0.2,
+      0.17,
+      0.13
+     ]
+    },
+    "uPants": {
+     "type": "v",
+     "value": [
+      0.17,
+      0.145,
+      0.11
+     ]
+    },
+    "uPrintA": {
+     "type": "v",
+     "value": [
+      [
+       0,
+       0.84,
+       -9
+      ],
+      [
+       0.42,
+       1,
+       -9
+      ]
+     ]
+    },
+    "uPrintB": {
+     "type": "v",
+     "value": [
+      [
+       0.3,
+       1.27,
+       -0.16
+      ],
+      [
+       0.82,
+       1.42,
+       9
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "vertex": "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uDark": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uLight": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uBand": {
+     "type": "v",
+     "value": [
+      0.05,
+      0.3,
+      0,
+      0.15
+     ]
+    },
+    "uLed": {
+     "type": "v",
+     "value": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "uSplit": {
+     "type": "v",
+     "value": [
+      0.745,
+      0.235,
+      0.83,
+      1
+     ]
+    },
+    "uShirt": {
+     "type": "v",
+     "value": [
+      0.72,
+      0.7,
+      0.62
+     ]
+    },
+    "uPants": {
+     "type": "v",
+     "value": [
+      0.03,
+      0.04,
+      0.09
+     ]
+    },
+    "uPrintA": {
+     "type": "v",
+     "value": [
+      [
+       0,
+       0.84,
+       -9
+      ],
+      [
+       0.42,
+       1,
+       -9
+      ]
+     ]
+    },
+    "uPrintB": {
+     "type": "v",
+     "value": [
+      [
+       0.3,
+       1.27,
+       -0.16
+      ],
+      [
+       0.82,
+       1.42,
+       9
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "vertex": "uniform mat4 uToModel; varying vec3 vRest;\n#include <common>\n#include <begin_vertex>\n vRest = (uToModel * vec4(position, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "uniform vec3 uDark; uniform vec3 uLight; uniform vec4 uBand; uniform vec4 uLed; uniform vec4 uSplit; uniform vec3 uShirt; uniform vec3 uPants; uniform vec3 uPrintA[2]; uniform vec3 uPrintB[2]; varying vec3 vRest;\n#include <common>\n#include <map_fragment>\n      { vec3 c = diffuseColor.rgb; float mx = max(c.r, max(c.g, c.b)), mn = min(c.r, min(c.g, c.b)), sa = (mx - mn) / (mx + 1e-4), lum = dot(c, vec3(0.2126, 0.7152, 0.0722));\n        float skin = max(step(1.12, vRest.y) * (1.0 - step(0.46, abs(vRest.x))), step(0.83, abs(vRest.x)));   // the head and the hands\n        float grey = 1.0 - smoothstep(0.32, 0.55, sa) * smoothstep(0.03, 0.07, mx);                            // near-black counts as cloth whatever its tint\n        float emblem = (1.0 - grey) * (1.0 - skin);\n        vec3 ra = vec3(abs(vRest.x), vRest.yz);\n        for (int i = 0; i < 2; i++) if (all(greaterThan(ra, uPrintA[i])) && all(lessThan(ra, uPrintB[i]))) emblem = max(emblem, 0.8);\n        lum = mix(lum, uBand.w, emblem); grey = max(grey, emblem);\n        vec3 t = (lum + uBand.z) * mix(uDark, uLight, smoothstep(uBand.x, uBand.y, lum));\n        if (uSplit.w > 0.5) {\n          float k = clamp(0.62 + lum * 2.6, 0.45, 1.45);\n          vec3 cloth = mix(uPants, uShirt, smoothstep(uSplit.x - 0.012, uSplit.x + 0.012, vRest.y));\n          float keep = max(1.0 - smoothstep(uSplit.y - 0.015, uSplit.y + 0.015, vRest.y), smoothstep(uSplit.z - 0.02, uSplit.z + 0.02, abs(vRest.x)));\n          t = mix(cloth * k, c * 0.85, keep);\n        }\n        c = mix(c, t, grey);\n        float led = uLed.w * step(0.2, diffuseColor.r) * (1.0 - smoothstep(0.03, 0.08, diffuseColor.g / (diffuseColor.r + 1e-4)));\n        diffuseColor.rgb = mix(c, uLed.rgb, led); }\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uDark": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uLight": {
+     "type": "v",
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "uBand": {
+     "type": "v",
+     "value": [
+      0.05,
+      0.3,
+      0,
+      0.15
+     ]
+    },
+    "uLed": {
+     "type": "v",
+     "value": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "uSplit": {
+     "type": "v",
+     "value": [
+      0.745,
+      0.235,
+      0.83,
+      1
+     ]
+    },
+    "uShirt": {
+     "type": "v",
+     "value": [
+      0.03,
+      0.03,
+      0.035
+     ]
+    },
+    "uPants": {
+     "type": "v",
+     "value": [
+      0.025,
+      0.025,
+      0.03
+     ]
+    },
+    "uPrintA": {
+     "type": "v",
+     "value": [
+      [
+       0,
+       0.84,
+       -9
+      ],
+      [
+       0.42,
+       1,
+       -9
+      ]
+     ]
+    },
+    "uPrintB": {
+     "type": "v",
+     "value": [
+      [
+       0.3,
+       1.27,
+       -0.16
+      ],
+      [
+       0.82,
+       1.42,
+       9
+      ]
+     ]
+    }
+   }
+  }
+ ]
+}

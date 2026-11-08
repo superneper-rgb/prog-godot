@@ -1,0 +1,89 @@
+{
+ "name": "shader_6c1b3c",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vW; void main(){ vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }",
+ "fragmentShader": "uniform vec3 uCar; uniform vec2 uFwd; uniform float uOn, uFlash; varying vec3 vW;\n        void main(){ vec2 d = vW.xz - uCar.xz; float L = length(d), k = uOn * smoothstep(.8, .97, dot(d / max(L, .01), uFwd)) * smoothstep(110., 10., L);\n          gl_FragColor = vec4(vec3(.04, .045, .05) + vec3(1., .78, .4) * k * 6. + vec3(.25) * uFlash, 1.); }",
+ "uniforms": {
+  "uCar": {
+   "type": "v",
+   "value": [
+    -148.88042,
+    0,
+    -1056.17149
+   ]
+  },
+  "uFwd": {
+   "type": "v",
+   "value": [
+    0.27571,
+    0.96124
+   ]
+  },
+  "uOn": {
+   "type": "f",
+   "value": 1
+  },
+  "uFlash": {
+   "type": "f",
+   "value": 0
+  }
+ },
+ "variants": [
+  {
+   "uCar": {
+    "type": "v",
+    "value": [
+     -148.88042,
+     0,
+     -1056.17149
+    ]
+   },
+   "uFwd": {
+    "type": "v",
+    "value": [
+     0.27571,
+     0.96124
+    ]
+   },
+   "uOn": {
+    "type": "f",
+    "value": 1
+   },
+   "uFlash": {
+    "type": "f",
+    "value": 0
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uCar\":{\"type\":\"v\",\"value\":[-148.88042,0,-1056.17149]},\"uFwd\":{\"type\":\"v\",\"value\":[0.27571,0.96124]},\"uOn\":{\"type\":\"f\",\"value\":1},\"uFlash\":{\"type\":\"f\",\"value\":0}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 203,
+ "nodes": [
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing",
+  "vhp-dressing"
+ ]
+}

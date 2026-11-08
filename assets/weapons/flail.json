@@ -1,0 +1,1 @@
+{"id":"flail","info":{"gripR":[0,0,-0.03],"gripL":[0,-0.08,0.02],"muzzle":[0,0,0.24],"carry":0.35,"two":false,"back":0.2,"kind":"melee","eject":[0,0,0],"flashLen":0.1,"display":{"object3d":"display"},"rlPose":{"x":0,"y":-0.06,"z":-0.1,"pitch":-0.4,"roll":0.45,"yaw":-0.1}},"parts":["display"],"tris":3806}

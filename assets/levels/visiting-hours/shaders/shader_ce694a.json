@@ -1,0 +1,44 @@
+{
+ "name": "shader_ce694a",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+ "fragmentShader": "uniform vec3 uCol; varying vec2 vUv; void main(){ float d = length(vUv - .5) * 2.; gl_FragColor = vec4(uCol * pow(max(0., 1. - d), 2.2) * .16, 1.); }",
+ "uniforms": {
+  "uCol": {
+   "type": "c",
+   "value": [
+    1,
+    0.32314,
+    0.05127
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uCol": {
+    "type": "c",
+    "value": [
+     1,
+     0.32314,
+     0.05127
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uCol\":{\"type\":\"c\",\"value\":[1,0.32314,0.05127]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "vhp-prison"
+ ]
+}

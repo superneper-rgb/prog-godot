@@ -1,0 +1,962 @@
+{
+ "name": "obc_a465045101_a465",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\r\n    sh.uniforms.uTime = { value: 0 }; m.userData.shader = sh;\r\n    sh.vertexShader = 'uniform float uTime;\\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\r\n  #ifdef USE_INSTANCING\r\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - ${from.toFixed(2)}) * ${sway.toFixed(3)};\r\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\r\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\r\n  #endif`);\r\n    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\r\n  totalEmissiveRadiance += diffuseColor.rgb * ${fill.toFixed(2)};`);\r\n  }",
+ "base": "MeshLambertMaterial",
+ "cacheKey": "",
+ "userData": {
+  "shader": {
+   "isWebGL2": true,
+   "shaderID": "lambert",
+   "shaderType": "MeshLambertMaterial",
+   "shaderName": "",
+   "vertexShader": "uniform float uTime;\n#define LAMBERT\nvarying vec3 vViewPosition;\n#include <common>\n#include <batching_pars_vertex>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <normal_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <color_vertex>\n\t#include <morphcolor_vertex>\n\t#include <batching_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <normal_vertex>\n\t#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - 2.50) * 0.000;\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\n  #endif\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}",
+   "fragmentShader": "#define LAMBERT\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <alphatest_pars_fragment>\n#include <alphahash_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_common_pars_fragment>\n#include <envmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <normal_pars_fragment>\n#include <lights_lambert_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <alphahash_fragment>\n\t#include <specularmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.45;\n\t#include <lights_lambert_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\t#include <opaque_fragment>\n\t#include <tonemapping_fragment>\n\t#include <colorspace_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n}",
+   "isRawShaderMaterial": false,
+   "precision": "highp",
+   "batching": false,
+   "instancing": true,
+   "instancingColor": false,
+   "supportsVertexTextures": true,
+   "outputColorSpace": "srgb",
+   "map": false,
+   "matcap": false,
+   "envMap": false,
+   "envMapMode": false,
+   "envMapCubeUVHeight": null,
+   "aoMap": false,
+   "lightMap": false,
+   "bumpMap": false,
+   "normalMap": false,
+   "displacementMap": false,
+   "emissiveMap": false,
+   "normalMapObjectSpace": false,
+   "normalMapTangentSpace": false,
+   "metalnessMap": false,
+   "roughnessMap": false,
+   "anisotropy": false,
+   "anisotropyMap": false,
+   "clearcoat": false,
+   "clearcoatMap": false,
+   "clearcoatNormalMap": false,
+   "clearcoatRoughnessMap": false,
+   "iridescence": false,
+   "iridescenceMap": false,
+   "iridescenceThicknessMap": false,
+   "sheen": false,
+   "sheenColorMap": false,
+   "sheenRoughnessMap": false,
+   "specularMap": false,
+   "specularColorMap": false,
+   "specularIntensityMap": false,
+   "transmission": false,
+   "transmissionMap": false,
+   "thicknessMap": false,
+   "gradientMap": false,
+   "opaque": true,
+   "alphaMap": false,
+   "alphaTest": false,
+   "alphaHash": false,
+   "combine": 0,
+   "mapUv": false,
+   "aoMapUv": false,
+   "lightMapUv": false,
+   "bumpMapUv": false,
+   "normalMapUv": false,
+   "displacementMapUv": false,
+   "emissiveMapUv": false,
+   "metalnessMapUv": false,
+   "roughnessMapUv": false,
+   "anisotropyMapUv": false,
+   "clearcoatMapUv": false,
+   "clearcoatNormalMapUv": false,
+   "clearcoatRoughnessMapUv": false,
+   "iridescenceMapUv": false,
+   "iridescenceThicknessMapUv": false,
+   "sheenColorMapUv": false,
+   "sheenRoughnessMapUv": false,
+   "specularMapUv": false,
+   "specularColorMapUv": false,
+   "specularIntensityMapUv": false,
+   "transmissionMapUv": false,
+   "thicknessMapUv": false,
+   "alphaMapUv": false,
+   "vertexTangents": false,
+   "vertexColors": true,
+   "vertexAlphas": false,
+   "vertexUv1s": false,
+   "vertexUv2s": false,
+   "vertexUv3s": false,
+   "pointsUvs": false,
+   "fog": true,
+   "useFog": true,
+   "fogExp2": true,
+   "flatShading": true,
+   "sizeAttenuation": false,
+   "logarithmicDepthBuffer": false,
+   "skinning": false,
+   "morphTargets": false,
+   "morphNormals": false,
+   "morphColors": false,
+   "morphTargetsCount": 0,
+   "morphTextureStride": 0,
+   "numDirLights": 1,
+   "numPointLights": 32,
+   "numSpotLights": 0,
+   "numSpotLightMaps": 0,
+   "numRectAreaLights": 0,
+   "numHemiLights": 1,
+   "numDirLightShadows": 1,
+   "numPointLightShadows": 0,
+   "numSpotLightShadows": 0,
+   "numSpotLightShadowsWithMaps": 0,
+   "numLightProbes": 0,
+   "numClippingPlanes": 0,
+   "numClipIntersection": 0,
+   "dithering": false,
+   "shadowMapEnabled": true,
+   "shadowMapType": 1,
+   "toneMapping": 4,
+   "useLegacyLights": false,
+   "decodeVideoTexture": false,
+   "premultipliedAlpha": false,
+   "doubleSided": false,
+   "flipSided": false,
+   "useDepthPacking": false,
+   "depthPacking": 0,
+   "extensionDerivatives": false,
+   "extensionFragDepth": false,
+   "extensionDrawBuffers": false,
+   "extensionShaderTextureLOD": false,
+   "extensionClipCullDistance": false,
+   "rendererExtensionFragDepth": true,
+   "rendererExtensionDrawBuffers": true,
+   "rendererExtensionShaderTextureLod": true,
+   "rendererExtensionParallelShaderCompile": true,
+   "customProgramCacheKey": "(sh) => {\r\n    sh.uniforms.uTime = { value: 0 }; m.userData.shader = sh;\r\n    sh.vertexShader = 'uniform float uTime;\\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\r\n  #ifdef USE_INSTANCING\r\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - ${from.toFixed(2)}) * ${sway.toFixed(3)};\r\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\r\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\r\n  #endif`);\r\n    sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\r\n  totalEmissiveRadiance += diffuseColor.rgb * ${fill.toFixed(2)};`);\r\n  }",
+   "uniforms": {
+    "diffuse": {
+     "value": [
+      1,
+      1,
+      1
+     ]
+    },
+    "opacity": {
+     "value": 1
+    },
+    "map": {
+     "value": null
+    },
+    "mapTransform": {},
+    "alphaMap": {
+     "value": null
+    },
+    "alphaMapTransform": {},
+    "alphaTest": {
+     "value": 0
+    },
+    "specularMap": {
+     "value": null
+    },
+    "specularMapTransform": {},
+    "envMap": {
+     "value": null
+    },
+    "flipEnvMap": {
+     "value": -1
+    },
+    "reflectivity": {
+     "value": 1
+    },
+    "ior": {
+     "value": 1.5
+    },
+    "refractionRatio": {
+     "value": 0.98
+    },
+    "aoMap": {
+     "value": null
+    },
+    "aoMapIntensity": {
+     "value": 1
+    },
+    "aoMapTransform": {},
+    "lightMap": {
+     "value": null
+    },
+    "lightMapIntensity": {
+     "value": 1
+    },
+    "lightMapTransform": {},
+    "emissiveMap": {
+     "value": null
+    },
+    "emissiveMapTransform": {},
+    "bumpMap": {
+     "value": null
+    },
+    "bumpMapTransform": {},
+    "bumpScale": {
+     "value": 1
+    },
+    "normalMap": {
+     "value": null
+    },
+    "normalMapTransform": {},
+    "normalScale": {
+     "value": [
+      1,
+      1
+     ]
+    },
+    "displacementMap": {
+     "value": null
+    },
+    "displacementMapTransform": {},
+    "displacementScale": {
+     "value": 1
+    },
+    "displacementBias": {
+     "value": 0
+    },
+    "fogDensity": {
+     "value": 0.0034
+    },
+    "fogNear": {
+     "value": 1
+    },
+    "fogFar": {
+     "value": 2000
+    },
+    "fogColor": {
+     "value": [
+      0.02609,
+      0.00699,
+      0.02238
+     ]
+    },
+    "ambientLightColor": {
+     "value": [
+      0,
+      0,
+      0
+     ],
+     "needsUpdate": true
+    },
+    "lightProbe": {
+     "value": [
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ],
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "needsUpdate": true
+    },
+    "directionalLights": {
+     "value": [
+      {
+       "direction": [
+        -0.48666,
+        0.86866,
+        -0.09268
+       ],
+       "color": [
+        0.08936,
+        0.15264,
+        0.29718
+       ]
+      }
+     ],
+     "properties": {
+      "direction": {},
+      "color": {}
+     },
+     "needsUpdate": true
+    },
+    "directionalLightShadows": {
+     "value": [
+      {
+       "shadowBias": -0.0006,
+       "shadowNormalBias": 0.04,
+       "shadowRadius": 1,
+       "shadowMapSize": [
+        2176,
+        2176
+       ]
+      }
+     ],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {}
+     },
+     "needsUpdate": true
+    },
+    "directionalShadowMap": {
+     "value": [
+      null
+     ]
+    },
+    "directionalShadowMatrix": {
+     "value": [
+      null
+     ]
+    },
+    "spotLights": {
+     "value": [],
+     "properties": {
+      "color": {},
+      "position": {},
+      "direction": {},
+      "distance": {},
+      "coneCos": {},
+      "penumbraCos": {},
+      "decay": {}
+     },
+     "needsUpdate": true
+    },
+    "spotLightShadows": {
+     "value": [],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {}
+     },
+     "needsUpdate": true
+    },
+    "spotLightMap": {
+     "value": []
+    },
+    "spotShadowMap": {
+     "value": []
+    },
+    "spotLightMatrix": {
+     "value": []
+    },
+    "pointLights": {
+     "value": [
+      {
+       "position": [
+        0,
+        1.15517,
+        0.32495
+       ],
+       "color": [
+        7.14161,
+        11.28799,
+        18.22865
+       ],
+       "distance": 20,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        -0.32554,
+        8.89426
+       ],
+       "color": [
+        75.10026,
+        33.43473,
+        10.82409
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        28.91963,
+        -95.07073
+       ],
+       "color": [
+        26.99055,
+        46.89168,
+        81.18641
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        5.30686,
+        -11.12862
+       ],
+       "color": [
+        26.99055,
+        46.89168,
+        81.18641
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        8.3397,
+        -21.91018
+       ],
+       "color": [
+        75.10026,
+        33.43473,
+        10.82409
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        12.67231,
+        -37.3124
+       ],
+       "color": [
+        25.85146,
+        80,
+        54.93482
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        20.79597,
+        -66.19157
+       ],
+       "color": [
+        26.99055,
+        46.89168,
+        81.18641
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        4.95,
+        20.25439,
+        -64.26629
+       ],
+       "color": [
+        75.10026,
+        33.43473,
+        10.82409
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        -4.95,
+        26.75332,
+        -87.36962
+       ],
+       "color": [
+        75.10026,
+        33.43473,
+        10.82409
+       ],
+       "distance": 26,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.2,
+        9.54337,
+        -29.88208
+       ],
+       "color": [
+        0.76848,
+        17.85382,
+        26
+       ],
+       "distance": 18,
+       "decay": 2
+      },
+      {
+       "position": [
+        -6.2,
+        5.01822,
+        -14.53402
+       ],
+       "color": [
+        24,
+        0.55568,
+        6.09965
+       ],
+       "distance": 18,
+       "decay": 2
+      },
+      {
+       "position": [
+        -14,
+        15.63923,
+        -54.1376
+       ],
+       "color": [
+        100,
+        80.69523,
+        63.75969
+       ],
+       "distance": 20,
+       "decay": 2
+      },
+      {
+       "position": [
+        -19.5,
+        15.35044,
+        -54.21884
+       ],
+       "color": [
+        9.47642,
+        25.07321,
+        27.35976
+       ],
+       "distance": 14,
+       "decay": 2
+      },
+      {
+       "position": [
+        -6.3,
+        15.7355,
+        -54.11052
+       ],
+       "color": [
+        26.13295,
+        1.10572,
+        0.71398
+       ],
+       "distance": 13,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.5,
+        11.37595,
+        -41.93619
+       ],
+       "color": [
+        23.19905,
+        9.08411,
+        0.98158
+       ],
+       "distance": 10,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.7,
+        2.84596,
+        -8.28891
+       ],
+       "color": [
+        9.30987,
+        0.79951,
+        9.68343
+       ],
+       "distance": 7,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.95,
+        1.11321,
+        -8.77633
+       ],
+       "color": [
+        6.52382,
+        0.11385,
+        0.38773
+       ],
+       "distance": 9,
+       "decay": 2
+      },
+      {
+       "position": [
+        6.95,
+        0.13837,
+        -5.31083
+       ],
+       "color": [
+        4.27335,
+        0.3773,
+        12.14615
+       ],
+       "distance": 9,
+       "decay": 2
+      },
+      {
+       "position": [
+        5.5,
+        -1.721,
+        0.19123
+       ],
+       "color": [
+        12.78947,
+        2.48906,
+        0.29612
+       ],
+       "distance": 13,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.66,
+        5.55928,
+        -24.98808
+       ],
+       "color": [
+        1.3,
+        0.70132,
+        0.253
+       ],
+       "distance": 3.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.79,
+        6.21632,
+        -25.88362
+       ],
+       "color": [
+        0.06163,
+        0.35242,
+        0.9
+       ],
+       "distance": 2.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -77.22963,
+        69.79087,
+        -455.46772
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 17,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.66,
+        5.55928,
+        -24.98808
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 3.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        -5.79,
+        6.21632,
+        -25.88362
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 2.6,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      },
+      {
+       "position": [
+        0,
+        9.29132,
+        -44.49633
+       ],
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "distance": 1,
+       "decay": 2
+      }
+     ],
+     "properties": {
+      "color": {},
+      "position": {},
+      "decay": {},
+      "distance": {}
+     },
+     "needsUpdate": true
+    },
+    "pointLightShadows": {
+     "value": [],
+     "properties": {
+      "shadowBias": {},
+      "shadowNormalBias": {},
+      "shadowRadius": {},
+      "shadowMapSize": {},
+      "shadowCameraNear": {},
+      "shadowCameraFar": {}
+     },
+     "needsUpdate": true
+    },
+    "pointShadowMap": {
+     "value": []
+    },
+    "pointShadowMatrix": {
+     "value": []
+    },
+    "hemisphereLights": {
+     "value": [
+      {
+       "direction": [
+        0,
+        0.96264,
+        0.27079
+       ],
+       "skyColor": [
+        0.05077,
+        0.10639,
+        0.22538
+       ],
+       "groundColor": [
+        0.00364,
+        0.00483,
+        0.00726
+       ]
+      }
+     ],
+     "properties": {
+      "direction": {},
+      "skyColor": {},
+      "groundColor": {}
+     },
+     "needsUpdate": true
+    },
+    "rectAreaLights": {
+     "value": [],
+     "properties": {
+      "color": {},
+      "position": {},
+      "width": {},
+      "height": {}
+     },
+     "needsUpdate": true
+    },
+    "ltc_1": {
+     "value": null
+    },
+    "ltc_2": {
+     "value": null
+    },
+    "emissive": {
+     "value": [
+      0,
+      0,
+      0
+     ]
+    },
+    "uTime": {
+     "value": 0
+    },
+    "clippingPlanes": {
+     "value": null,
+     "needsUpdate": false
+    }
+   }
+  }
+ },
+ "uses": 227,
+ "nodes": [
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches",
+  "Benches"
+ ],
+ "variant_keys": [
+  "uniform float uTime;\n#include <common>\n#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - 2.50) * 0.000;\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\n  #endif\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.45;\n#include <opaque_fragment>\nvoid main() {{\"uTime\":{\"type\":\"f\",\"value\":0}}",
+  "uniform float uTime;\n#include <common>\n#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - 2.60) * 0.035;\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\n  #endif\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.16;\n#include <opaque_fragment>\nvoid main() {{\"uTime\":{\"type\":\"f\",\"value\":0}}"
+ ],
+ "variants": [
+  {
+   "vertex": "uniform float uTime;\n#include <common>\n#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - 2.50) * 0.000;\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\n  #endif\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.45;\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uTime": {
+     "type": "f",
+     "value": 0
+    }
+   }
+  },
+  {
+   "vertex": "uniform float uTime;\n#include <common>\n#include <begin_vertex>\n  #ifdef USE_INSTANCING\n  { vec3 ip = instanceMatrix[3].xyz; float k = max(0.0, transformed.y - 2.60) * 0.035;\n    transformed.x += k * (sin(uTime * 1.3 + ip.x * 0.31) + 0.4 * sin(uTime * 3.1 + ip.z * 0.7));\n    transformed.z += k * 0.7 * sin(uTime * 1.1 + ip.z * 0.27); }\n  #endif\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.16;\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "uTime": {
+     "type": "f",
+     "value": 0
+    }
+   }
+  }
+ ]
+}

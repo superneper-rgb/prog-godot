@@ -1,0 +1,52 @@
+{
+ "name": "shader_8dce7b",
+ "type": "ShaderMaterial",
+ "vertexShader": "uniform float uSkyNear; uniform float uSize; varying vec2 vUv; void main(){ vUv = position.xy; vec4 mv = modelViewMatrix * vec4(0.0, 0.0, 0.0, 1.0); mv.xy += position.xy * uSize; gl_Position = projectionMatrix * mv; vec4 mvSky = mv; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (0.99992 + 0.00006 * skyK) * gl_Position.w; }",
+ "fragmentShader": "uniform float uPulse; varying vec2 vUv; void main(){ float r2 = dot(vUv, vUv); float edge = 1.0 - smoothstep(0.55, 1.0, r2); gl_FragColor = vec4((vec3(0.36, 0.16, 0.74) * exp(-r2 * 6.0) * 0.7 + vec3(0.6, 0.38, 1.0) * exp(-r2 * 60.0) * 0.5) * edge * uPulse, 1.0); }",
+ "uniforms": {
+  "uSkyNear": {
+   "type": "f",
+   "value": 1300
+  },
+  "uSize": {
+   "type": "f",
+   "value": 256
+  },
+  "uPulse": {
+   "type": "f",
+   "value": 1.093094
+  }
+ },
+ "variants": [
+  {
+   "uSkyNear": {
+    "type": "f",
+    "value": 1300
+   },
+   "uSize": {
+    "type": "f",
+    "value": 256
+   },
+   "uPulse": {
+    "type": "f",
+    "value": 1.093094
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uSize\":{\"type\":\"f\",\"value\":256},\"uPulse\":{\"type\":\"f\",\"value\":1.093094}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "DyoStation"
+ ]
+}

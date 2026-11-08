@@ -1,0 +1,30 @@
+{
+ "name": "shader_1d0ffe",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+ "fragmentShader": "varying vec2 vUv;void main(){float edge=pow(max(0.,sin(vUv.x*3.14159)),2.);float lengthFade=smoothstep(0.,.25,vUv.y)*(1.-smoothstep(.85,1.,vUv.y));gl_FragColor=vec4(.38,.5,.48,.024*edge*lengthFade);}",
+ "uniforms": {},
+ "variants": [
+  {}
+ ],
+ "variant_keys": [
+  "{}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "double",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 5,
+ "nodes": [
+  "B-9 / light shafts in suspended dust",
+  "B-9 / light shafts in suspended dust",
+  "B-9 / light shafts in suspended dust",
+  "B-9 / light shafts in suspended dust",
+  "B-9 / light shafts in suspended dust"
+ ]
+}

@@ -1,0 +1,47 @@
+{
+ "name": "shader_a19d8a",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute vec4 aV; attribute vec2 aT; uniform float uTime, uH; varying float vHeat;\n  void main() {\n    float tt = fract(uTime / aT.x + aT.y) * aT.x, life = 2.4;\n    vec3 p = position + aV.xyz * tt + vec3(0., -4.9 * tt * tt, 0.);\n    vec4 mv = viewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv;\n    float on = step(tt, life) * step(position.y - .2, p.y);\n    gl_PointSize = on * min(aV.w * (1. - .45 * tt / life) * projectionMatrix[1][1] * uH * .5 / max(-mv.z, .5), 120.);\n    vHeat = tt / life;\n  }",
+ "fragmentShader": "\n  varying float vHeat;\n  void main() { float r = length(gl_PointCoord - .5); if (r > .5) discard;\n    vec3 c = mix(vec3(2.6, 1.5, .4), vec3(1.2, .18, .02), smoothstep(.1, .8, vHeat));\n    gl_FragColor = vec4(c * (1. - smoothstep(.25, .5, r)) * (1. - smoothstep(.75, 1., vHeat)), 1.);\n    #include <colorspace_fragment>\n  }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 87.7041
+  },
+  "uH": {
+   "type": "f",
+   "value": 540
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 87.7041
+   },
+   "uH": {
+    "type": "f",
+    "value": 540
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uH\":{\"type\":\"f\",\"value\":540}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aV",
+  "aT"
+ ],
+ "uses": 1,
+ "nodes": [
+  "lava bursts"
+ ]
+}

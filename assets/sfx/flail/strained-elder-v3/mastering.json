@@ -1,0 +1,133 @@
+{
+  "revision": "strained-elder-v3",
+  "sourceRevision": "rasping-elder-v2",
+  "processing": "OfflineAudioContext: pitch down, chest EQ, soft throat saturation, high-cut; pain pitch catch and breath flutter",
+  "clips": {
+    "pain-1": {
+      "sourceSha256": "35c9235481e818525c8be2b0cada1176139a67abf943c2280ffd72ea895ea79d",
+      "sha256": "876763ba49ab8e4f4dc61799d6182387d294f2ea54dfa3b9a03ef74beb7d6bfa",
+      "duration": 0.772,
+      "peak": 0.82,
+      "rms": 0.26595868742893386,
+      "playbackRate": 0.8,
+      "kind": "pain"
+    },
+    "pain-2": {
+      "sourceSha256": "e58c6d88010192222b9e3008a3b842bf289b96d8d455212ec6fd615325f1ad6f",
+      "sha256": "6de20b7d4b74cd162b0fdbc7ab3dfa69f922559d84e27e1730552035737a2b2e",
+      "duration": 0.7609375,
+      "peak": 0.82,
+      "rms": 0.28754383475984396,
+      "playbackRate": 0.8,
+      "kind": "pain"
+    },
+    "pain-3": {
+      "sourceSha256": "6769e7cd769bddf4d288cb849cccf44afb8d73ef8786536b38cfb668be5992c0",
+      "sha256": "b3a0d1acf6c68331b7a74d0293aff7da6c33e60b0207f962e9dcfc8cf378be1f",
+      "duration": 0.590625,
+      "peak": 0.82,
+      "rms": 0.2564856933101185,
+      "playbackRate": 0.8,
+      "kind": "pain"
+    },
+    "pain-4": {
+      "sourceSha256": "f726454974dd3bbefa1874244762b005d6c62acdbd7bdf5787ca852b82feecb0",
+      "sha256": "ba0a6090516dd39a7720a4f07670c19a56eeeab62fad8c717de82a08acc02f20",
+      "duration": 0.70215625,
+      "peak": 0.82,
+      "rms": 0.3064241152634901,
+      "playbackRate": 0.8,
+      "kind": "pain"
+    },
+    "pain-5": {
+      "sourceSha256": "73160d2584a89573421353b3198fbf6ac044b355d90fcd2732b00323b3f69fa8",
+      "sha256": "d9ed11e028494731f298ef9b618c8734bc4dff9e041fc047265d71dbbab837f0",
+      "duration": 0.66165625,
+      "peak": 0.82,
+      "rms": 0.24844989185661454,
+      "playbackRate": 0.8,
+      "kind": "pain"
+    },
+    "teeth": {
+      "sourceSha256": "cc65f53f761c938e19235babc2547a9152b7c02ec4cb92ebeb372f45486db3b2",
+      "sha256": "87c3ee6075bb0b11408200ffdb7255bfa87583ab4e60f32b68df44ade57b6965",
+      "duration": 3.48478125,
+      "peak": 0.82,
+      "rms": 0.21126207411715592,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "retired": {
+      "sourceSha256": "39f6f4316532de92f13cbb1762db5260bda0eb1c705005d91e1f76cf37fd3388",
+      "sha256": "610aeb3f5e73380713e7a9546078a8ef83b86d47f0c07f1bf60c6e7f076b8b25",
+      "duration": 2.04515625,
+      "peak": 0.82,
+      "rms": 0.21642541689403624,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "shuffleboard": {
+      "sourceSha256": "85e66bfe0f0f8ea54c9ad49adac8548ae0e774f5e70d8d30f8d7521e94d20ba1",
+      "sha256": "a460fc2ac11750159d13138892bd5dab0890d80bf4feadfa9124e6958ea5ae9d",
+      "duration": 2.88240625,
+      "peak": 0.82,
+      "rms": 0.20841034259646657,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "stick": {
+      "sourceSha256": "f813202155b0cb6469b42de513dab36cf9a3310dfdbf1e7ab33a7fac2b113ad4",
+      "sha256": "9494e3ba81a3a71509b93a822e195106aa504a6b22fa49109dd0590de020c792",
+      "duration": 2.9534375,
+      "peak": 0.82,
+      "rms": 0.20163815508460015,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "pension": {
+      "sourceSha256": "efa96fd193865a664689e27bab3bd220c543332fe5058506ed56f5cba03e4330",
+      "sha256": "2ee6396243000141a9af56b4e95331817d6ed832aad821bf7f9d73017ababa82",
+      "duration": 2.47403125,
+      "peak": 0.82,
+      "rms": 0.21679336893864043,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "aim": {
+      "sourceSha256": "0a27a83aee506e6d4323a6452db0864d1729aca1da0d6dfed0ff97bd7062cef7",
+      "sha256": "b7e773f94874d57ab16e86a8a46a2da05930d84f6dd20e99b979b2c7d61935bc",
+      "duration": 1.820625,
+      "peak": 0.82,
+      "rms": 0.19598705973234723,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "bill": {
+      "sourceSha256": "5549cba7497dd65da9aa88bbc8edee8d3c246068a8c77bde4bb499ad24d9049f",
+      "sha256": "ab8c8a8533df39d62bb69e049dd6146c20fe626a5ddad51ee93e6cf340e9df80",
+      "duration": 2.67990625,
+      "peak": 0.82,
+      "rms": 0.2479544529028715,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "mother": {
+      "sourceSha256": "540b9e1d84770ed8afa43487d1c0dc7ffa2e21e68ca6e2de51e226ce52a9a794",
+      "sha256": "3344add8d15fd56c629f7b56e41c55684229bf3cb7cbe871cdd333d9104ded77",
+      "duration": 2.96396875,
+      "peak": 0.82,
+      "rms": 0.2157998101832179,
+      "playbackRate": 0.83,
+      "kind": "quip"
+    },
+    "collateral": {
+      "sourceSha256": "1dd806af3d94a9b6246012c56cd14f476009cc7f09768e1f6fa5612240416e5e",
+      "sha256": "457a3d2b49b6504b5e1e32ccf7378a181ef82e312dad281e7bde2b730e68059d",
+      "duration": 1.97625,
+      "peak": 0.82,
+      "rms": 0.23432917145011992,
+      "playbackRate": 0.83,
+      "kind": "collateral"
+    }
+  }
+}

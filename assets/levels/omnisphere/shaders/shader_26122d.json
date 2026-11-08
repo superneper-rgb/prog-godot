@@ -1,0 +1,161 @@
+{
+ "name": "shader_26122d",
+ "type": "ShaderMaterial",
+ "vertexShader": "\n  attribute float aSize, aAlpha, aRot; attribute vec3 aCol; uniform float uScale; varying float vA, vR; varying vec3 vC;\n  #include <fog_pars_vertex>\n  void main() { vec4 mvPosition = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mvPosition; float d = -mvPosition.z;\n    gl_PointSize = clamp(aSize * uScale / max(d, .1), 0., 900.); vA = aAlpha * smoothstep(.8, 5., d) * step(1., gl_PointSize); vR = aRot; vC = aCol;\n    #include <fog_vertex>\n  }",
+ "fragmentShader": "\n  uniform sampler2D uMap; varying float vA, vR; varying vec3 vC;\n  #include <fog_pars_fragment>\n  void main() { vec2 u = gl_PointCoord - .5; float c = cos(vR), s = sin(vR); u = vec2(c * u.x - s * u.y, s * u.x + c * u.y) + .5;\n    vec4 t = texture2D(uMap, u); gl_FragColor = vec4(vC * t.rgb, t.a * vA); if (gl_FragColor.a < .003) discard;\n    #include <fog_fragment>\n  }",
+ "uniforms": {
+  "uMap": {
+   "type": "t",
+   "file": "levels/_tex/757741b4aa7e8577_64x64.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uScale": {
+   "type": "f",
+   "value": 449.35546
+  },
+  "fogDensity": {
+   "type": "f",
+   "value": 0.00042
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.14118,
+    0.07059,
+    0.05491
+   ]
+  }
+ },
+ "variants": [
+  {
+   "uMap": {
+    "type": "t",
+    "file": "levels/_tex/757741b4aa7e8577_64x64.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uScale": {
+    "type": "f",
+    "value": 449.35546
+   },
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   }
+  },
+  {
+   "uMap": {
+    "type": "t",
+    "file": "levels/_tex/5184e9a87a4e5dd6_64x64.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uScale": {
+    "type": "f",
+    "value": 449.35546
+   },
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   }
+  },
+  {
+   "uMap": {
+    "type": "t",
+    "file": "levels/_tex/e7d52dfbd650b089_64x64.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uScale": {
+    "type": "f",
+    "value": 449.35546
+   },
+   "fogDensity": {
+    "type": "f",
+    "value": 0.00042
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.14118,
+     0.07059,
+     0.05491
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/757741b4aa7e8577_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}",
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/5184e9a87a4e5dd6_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}",
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/e7d52dfbd650b089_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aSize",
+  "aAlpha",
+  "aRot",
+  "aCol"
+ ],
+ "uses": 3,
+ "nodes": [
+  "",
+  "",
+  ""
+ ]
+}

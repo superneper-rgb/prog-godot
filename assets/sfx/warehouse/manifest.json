@@ -1,0 +1,179 @@
+{
+  "provider": "ElevenLabs",
+  "soundModel": "eleven_text_to_sound_v2",
+  "securityVoice": "JBFqnCBsd6RMkjVDRZzb",
+  "securityModel": "eleven_multilingual_v2",
+  "effects": [
+    {
+      "id": "robot-step",
+      "duration": 0.5,
+      "gain": 0.24,
+      "prompt": "One compact combat robot footstep: clacking metal toes, brief electric servo and heavy rubberized steel heel. Crisp PS2 science fiction industrial sound. Single dry impact, no voice, no music.",
+      "loop": false
+    },
+    {
+      "id": "robot-alert",
+      "duration": 2,
+      "gain": 0.3,
+      "prompt": "Loud angry security robot alarm beep. A sharp electronic chirp immediately, followed by a descending distorted electric growl and three warning bleeps. Dry isolated science fiction alert sound. No speech. No music.",
+      "loop": false
+    },
+    {
+      "id": "robot-deploy",
+      "duration": 1.5,
+      "gain": 0.28,
+      "prompt": "Security robot powering up: relay clacks, spring-loaded armor snapping, little angry servo whine ending in a pneumatic lock. Single dry mechanical activation. No voice, no music.",
+      "loop": false
+    },
+    {
+      "id": "robot-hit",
+      "duration": 0.6,
+      "gain": 0.3,
+      "prompt": "Single combat robot armor hit: punchy dented metal clang, brief electrical arc and loose components rattling. Dry isolated game effect, no music.",
+      "loop": false
+    },
+    {
+      "id": "robot-death",
+      "duration": 1.8,
+      "gain": 0.45,
+      "prompt": "Small hostile robot destroyed: metallic explosive crunch, broken gears scattering, sparking electronics and descending motor shutdown. Dry isolated game effect, no music.",
+      "loop": false
+    },
+    {
+      "id": "robot-shot",
+      "duration": 0.5,
+      "gain": 0.2,
+      "prompt": "Single industrial robot plasma rivet gun shot: electric snap, sharp pneumatic crack, tiny shell mechanism cycling. Dry isolated sci-fi weapon effect, no music.",
+      "loop": false
+    },
+    {
+      "id": "drone-hover",
+      "duration": 3,
+      "gain": 0.11,
+      "prompt": "Seamless steady loop of a small sinister security drone hovering: oscillating electric rotor, gritty low motor flutter, high servo buzz. Constant texture, no starts or stops, no speech or music.",
+      "loop": true
+    },
+    {
+      "id": "intruder-siren",
+      "duration": 3,
+      "gain": 0.38,
+      "prompt": "Short factory intruder alarm: two harsh alternating industrial warning horn pulses, a rattling PA speaker and electrical distortion. Serious sci-fi security breach. No speech or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-step",
+      "duration": 0.9,
+      "gain": 0.52,
+      "prompt": "Single gigantic industrial walking robot footfall: enormous steel heel crunch, deep chassis thud, piston air discharge and loose chains settling. Immediate impact with short tail, dry isolated effect, no music.",
+      "loop": false
+    },
+    {
+      "id": "boss-servo",
+      "duration": 2,
+      "gain": 0.14,
+      "prompt": "Seamless steady giant robot movement loop: strained hydraulic pumps, slow grinding worm gears, ticking high torque electric motors and heavy cable tension. Dry machinery, no impact, no voice, no music.",
+      "loop": true
+    },
+    {
+      "id": "boss-impact",
+      "duration": 1.2,
+      "gain": 0.65,
+      "prompt": "Single huge hydraulic pile driver striking steel concrete: crushing low metallic boom, buckled plate crack and piston exhaust. Immediate ferocious impact, short dry tail, no music.",
+      "loop": false
+    },
+    {
+      "id": "boss-charge",
+      "duration": 1.3,
+      "gain": 0.32,
+      "prompt": "Giant industrial robot attack windup: high torque motor spins up, thick ratcheting gears tension a massive hydraulic arm, rising angry electric whine. Immediate onset, no final impact, no voice or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-ram",
+      "duration": 1,
+      "gain": 0.5,
+      "prompt": "Gigantic forklift robot lunging forward: violent turbine surge, hydraulic pressure dump, brutal accelerating steel tracks and chassis rattle. Dry aggressive single movement, no voice or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-missile",
+      "duration": 0.6,
+      "gain": 0.37,
+      "prompt": "Single shoulder-mounted industrial missile launcher: heavy hatch clack, sharp compressed ignition pop and brief rocket whoosh. Immediate launch, no explosion, no music.",
+      "loop": false
+    },
+    {
+      "id": "boss-purge",
+      "duration": 2,
+      "gain": 0.42,
+      "prompt": "Industrial robot floor purge activation: giant pressure valve opens with a mechanical bang, dense roaring superheated steam jets and electrical crackle. Immediate onset, dry isolated effect, no music.",
+      "loop": false
+    },
+    {
+      "id": "boss-latch",
+      "duration": 0.65,
+      "gain": 0.38,
+      "prompt": "Giant robot armored eye shutter locks shut: several heavy steel iris leaves clatter inward, end in a forceful magnetic latch and short electric snap. One dry mechanical action, no music.",
+      "loop": false
+    },
+    {
+      "id": "boss-rivet",
+      "duration": 0.5,
+      "gain": 0.4,
+      "prompt": "Single gigantic industrial nail cannon shot: brutal pneumatic piston bang, sharp metallic projectile crack and fast ammunition feed clank. Immediate dry weapon shot, no explosion or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-vent",
+      "duration": 1.2,
+      "gain": 0.35,
+      "prompt": "Giant robot armored core opens: heavy iris shutters scrape apart, pressurized steam escapes, hot hydraulic system sighs down. Dry isolated mechanical action, no voice or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-taunt",
+      "duration": 1.8,
+      "gain": 0.4,
+      "prompt": "Monstrous industrial robot overdrive activation: angry distorted machine horn, rising electrical transformer roar, three huge relay clicks. No human voice, no music, dry isolated effect.",
+      "loop": false
+    },
+    {
+      "id": "boss-shutdown",
+      "duration": 3.5,
+      "gain": 0.65,
+      "prompt": "Gigantic industrial robot catastrophic shutdown: seized gears grinding, detonating power relays, falling heavy chassis crash, final pathetic descending electronic whine. Dry isolated effect, no voice or music.",
+      "loop": false
+    },
+    {
+      "id": "boss-sweep",
+      "duration": 1.2,
+      "gain": 0.4,
+      "prompt": "Massive articulated steel robot arm swinging fast at ankle height: sweeping hydraulic hiss, cable whip, heavy rotating gearbox growl. No contact impact, no voice or music.",
+      "loop": false
+    },
+    {
+      "id": "arena-gate",
+      "duration": 1.8,
+      "gain": 0.42,
+      "prompt": "Heavy factory security barricade rising from a steel floor slot: hydraulic jack growl, interlocking armored plates ratcheting upward, final locking clunk. Dry isolated single mechanical motion, no music.",
+      "loop": false
+    }
+  ],
+  "speech": [
+    {
+      "id": "pa-intruder",
+      "gain": 0.55,
+      "text": "Intruder alert. Unauthorized life form in dispatch. Security units, intercept."
+    },
+    {
+      "id": "pa-lockdown",
+      "gain": 0.55,
+      "text": "Loading apron sealed. Export handler online. Intruder disposal authorized."
+    },
+    {
+      "id": "pa-overdrive",
+      "gain": 0.55,
+      "text": "Overtime protocol engaged. All safety restrictions suspended."
+    }
+  ]
+}

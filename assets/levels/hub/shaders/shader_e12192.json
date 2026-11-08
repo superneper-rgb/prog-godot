@@ -1,0 +1,107 @@
+{
+ "name": "shader_e12192",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float aPhase; attribute float aSize; uniform float uTime; varying float vA;\n#include <fog_pars_vertex>\nvoid main(){ float t = fract(uTime * 0.33 + aPhase); vA = 0.3 + 0.7 * (smoothstep(0.0, 0.06, t) * (1.0 - smoothstep(0.1, 0.34, t)));\n  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mvPosition;\n  gl_PointSize = clamp(aSize * 260.0 / max(1.0, -mvPosition.z), 1.5, 22.0);\n#include <fog_vertex>\n}",
+ "fragmentShader": "uniform sampler2D uMap; uniform vec3 uCol; varying float vA;\n#include <fog_pars_fragment>\nvoid main(){ float a = texture2D(uMap, gl_PointCoord).r; if (a < 0.02) discard; gl_FragColor = vec4(uCol * (0.55 + 0.45 * vA), a * vA);\n#include <fog_fragment>\n}",
+ "uniforms": {
+  "fogDensity": {
+   "type": "f",
+   "value": 0.0034
+  },
+  "fogNear": {
+   "type": "f",
+   "value": 1
+  },
+  "fogFar": {
+   "type": "f",
+   "value": 2000
+  },
+  "fogColor": {
+   "type": "c",
+   "value": [
+    0.02609,
+    0.00699,
+    0.02238
+   ]
+  },
+  "uTime": {
+   "type": "f",
+   "value": 177.6536
+  },
+  "uMap": {
+   "type": "t",
+   "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+   "name": "",
+   "srgb": true
+  },
+  "uCol": {
+   "type": "v",
+   "value": [
+    1,
+    0.17,
+    0.13
+   ]
+  }
+ },
+ "variants": [
+  {
+   "fogDensity": {
+    "type": "f",
+    "value": 0.0034
+   },
+   "fogNear": {
+    "type": "f",
+    "value": 1
+   },
+   "fogFar": {
+    "type": "f",
+    "value": 2000
+   },
+   "fogColor": {
+    "type": "c",
+    "value": [
+     0.02609,
+     0.00699,
+     0.02238
+    ]
+   },
+   "uTime": {
+    "type": "f",
+    "value": 177.6536
+   },
+   "uMap": {
+    "type": "t",
+    "file": "levels/_tex/7ee2077b0c5fc3e4_128x128.webp",
+    "name": "",
+    "srgb": true
+   },
+   "uCol": {
+    "type": "v",
+    "value": [
+     1,
+     0.17,
+     0.13
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true},\"uCol\":{\"type\":\"v\",\"value\":[1,0.17,0.13]}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "aPhase",
+  "aSize"
+ ],
+ "uses": 1,
+ "nodes": [
+  "CityBeacons"
+ ]
+}

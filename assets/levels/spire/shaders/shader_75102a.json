@@ -1,0 +1,84 @@
+{
+ "name": "shader_75102a",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vDir; void main(){ vDir = position; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; }",
+ "fragmentShader": "\n      uniform float uTime, uBeat, uStrength; uniform vec3 uSky, uBg; varying vec3 vDir;\n      float h(vec3 p){ p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }\n      float n3(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);\n        return mix(mix(mix(h(i), h(i + vec3(1,0,0)), f.x), mix(h(i + vec3(0,1,0)), h(i + vec3(1,1,0)), f.x), f.y),\n                   mix(mix(h(i + vec3(0,0,1)), h(i + vec3(1,0,1)), f.x), mix(h(i + vec3(0,1,1)), h(i + vec3(1,1,1)), f.x), f.y), f.z); }\n      float gyro(vec3 p){ return sin(p.x) * cos(p.y) + sin(p.y) * cos(p.z) + sin(p.z) * cos(p.x); }\n      // the lattice field: a warped gyroid (membrane where |g| is small ... hole where it is large)\n      float field(vec3 d, float t){ vec3 w = d * 6.0 + vec3(t, -t * 0.7, t * 0.5); w += 0.6 * vec3(n3(w * 1.7), n3(w * 1.7 + 11.0), n3(w * 1.7 + 23.0)); return gyro(w); }\n      void main(){\n        vec3 d = normalize(vDir); float t = uTime * 0.02;\n        float g1 = field(d, t);\n        float wall1 = smoothstep(0.5, 1.1, abs(g1));                                       // 1 = membrane, 0 = hole\n        // fake surface normal from the field's slope, so the membrane has form and a wet sheen\n        vec3 e = vec3(0.012, 0.0, 0.0);\n        vec3 gr = vec3(field(normalize(d + e.xyy), t) - field(normalize(d - e.xyy), t), field(normalize(d + e.yxy), t) - field(normalize(d - e.yxy), t), field(normalize(d + e.yyx), t) - field(normalize(d - e.yyx), t));\n        vec3 nrm = normalize(d * 0.6 - gr * 1.8 * sign(g1));\n        vec3 L = normalize(vec3(0.35, 0.7, 0.45));\n        float lit = clamp(dot(nrm, L) * 0.5 + 0.5, 0.0, 1.0);\n        float spec = pow(max(dot(reflect(-L, nrm), -d), 0.0), 18.0);\n        // flesh: mottled crimson, ridged veins, darker in the folds\n        float mott = n3(d * 9.0 + 3.0) * 0.6 + n3(d * 21.0) * 0.4;\n        float ridge = 1.0 - abs(2.0 * n3(d * 14.0 + vec3(0.0, t * 2.0, 0.0)) - 1.0), vein = smoothstep(0.86, 0.99, ridge);\n        float vein2 = smoothstep(0.88, 0.995, 1.0 - abs(2.0 * n3(d * 31.0 + 9.0) - 1.0));\n        float beat = 0.85 + 0.35 * uBeat;\n        vec3 fleshDark = vec3(0.13, 0.016, 0.03), fleshLit = vec3(0.50, 0.085, 0.11);\n        vec3 membrane = mix(fleshDark, fleshLit, lit * (0.45 + 0.55 * mott));\n        membrane = mix(membrane, vec3(0.05, 0.004, 0.012), (vein * 0.7 + vein2 * 0.4));    // dark veins\n        membrane += vec3(0.55, 0.06, 0.07) * (vein * 0.18 + vein2 * 0.08) * beat;          // ... that glow a little on the beat\n        // bulbous organs: glossy cysts studding the membrane\n        vec3 cp = d * 5.0 + 4.0; vec3 cid = floor(cp), cf = fract(cp) - 0.5;\n        vec3 jit = vec3(h(cid), h(cid + 3.1), h(cid + 7.7)) - 0.5; vec3 q = cf - jit * 0.35;\n        float cr = 0.16 + 0.12 * h(cid + 1.7), cd = length(q), cyst = step(0.55, h(cid + 9.3)) * (1.0 - smoothstep(cr - 0.02, cr, cd));\n        vec3 cn = normalize(q + 0.001); float cl = clamp(dot(cn, L) * 0.5 + 0.5, 0.0, 1.0), cs = pow(max(dot(reflect(-L, cn), -d), 0.0), 22.0);\n        vec3 cystCol = mix(vec3(0.12, 0.012, 0.025), vec3(0.62, 0.07, 0.10), cl) + vec3(0.7, 0.35, 0.3) * cs * 0.45;\n        membrane = mix(membrane, cystCol, cyst * smoothstep(0.7, 0.95, wall1));\n        membrane += vec3(0.9, 0.5, 0.45) * spec * 0.22 * wall1;                            // wet highlights\n        // the holes: a deeper lattice with embers, and a translucent, blood-lit lip round each hole\n        vec3 ember = mix(vec3(1.0, 0.34, 0.12), uSky, 0.25);\n        vec3 w2 = d * 12.0 + vec3(-t * 0.6, t, t * 0.4) + 7.0; w2 += 0.5 * vec3(n3(w2 * 2.1), n3(w2 * 2.1 + 5.0), n3(w2 * 2.1 + 17.0));\n        float wall2 = smoothstep(0.5, 1.1, abs(gyro(w2)));\n        float glowField = 0.5 + 0.5 * n3(d * 3.0 + vec3(0.0, t * 3.0, 0.0));\n        vec3 deep = mix(ember * (0.2 + 0.8 * glowField) * beat * 0.8, vec3(0.22, 0.03, 0.05), wall2 * 0.7);\n        float lip = smoothstep(0.35, 0.8, wall1) * (1.0 - smoothstep(0.8, 1.0, wall1));\n        vec3 col = mix(deep, membrane, wall1) + vec3(0.9, 0.22, 0.12) * lip * 0.22 * beat; // light bleeding through the thin edge\n        gl_FragColor = vec4(mix(uBg, col, uStrength), 1.0);\n      }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 17.6028
+  },
+  "uBeat": {
+   "type": "f",
+   "value": 0.298858
+  },
+  "uSky": {
+   "type": "c",
+   "value": [
+    0.7454,
+    0.35153,
+    0.39157
+   ]
+  },
+  "uBg": {
+   "type": "c",
+   "value": [
+    0.00605,
+    0.00121,
+    0.00304
+   ]
+  },
+  "uStrength": {
+   "type": "f",
+   "value": 0.5
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 17.6028
+   },
+   "uBeat": {
+    "type": "f",
+    "value": 0.298858
+   },
+   "uSky": {
+    "type": "c",
+    "value": [
+     0.7454,
+     0.35153,
+     0.39157
+    ]
+   },
+   "uBg": {
+    "type": "c",
+    "value": [
+     0.00605,
+     0.00121,
+     0.00304
+    ]
+   },
+   "uStrength": {
+    "type": "f",
+    "value": 0.5
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uBeat\":{\"type\":\"f\",\"value\":0.298858},\"uSky\":{\"type\":\"c\",\"value\":[0.7454,0.35153,0.39157]},\"uBg\":{\"type\":\"c\",\"value\":[0.00605,0.00121,0.00304]},\"uStrength\":{\"type\":\"f\",\"value\":0.5}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "back",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": false,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "spire-sky"
+ ]
+}

@@ -1,0 +1,1579 @@
+{
+ "polyfork/boxy-sedan-70s-7d55f7.glb": {
+  "source": "polyfork",
+  "title": "Boxy-sedan-70s",
+  "url": "https://polyfork.dev/asset/boxy-sedan-70s-7d55f7",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 3507,
+  "size_m": {
+   "x": 2.07,
+   "y": 1.42,
+   "z": 4.88
+  },
+  "rigged": false
+ },
+ "polyfork/boxy-sedan-70s-7d55f7-mod.glb": {
+  "source": "polyfork",
+  "title": "Boxy-sedan-70s",
+  "url": "https://polyfork.dev/asset/boxy-sedan-70s-7d55f7",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "512"
+  },
+  "derivedFrom": "boxy-sedan-70s-7d55f7.glb"
+ },
+ "polyfork/timber-utility-pole-a93693.glb": {
+  "source": "polyfork",
+  "title": "Timber Utility Pole",
+  "url": "https://polyfork.dev/asset/timber-utility-pole-a93693",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 588,
+  "size_m": {
+   "x": 4,
+   "y": 9,
+   "z": 8.1
+  },
+  "rigged": false
+ },
+ "polyfork/timber-utility-pole-a93693-mod.glb": {
+  "source": "polyfork",
+  "title": "Timber Utility Pole",
+  "url": "https://polyfork.dev/asset/timber-utility-pole-a93693",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "timber-utility-pole-a93693.glb"
+ },
+ "polyfork/guardrail-d3bd42.glb": {
+  "source": "polyfork",
+  "title": "Guardrail",
+  "url": "https://polyfork.dev/asset/guardrail-d3bd42",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 146,
+  "size_m": {
+   "x": 4,
+   "y": 0.9,
+   "z": 0.34
+  },
+  "rigged": false
+ },
+ "polyfork/guardrail-d3bd42-mod.glb": {
+  "source": "polyfork",
+  "title": "Guardrail",
+  "url": "https://polyfork.dev/asset/guardrail-d3bd42",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "guardrail-d3bd42.glb"
+ },
+ "polyfork/roadside-billboard-c3c053.glb": {
+  "source": "polyfork",
+  "title": "Roadside Billboard",
+  "url": "https://polyfork.dev/asset/roadside-billboard-c3c053",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 750,
+  "size_m": {
+   "x": 8.3,
+   "y": 6.67,
+   "z": 3.54
+  },
+  "rigged": false
+ },
+ "polyfork/roadside-billboard-c3c053-mod.glb": {
+  "source": "polyfork",
+  "title": "Roadside Billboard",
+  "url": "https://polyfork.dev/asset/roadside-billboard-c3c053",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "512"
+  },
+  "derivedFrom": "roadside-billboard-c3c053.glb"
+ },
+ "polyfork/dead-cottonwood-edbde8.glb": {
+  "source": "polyfork",
+  "title": "Dead Cottonwood",
+  "url": "https://polyfork.dev/asset/dead-cottonwood-edbde8",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1090,
+  "size_m": {
+   "x": 6.82,
+   "y": 7,
+   "z": 3.71
+  },
+  "rigged": false
+ },
+ "polyfork/dead-cottonwood-edbde8-mod.glb": {
+  "source": "polyfork",
+  "title": "Dead Cottonwood",
+  "url": "https://polyfork.dev/asset/dead-cottonwood-edbde8",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "dead-cottonwood-edbde8.glb"
+ },
+ "polyfork/dead-tree-6795fa.glb": {
+  "source": "polyfork",
+  "title": "Dead Tree",
+  "url": "https://polyfork.dev/asset/dead-tree-6795fa",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 536,
+  "size_m": {
+   "x": 3.19,
+   "y": 5,
+   "z": 1.87
+  },
+  "rigged": false
+ },
+ "polyfork/dead-tree-6795fa-mod.glb": {
+  "source": "polyfork",
+  "title": "Dead Tree",
+  "url": "https://polyfork.dev/asset/dead-tree-6795fa",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "dead-tree-6795fa.glb"
+ },
+ "polyfork/pante-n-cypress-a667ad.glb": {
+  "source": "polyfork",
+  "title": "Panteón Cypress",
+  "url": "https://polyfork.dev/asset/pante-n-cypress-a667ad",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 749,
+  "size_m": {
+   "x": 1.94,
+   "y": 7,
+   "z": 1.99
+  },
+  "rigged": false
+ },
+ "polyfork/pante-n-cypress-a667ad-mod.glb": {
+  "source": "polyfork",
+  "title": "Panteón Cypress",
+  "url": "https://polyfork.dev/asset/pante-n-cypress-a667ad",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "pante-n-cypress-a667ad.glb"
+ },
+ "polyfork/fisherman-shack-ea9b2b.glb": {
+  "source": "polyfork",
+  "title": "Fisherman Shack",
+  "url": "https://polyfork.dev/asset/fisherman-shack-ea9b2b",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1638,
+  "size_m": {
+   "x": 4.72,
+   "y": 5.45,
+   "z": 4.26
+  },
+  "rigged": false
+ },
+ "polyfork/fisherman-shack-ea9b2b-mod.glb": {
+  "source": "polyfork",
+  "title": "Fisherman Shack",
+  "url": "https://polyfork.dev/asset/fisherman-shack-ea9b2b",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "512"
+  },
+  "derivedFrom": "fisherman-shack-ea9b2b.glb"
+ },
+ "polyfork/sunken-fishing-boat-061c70.glb": {
+  "source": "polyfork",
+  "title": "Sunken Fishing Boat",
+  "url": "https://polyfork.dev/asset/sunken-fishing-boat-061c70",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1192,
+  "size_m": {
+   "x": 2.1,
+   "y": 2.35,
+   "z": 5
+  },
+  "rigged": false
+ },
+ "polyfork/sunken-fishing-boat-061c70-mod.glb": {
+  "source": "polyfork",
+  "title": "Sunken Fishing Boat",
+  "url": "https://polyfork.dev/asset/sunken-fishing-boat-061c70",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "sunken-fishing-boat-061c70.glb"
+ },
+ "polyfork/rowboat-c42d85.glb": {
+  "source": "polyfork",
+  "title": "Rowboat",
+  "url": "https://polyfork.dev/asset/rowboat-c42d85",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 694,
+  "size_m": {
+   "x": 1.34,
+   "y": 0.72,
+   "z": 3
+  },
+  "rigged": false
+ },
+ "polyfork/rowboat-c42d85-mod.glb": {
+  "source": "polyfork",
+  "title": "Rowboat",
+  "url": "https://polyfork.dev/asset/rowboat-c42d85",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "rowboat-c42d85.glb"
+ },
+ "polyfork/town-car-56eeb6.glb": {
+  "source": "polyfork",
+  "title": "Town Car",
+  "url": "https://polyfork.dev/asset/town-car-56eeb6",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1770,
+  "size_m": {
+   "x": 1.98,
+   "y": 1.5,
+   "z": 5
+  },
+  "rigged": false
+ },
+ "polyfork/town-car-56eeb6-mod.glb": {
+  "source": "polyfork",
+  "title": "Town Car",
+  "url": "https://polyfork.dev/asset/town-car-56eeb6",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256",
+   "tint": "0.55,0.42,0.32"
+  },
+  "derivedFrom": "town-car-56eeb6.glb"
+ },
+ "polyfork/cattail-reed-6abbb3.glb": {
+  "source": "polyfork",
+  "title": "Cattail Reed",
+  "url": "https://polyfork.dev/asset/cattail-reed-6abbb3",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 388,
+  "size_m": {
+   "x": 0.39,
+   "y": 1.2,
+   "z": 0.29
+  },
+  "rigged": false
+ },
+ "polyfork/cattail-reed-6abbb3-mod.glb": {
+  "source": "polyfork",
+  "title": "Cattail Reed",
+  "url": "https://polyfork.dev/asset/cattail-reed-6abbb3",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "cattail-reed-6abbb3.glb"
+ },
+ "polyfork/river-reed-cluster-cba87e.glb": {
+  "source": "polyfork",
+  "title": "River Reed Cluster",
+  "url": "https://polyfork.dev/asset/river-reed-cluster-cba87e",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 900,
+  "size_m": {
+   "x": 1.5,
+   "y": 1.93,
+   "z": 1
+  },
+  "rigged": false
+ },
+ "polyfork/river-reed-cluster-cba87e-mod.glb": {
+  "source": "polyfork",
+  "title": "River Reed Cluster",
+  "url": "https://polyfork.dev/asset/river-reed-cluster-cba87e",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "river-reed-cluster-cba87e.glb"
+ },
+ "polyfork/oil-drum-386c30.glb": {
+  "source": "polyfork",
+  "title": "Oil-drum",
+  "url": "https://polyfork.dev/asset/oil-drum-386c30",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 532,
+  "size_m": {
+   "x": 0.62,
+   "y": 0.9,
+   "z": 0.6
+  },
+  "rigged": false
+ },
+ "polyfork/oil-drum-386c30-mod.glb": {
+  "source": "polyfork",
+  "title": "Oil-drum",
+  "url": "https://polyfork.dev/asset/oil-drum-386c30",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "oil-drum-386c30.glb"
+ },
+ "polyhaven/asphalt_02.jpg": {
+  "source": "polyhaven",
+  "title": "asphalt_02",
+  "url": "https://polyhaven.com/a/asphalt_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/rusty_metal_02.jpg": {
+  "source": "polyhaven",
+  "title": "rusty_metal_02",
+  "url": "https://polyhaven.com/a/rusty_metal_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/old_planks_02.jpg": {
+  "source": "polyhaven",
+  "title": "old_planks_02",
+  "url": "https://polyhaven.com/a/old_planks_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/bark_willow.jpg": {
+  "source": "polyhaven",
+  "title": "bark_willow",
+  "url": "https://polyhaven.com/a/bark_willow",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/brushed_concrete_2.jpg": {
+  "source": "polyhaven",
+  "title": "brushed_concrete_2",
+  "url": "https://polyhaven.com/a/brushed_concrete_2",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/forest_ground_04.jpg": {
+  "source": "polyhaven",
+  "title": "forest_ground_04",
+  "url": "https://polyhaven.com/a/forest_ground_04",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/concrete.jpg": {
+  "source": "polyhaven",
+  "title": "concrete",
+  "url": "https://polyhaven.com/a/concrete",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/grass_ground.jpg": {
+  "source": "polyhaven",
+  "title": "grass_ground",
+  "url": "https://polyhaven.com/a/grass_ground",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/brown_mud_02.jpg": {
+  "source": "polyhaven",
+  "title": "brown_mud_02",
+  "url": "https://polyhaven.com/a/brown_mud_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/aerial_grass_rock.jpg": {
+  "source": "polyhaven",
+  "title": "aerial_grass_rock",
+  "url": "https://polyhaven.com/a/aerial_grass_rock",
+  "license": "CC0",
+  "mods": {
+   "tex": "512 diffuse only"
+  }
+ },
+ "polyhaven/marsh_foliage.png": {
+  "source": "polyhaven",
+  "title": "grass_medium_02 (blades)",
+  "url": "https://polyhaven.com/a/grass_medium_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "1024x512 RGBA card atlas: sedge, tussock, cattails, reeds; blades recomposed into clumps, cattail heads and reed plumes painted (devtools/build-marsh-foliage.py)"
+  }
+ },
+ "polyfork/office-desk-021eb3.glb": {
+  "source": "polyfork",
+  "title": "Office Desk",
+  "url": "https://polyfork.dev/asset/office-desk-021eb3",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 280,
+  "size_m": {
+   "x": 1.4,
+   "y": 0.75,
+   "z": 0.7
+  },
+  "rigged": false
+ },
+ "polyfork/office-desk-021eb3-mod.glb": {
+  "source": "polyfork",
+  "title": "Office Desk",
+  "url": "https://polyfork.dev/asset/office-desk-021eb3",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "office-desk-021eb3.glb"
+ },
+ "polyfork/write-up-desk-38763a.glb": {
+  "source": "polyfork",
+  "title": "Write-up Desk",
+  "url": "https://polyfork.dev/asset/write-up-desk-38763a",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 554,
+  "size_m": {
+   "x": 1.8,
+   "y": 1.26,
+   "z": 0.9
+  },
+  "rigged": false
+ },
+ "polyfork/write-up-desk-38763a-mod.glb": {
+  "source": "polyfork",
+  "title": "Write-up Desk",
+  "url": "https://polyfork.dev/asset/write-up-desk-38763a",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "write-up-desk-38763a.glb"
+ },
+ "polyfork/issue-desk-with-gate-3ee2a9.glb": {
+  "source": "polyfork",
+  "title": "Issue Desk (with Gate)",
+  "url": "https://polyfork.dev/asset/issue-desk-with-gate-3ee2a9",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 684,
+  "size_m": {
+   "x": 4,
+   "y": 2.34,
+   "z": 1.75
+  },
+  "rigged": false
+ },
+ "polyfork/issue-desk-with-gate-3ee2a9-mod.glb": {
+  "source": "polyfork",
+  "title": "Issue Desk (with Gate)",
+  "url": "https://polyfork.dev/asset/issue-desk-with-gate-3ee2a9",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "issue-desk-with-gate-3ee2a9.glb"
+ },
+ "polyfork/task-chair-ccd944.glb": {
+  "source": "polyfork",
+  "title": "Task Chair",
+  "url": "https://polyfork.dev/asset/task-chair-ccd944",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 698,
+  "size_m": {
+   "x": 0.64,
+   "y": 1.07,
+   "z": 0.67
+  },
+  "rigged": false
+ },
+ "polyfork/task-chair-ccd944-mod.glb": {
+  "source": "polyfork",
+  "title": "Task Chair",
+  "url": "https://polyfork.dev/asset/task-chair-ccd944",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "task-chair-ccd944.glb"
+ },
+ "polyfork/meeting-chair-731ce0.glb": {
+  "source": "polyfork",
+  "title": "Meeting Chair",
+  "url": "https://polyfork.dev/asset/meeting-chair-731ce0",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 464,
+  "size_m": {
+   "x": 0.4,
+   "y": 0.82,
+   "z": 0.48
+  },
+  "rigged": false
+ },
+ "polyfork/meeting-chair-731ce0-mod.glb": {
+  "source": "polyfork",
+  "title": "Meeting Chair",
+  "url": "https://polyfork.dev/asset/meeting-chair-731ce0",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "meeting-chair-731ce0.glb"
+ },
+ "polyfork/filing-cabinet-f8a251.glb": {
+  "source": "polyfork",
+  "title": "Filing Cabinet",
+  "url": "https://polyfork.dev/asset/filing-cabinet-f8a251",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 420,
+  "size_m": {
+   "x": 0.45,
+   "y": 0.7,
+   "z": 0.62
+  },
+  "rigged": false
+ },
+ "polyfork/filing-cabinet-f8a251-mod.glb": {
+  "source": "polyfork",
+  "title": "Filing Cabinet",
+  "url": "https://polyfork.dev/asset/filing-cabinet-f8a251",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "filing-cabinet-f8a251.glb"
+ },
+ "polyfork/locker-bank-1784b8.glb": {
+  "source": "polyfork",
+  "title": "Locker Bank",
+  "url": "https://polyfork.dev/asset/locker-bank-1784b8",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 602,
+  "size_m": {
+   "x": 1,
+   "y": 1.8,
+   "z": 0.5
+  },
+  "rigged": false
+ },
+ "polyfork/locker-bank-1784b8-mod.glb": {
+  "source": "polyfork",
+  "title": "Locker Bank",
+  "url": "https://polyfork.dev/asset/locker-bank-1784b8",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "locker-bank-1784b8.glb"
+ },
+ "polyfork/vending-machine-471c29.glb": {
+  "source": "polyfork",
+  "title": "Vending Machine",
+  "url": "https://polyfork.dev/asset/vending-machine-471c29",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 692,
+  "size_m": {
+   "x": 1.11,
+   "y": 1.9,
+   "z": 0.8
+  },
+  "rigged": false
+ },
+ "polyfork/vending-machine-471c29-mod.glb": {
+  "source": "polyfork",
+  "title": "Vending Machine",
+  "url": "https://polyfork.dev/asset/vending-machine-471c29",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "vending-machine-471c29.glb"
+ },
+ "polyfork/office-coffee-machine-9da5e6.glb": {
+  "source": "polyfork",
+  "title": "Office Coffee Machine",
+  "url": "https://polyfork.dev/asset/office-coffee-machine-9da5e6",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 578,
+  "size_m": {
+   "x": 0.35,
+   "y": 0.56,
+   "z": 0.4
+  },
+  "rigged": false
+ },
+ "polyfork/office-coffee-machine-9da5e6-mod.glb": {
+  "source": "polyfork",
+  "title": "Office Coffee Machine",
+  "url": "https://polyfork.dev/asset/office-coffee-machine-9da5e6",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "office-coffee-machine-9da5e6.glb"
+ },
+ "polyfork/coffin-prop-d62082.glb": {
+  "source": "polyfork",
+  "title": "Coffin Prop",
+  "url": "https://polyfork.dev/asset/coffin-prop-d62082",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 712,
+  "size_m": {
+   "x": 2,
+   "y": 0.62,
+   "z": 0.96
+  },
+  "rigged": false
+ },
+ "polyfork/coffin-prop-d62082-mod.glb": {
+  "source": "polyfork",
+  "title": "Coffin Prop",
+  "url": "https://polyfork.dev/asset/coffin-prop-d62082",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "coffin-prop-d62082.glb"
+ },
+ "polyfork/mop-bucket-trolley-ed94e7.glb": {
+  "source": "polyfork",
+  "title": "Mop Bucket Trolley",
+  "url": "https://polyfork.dev/asset/mop-bucket-trolley-ed94e7",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 620,
+  "size_m": {
+   "x": 0.36,
+   "y": 1.02,
+   "z": 0.6
+  },
+  "rigged": false
+ },
+ "polyfork/mop-bucket-trolley-ed94e7-mod.glb": {
+  "source": "polyfork",
+  "title": "Mop Bucket Trolley",
+  "url": "https://polyfork.dev/asset/mop-bucket-trolley-ed94e7",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "mop-bucket-trolley-ed94e7.glb"
+ },
+ "polyfork/pendant-strip-light-a7006f.glb": {
+  "source": "polyfork",
+  "title": "Pendant Strip Light",
+  "url": "https://polyfork.dev/asset/pendant-strip-light-a7006f",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 426,
+  "size_m": {
+   "x": 2,
+   "y": 0.67,
+   "z": 0.25
+  },
+  "rigged": false
+ },
+ "polyfork/pendant-strip-light-a7006f-mod.glb": {
+  "source": "polyfork",
+  "title": "Pendant Strip Light",
+  "url": "https://polyfork.dev/asset/pendant-strip-light-a7006f",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "pendant-strip-light-a7006f.glb"
+ },
+ "polyfork/housekeeping-cart-4df085.glb": {
+  "source": "polyfork",
+  "title": "Housekeeping Cart",
+  "url": "https://polyfork.dev/asset/housekeeping-cart-4df085",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 908,
+  "size_m": {
+   "x": 0.6,
+   "y": 1.41,
+   "z": 1.4
+  },
+  "rigged": false
+ },
+ "polyfork/housekeeping-cart-4df085-mod.glb": {
+  "source": "polyfork",
+  "title": "Housekeeping Cart",
+  "url": "https://polyfork.dev/asset/housekeeping-cart-4df085",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "housekeeping-cart-4df085.glb"
+ },
+ "polyfork/column-radiator-18af7e.glb": {
+  "source": "polyfork",
+  "title": "Column Radiator",
+  "url": "https://polyfork.dev/asset/column-radiator-18af7e",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 440,
+  "size_m": {
+   "x": 0.63,
+   "y": 0.68,
+   "z": 0.09
+  },
+  "rigged": false
+ },
+ "polyfork/column-radiator-18af7e-mod.glb": {
+  "source": "polyfork",
+  "title": "Column Radiator",
+  "url": "https://polyfork.dev/asset/column-radiator-18af7e",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "column-radiator-18af7e.glb"
+ },
+ "polyfork/wall-clock-0c555c.glb": {
+  "source": "polyfork",
+  "title": "Wall Clock",
+  "url": "https://polyfork.dev/asset/wall-clock-0c555c",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 408,
+  "size_m": {
+   "x": 0.35,
+   "y": 0.35,
+   "z": 0.11
+  },
+  "rigged": false
+ },
+ "polyfork/wall-clock-0c555c-mod.glb": {
+  "source": "polyfork",
+  "title": "Wall Clock",
+  "url": "https://polyfork.dev/asset/wall-clock-0c555c",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "wall-clock-0c555c.glb"
+ },
+ "polyfork/cardboard-delivery-box-59cc68.glb": {
+  "source": "polyfork",
+  "title": "Cardboard Delivery Box",
+  "url": "https://polyfork.dev/asset/cardboard-delivery-box-59cc68",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 376,
+  "size_m": {
+   "x": 0.57,
+   "y": 0.43,
+   "z": 0.45
+  },
+  "rigged": false
+ },
+ "polyfork/cardboard-delivery-box-59cc68-mod.glb": {
+  "source": "polyfork",
+  "title": "Cardboard Delivery Box",
+  "url": "https://polyfork.dev/asset/cardboard-delivery-box-59cc68",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "cardboard-delivery-box-59cc68.glb"
+ },
+ "polyfork/ground-litter-bin-aaaba0.glb": {
+  "source": "polyfork",
+  "title": "Ground Litter Bin",
+  "url": "https://polyfork.dev/asset/ground-litter-bin-aaaba0",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 618,
+  "size_m": {
+   "x": 0.48,
+   "y": 0.67,
+   "z": 0.48
+  },
+  "rigged": false
+ },
+ "polyfork/ground-litter-bin-aaaba0-mod.glb": {
+  "source": "polyfork",
+  "title": "Ground Litter Bin",
+  "url": "https://polyfork.dev/asset/ground-litter-bin-aaaba0",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "ground-litter-bin-aaaba0.glb"
+ },
+ "polyfork/fire-extinguisher-95dca1.glb": {
+  "source": "polyfork",
+  "title": "Fire Extinguisher",
+  "url": "https://polyfork.dev/asset/fire-extinguisher-95dca1",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 598,
+  "size_m": {
+   "x": 0.24,
+   "y": 0.55,
+   "z": 0.17
+  },
+  "rigged": false
+ },
+ "polyfork/fire-extinguisher-95dca1-mod.glb": {
+  "source": "polyfork",
+  "title": "Fire Extinguisher",
+  "url": "https://polyfork.dev/asset/fire-extinguisher-95dca1",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "fire-extinguisher-95dca1.glb"
+ },
+ "polyfork/station-bench-5f56b4.glb": {
+  "source": "polyfork",
+  "title": "Station Bench",
+  "url": "https://polyfork.dev/asset/station-bench-5f56b4",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 866,
+  "size_m": {
+   "x": 1.5,
+   "y": 0.95,
+   "z": 0.74
+  },
+  "rigged": false
+ },
+ "polyfork/station-bench-5f56b4-mod.glb": {
+  "source": "polyfork",
+  "title": "Station Bench",
+  "url": "https://polyfork.dev/asset/station-bench-5f56b4",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "station-bench-5f56b4.glb"
+ },
+ "polyfork/folding-dining-table-7b68ce.glb": {
+  "source": "polyfork",
+  "title": "Folding Dining Table",
+  "url": "https://polyfork.dev/asset/folding-dining-table-7b68ce",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 728,
+  "size_m": {
+   "x": 2.4,
+   "y": 0.72,
+   "z": 1.4
+  },
+  "rigged": false
+ },
+ "polyfork/folding-dining-table-7b68ce-mod.glb": {
+  "source": "polyfork",
+  "title": "Folding Dining Table",
+  "url": "https://polyfork.dev/asset/folding-dining-table-7b68ce",
+  "license": "Polyfork licence",
+  "mods": {
+   "tex": "256"
+  },
+  "derivedFrom": "folding-dining-table-7b68ce.glb"
+ },
+ "polyhaven/utility_ship_steel.jpg": {
+  "source": "polyhaven",
+  "title": "Metal Plate 02",
+  "author": "Rob Tuytel",
+  "url": "https://polyhaven.com/a/metal_plate_02",
+  "license": "CC0",
+  "mods": {
+   "resolution": "512x512",
+   "derivation": "resized; recolored to neutral steel"
+  }
+ },
+ "polyhaven/utility_ship_normal.jpg": {
+  "source": "polyhaven",
+  "title": "Metal Plate 02",
+  "author": "Rob Tuytel",
+  "url": "https://polyhaven.com/a/metal_plate_02",
+  "license": "CC0",
+  "mods": {
+   "resolution": "512x512",
+   "derivation": "resized"
+  }
+ },
+ "polyhaven/utility_ship_roughness.jpg": {
+  "source": "polyhaven",
+  "title": "Metal Plate 02",
+  "author": "Rob Tuytel",
+  "url": "https://polyhaven.com/a/metal_plate_02",
+  "license": "CC0",
+  "mods": {
+   "resolution": "512x512",
+   "derivation": "resized"
+  }
+ },
+ "polyfork/construction-dumpster-2de7ae.glb": {
+  "source": "polyfork",
+  "title": "Construction Dumpster",
+  "url": "https://polyfork.dev/asset/construction-dumpster-2de7ae",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 516,
+  "size_m": {
+   "x": 3,
+   "y": 1.4,
+   "z": 1.7
+  },
+  "rigged": false
+ },
+ "polyfork/air-con-unit-9fadc2.glb": {
+  "source": "polyfork",
+  "title": "Air-Con Unit",
+  "url": "https://polyfork.dev/asset/air-con-unit-9fadc2",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 480,
+  "size_m": {
+   "x": 0.92,
+   "y": 0.6,
+   "z": 0.38
+  },
+  "rigged": false
+ },
+ "polyfork/hvac-condenser-unit-a41b8d.glb": {
+  "source": "polyfork",
+  "title": "HVAC Condenser Unit",
+  "url": "https://polyfork.dev/asset/hvac-condenser-unit-a41b8d",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 494,
+  "size_m": {
+   "x": 1.04,
+   "y": 1.05,
+   "z": 0.99
+  },
+  "rigged": false
+ },
+ "polyfork/fire-escape-section-0b473a.glb": {
+  "source": "polyfork",
+  "title": "Fire Escape Section",
+  "url": "https://polyfork.dev/asset/fire-escape-section-0b473a",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 588,
+  "size_m": {
+   "x": 4,
+   "y": 4.13,
+   "z": 1.4
+  },
+  "rigged": false
+ },
+ "polyfork/material-pallet-6af263.glb": {
+  "source": "polyfork",
+  "title": "Material Pallet",
+  "url": "https://polyfork.dev/asset/material-pallet-6af263",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 542,
+  "size_m": {
+   "x": 1.2,
+   "y": 1.09,
+   "z": 1
+  },
+  "rigged": false
+ },
+ "polyfork/freight-crate-and-sack-f49cbb.glb": {
+  "source": "polyfork",
+  "title": "Freight Crate and Sack Stack",
+  "url": "https://polyfork.dev/asset/freight-crate-and-sack-f49cbb",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 522,
+  "size_m": {
+   "x": 1.5,
+   "y": 0.9,
+   "z": 0.93
+  },
+  "rigged": false
+ },
+ "polyfork/composite-supply-crate-1547cb.glb": {
+  "source": "polyfork",
+  "title": "Composite Supply Crate",
+  "url": "https://polyfork.dev/asset/composite-supply-crate-1547cb",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 392,
+  "size_m": {
+   "x": 1.2,
+   "y": 1.23,
+   "z": 1.2
+  },
+  "rigged": false
+ },
+ "polyfork/modular-freight-container-412fd5.glb": {
+  "source": "polyfork",
+  "title": "Modular Freight Container",
+  "url": "https://polyfork.dev/asset/modular-freight-container-412fd5",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 636,
+  "size_m": {
+   "x": 2,
+   "y": 2,
+   "z": 4
+  },
+  "rigged": false
+ },
+ "polyfork/railway-container-1cfbbd.glb": {
+  "source": "polyfork",
+  "title": "Railway Container",
+  "url": "https://polyfork.dev/asset/railway-container-1cfbbd",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 931,
+  "size_m": {
+   "x": 2.28,
+   "y": 2.41,
+   "z": 4.98
+  },
+  "rigged": false
+ },
+ "polyfork/barrel-aadc94.glb": {
+  "source": "polyfork",
+  "title": "Barrel",
+  "url": "https://polyfork.dev/asset/barrel-aadc94",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 564,
+  "size_m": {
+   "x": 0.89,
+   "y": 0.92,
+   "z": 0.89
+  },
+  "rigged": false
+ },
+ "polyfork/fuel-drum-d65fa4.glb": {
+  "source": "polyfork",
+  "title": "Fuel Drum",
+  "url": "https://polyfork.dev/asset/fuel-drum-d65fa4",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 522,
+  "size_m": {
+   "x": 0.62,
+   "y": 1.08,
+   "z": 0.62
+  },
+  "rigged": false
+ },
+ "polyfork/corroded-drum-fc75cf.glb": {
+  "source": "polyfork",
+  "title": "Corroded Drum",
+  "url": "https://polyfork.dev/asset/corroded-drum-fc75cf",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 784,
+  "size_m": {
+   "x": 0.99,
+   "y": 1.06,
+   "z": 0.82
+  },
+  "rigged": false
+ },
+ "polyfork/signal-cable-drum-88e3f8.glb": {
+  "source": "polyfork",
+  "title": "Signal Cable Drum",
+  "url": "https://polyfork.dev/asset/signal-cable-drum-88e3f8",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 606,
+  "size_m": {
+   "x": 1.16,
+   "y": 1.1,
+   "z": 1.12
+  },
+  "rigged": false
+ },
+ "polyfork/cargo-loader-a3da44.glb": {
+  "source": "polyfork",
+  "title": "Cargo Loader",
+  "url": "https://polyfork.dev/asset/cargo-loader-a3da44",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1998,
+  "size_m": {
+   "x": 1.43,
+   "y": 2.55,
+   "z": 3.19
+  },
+  "rigged": false
+ },
+ "polyfork/telehandler-88c668.glb": {
+  "source": "polyfork",
+  "title": "Telehandler",
+  "url": "https://polyfork.dev/asset/telehandler-88c668",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 2583,
+  "size_m": {
+   "x": 3.57,
+   "y": 2.69,
+   "z": 6.48
+  },
+  "rigged": false
+ },
+ "polyfork/site-tool-vault-200e38.glb": {
+  "source": "polyfork",
+  "title": "Site Tool Vault",
+  "url": "https://polyfork.dev/asset/site-tool-vault-200e38",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 893,
+  "size_m": {
+   "x": 2.01,
+   "y": 1.51,
+   "z": 1.17
+  },
+  "rigged": false
+ },
+ "polyfork/field-workbench-70f706.glb": {
+  "source": "polyfork",
+  "title": "Field Workbench",
+  "url": "https://polyfork.dev/asset/field-workbench-70f706",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 616,
+  "size_m": {
+   "x": 2,
+   "y": 1.45,
+   "z": 0.68
+  },
+  "rigged": false
+ },
+ "polyfork/surface-pipe-run-62c4b3.glb": {
+  "source": "polyfork",
+  "title": "Surface Pipe Run",
+  "url": "https://polyfork.dev/asset/surface-pipe-run-62c4b3",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 504,
+  "size_m": {
+   "x": 4,
+   "y": 0.78,
+   "z": 1.44
+  },
+  "rigged": false
+ },
+ "polyfork/pipe-junction-5b146a.glb": {
+  "source": "polyfork",
+  "title": "Pipe junction",
+  "url": "https://polyfork.dev/asset/pipe-junction-5b146a",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 678,
+  "size_m": {
+   "x": 2.34,
+   "y": 1.56,
+   "z": 3.16
+  },
+  "rigged": false
+ },
+ "polyfork/gauge-and-valve-panel-f2164c.glb": {
+  "source": "polyfork",
+  "title": "Gauge and valve panel",
+  "url": "https://polyfork.dev/asset/gauge-and-valve-panel-f2164c",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 750,
+  "size_m": {
+   "x": 1.2,
+   "y": 0.6,
+   "z": 0.38
+  },
+  "rigged": false
+ },
+ "polyfork/site-generator-298792.glb": {
+  "source": "polyfork",
+  "title": "Site Generator",
+  "url": "https://polyfork.dev/asset/site-generator-298792",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 772,
+  "size_m": {
+   "x": 2.5,
+   "y": 1.86,
+   "z": 1.03
+  },
+  "rigged": false
+ },
+ "polyfork/horizontal-tank-6e9b8b.glb": {
+  "source": "polyfork",
+  "title": "Horizontal Tank",
+  "url": "https://polyfork.dev/asset/horizontal-tank-6e9b8b",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 344,
+  "size_m": {
+   "x": 2.4,
+   "y": 1.33,
+   "z": 1.16
+  },
+  "rigged": false
+ },
+ "polyfork/depot-fuel-tank-55a00e.glb": {
+  "source": "polyfork",
+  "title": "Depot Fuel Tank",
+  "url": "https://polyfork.dev/asset/depot-fuel-tank-55a00e",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 835,
+  "size_m": {
+   "x": 4,
+   "y": 3.24,
+   "z": 8
+  },
+  "rigged": false
+ },
+ "polyfork/gas-cylinder-cabinet-cea23b.glb": {
+  "source": "polyfork",
+  "title": "Gas Cylinder Cabinet",
+  "url": "https://polyfork.dev/asset/gas-cylinder-cabinet-cea23b",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1262,
+  "size_m": {
+   "x": 1.2,
+   "y": 1.95,
+   "z": 0.6
+  },
+  "rigged": false
+ },
+ "polyfork/vented-chemical-storage-cabinet-91b061.glb": {
+  "source": "polyfork",
+  "title": "Vented Chemical Storage Cabinet",
+  "url": "https://polyfork.dev/asset/vented-chemical-storage-cabinet-91b061",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1143,
+  "size_m": {
+   "x": 0.6,
+   "y": 1.2,
+   "z": 0.64
+  },
+  "rigged": false
+ },
+ "polyfork/traffic-cone-247748.glb": {
+  "source": "polyfork",
+  "title": "Traffic Cone",
+  "url": "https://polyfork.dev/asset/traffic-cone-247748",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 376,
+  "size_m": {
+   "x": 0.44,
+   "y": 0.7,
+   "z": 0.44
+  },
+  "rigged": false
+ },
+ "polyfork/crash-barrier-run-b47d1d.glb": {
+  "source": "polyfork",
+  "title": "Crash Barrier Run",
+  "url": "https://polyfork.dev/asset/crash-barrier-run-b47d1d",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 749,
+  "size_m": {
+   "x": 4,
+   "y": 1.24,
+   "z": 0.6
+  },
+  "rigged": false
+ },
+ "polyfork/builder-s-skip-191d35.glb": {
+  "source": "polyfork",
+  "title": "Builder's Skip",
+  "url": "https://polyfork.dev/asset/builder-s-skip-191d35",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 328,
+  "size_m": {
+   "x": 3.6,
+   "y": 1.32,
+   "z": 1.7
+  },
+  "rigged": false
+ },
+ "polyfork/tyre-stack-ad4692.glb": {
+  "source": "polyfork",
+  "title": "Tyre Stack",
+  "url": "https://polyfork.dev/asset/tyre-stack-ad4692",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 2368,
+  "size_m": {
+   "x": 0.75,
+   "y": 0.8,
+   "z": 0.74
+  },
+  "rigged": false
+ },
+ "polyfork/platform-weighing-scale-f43019.glb": {
+  "source": "polyfork",
+  "title": "Platform Weighing Scale",
+  "url": "https://polyfork.dev/asset/platform-weighing-scale-f43019",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1056,
+  "size_m": {
+   "x": 1.24,
+   "y": 1.7,
+   "z": 1.19
+  },
+  "rigged": false
+ },
+ "polyfork/ppe-locker-bank-60dd99.glb": {
+  "source": "polyfork",
+  "title": "PPE Locker Bank",
+  "url": "https://polyfork.dev/asset/ppe-locker-bank-60dd99",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 606,
+  "size_m": {
+   "x": 1.2,
+   "y": 1.97,
+   "z": 0.81
+  },
+  "rigged": false
+ },
+ "polyfork/small-server-rack-8ae0a4.glb": {
+  "source": "polyfork",
+  "title": "Small Server Rack",
+  "url": "https://polyfork.dev/asset/small-server-rack-8ae0a4",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 708,
+  "size_m": {
+   "x": 0.6,
+   "y": 1.2,
+   "z": 0.6
+  },
+  "rigged": false
+ },
+ "polyfork/iron-vault-safe-8b8f29.glb": {
+  "source": "polyfork",
+  "title": "Iron Vault Safe",
+  "url": "https://polyfork.dev/asset/iron-vault-safe-8b8f29",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 806,
+  "size_m": {
+   "x": 0.9,
+   "y": 0.9,
+   "z": 1.03
+  },
+  "rigged": false
+ },
+ "polyfork/loading-gantry-34460f.glb": {
+  "source": "polyfork",
+  "title": "Loading Gantry",
+  "url": "https://polyfork.dev/asset/loading-gantry-34460f",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1596,
+  "size_m": {
+   "x": 4,
+   "y": 4.2,
+   "z": 4
+  },
+  "rigged": false
+ },
+ "polyfork/scissor-lift-platform-3eae3f.glb": {
+  "source": "polyfork",
+  "title": "Scissor Lift Platform",
+  "url": "https://polyfork.dev/asset/scissor-lift-platform-3eae3f",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 2337,
+  "size_m": {
+   "x": 1.22,
+   "y": 4.55,
+   "z": 3.32
+  },
+  "rigged": false
+ },
+ "polyfork/skid-steer-loader-268f4d.glb": {
+  "source": "polyfork",
+  "title": "Skid-Steer Loader",
+  "url": "https://polyfork.dev/asset/skid-steer-loader-268f4d",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 2626,
+  "size_m": {
+   "x": 1.63,
+   "y": 2.18,
+   "z": 2.72
+  },
+  "rigged": false
+ },
+ "polyfork/ore-chute-and-bin-8375ac.glb": {
+  "source": "polyfork",
+  "title": "Ore Chute and Bin",
+  "url": "https://polyfork.dev/asset/ore-chute-and-bin-8375ac",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 633,
+  "size_m": {
+   "x": 3,
+   "y": 4,
+   "z": 3
+  },
+  "rigged": false
+ },
+ "polyfork/sleeper-stack-67628e.glb": {
+  "source": "polyfork",
+  "title": "Sleeper Stack",
+  "url": "https://polyfork.dev/asset/sleeper-stack-67628e",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 760,
+  "size_m": {
+   "x": 2.7,
+   "y": 1.26,
+   "z": 2.69
+  },
+  "rigged": false
+ },
+ "polyfork/spare-rail-stack-99d443.glb": {
+  "source": "polyfork",
+  "title": "Spare Rail Stack",
+  "url": "https://polyfork.dev/asset/spare-rail-stack-99d443",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 474,
+  "size_m": {
+   "x": 1.31,
+   "y": 0.38,
+   "z": 8.34
+  },
+  "rigged": false
+ },
+ "polyfork/security-patrol-cruiser-b40d27.glb": {
+  "source": "polyfork",
+  "title": "Security Patrol Cruiser",
+  "url": "https://polyfork.dev/asset/security-patrol-cruiser-b40d27",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1066,
+  "size_m": {
+   "x": 2.5,
+   "y": 2.37,
+   "z": 5.5
+  },
+  "rigged": false
+ },
+ "polyfork/checkpoint-barrier-pole-59c197.glb": {
+  "source": "polyfork",
+  "title": "Checkpoint Barrier Pole",
+  "url": "https://polyfork.dev/asset/checkpoint-barrier-pole-59c197",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 430,
+  "size_m": {
+   "x": 5.4,
+   "y": 2.02,
+   "z": 0.71
+  },
+  "rigged": false
+ },
+ "polyfork/mine-cart-94bd76.glb": {
+  "source": "polyfork",
+  "title": "Mine Cart",
+  "url": "https://polyfork.dev/asset/mine-cart-94bd76",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 816,
+  "size_m": {
+   "x": 0.8,
+   "y": 0.9,
+   "z": 1.23
+  },
+  "rigged": false
+ },
+ "polyfork/cargo-sack-3cd3ab.glb": {
+  "source": "polyfork",
+  "title": "Cargo Sack",
+  "url": "https://polyfork.dev/asset/cargo-sack-3cd3ab",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 444,
+  "size_m": {
+   "x": 0.38,
+   "y": 0.7,
+   "z": 0.39
+  },
+  "rigged": false
+ },
+ "polyhaven/concrete_floor_worn_001.jpg": {
+  "source": "polyhaven",
+  "title": "concrete_floor_worn_001",
+  "url": "https://polyhaven.com/a/concrete_floor_worn_001",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/floor.jpg"
+  }
+ },
+ "polyhaven/garage_floor.jpg": {
+  "source": "polyhaven",
+  "title": "garage_floor",
+  "url": "https://polyhaven.com/a/garage_floor",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/macro.jpg"
+  }
+ },
+ "polyhaven/concrete_block_wall.jpg": {
+  "source": "polyhaven",
+  "title": "concrete_block_wall",
+  "url": "https://polyhaven.com/a/concrete_block_wall",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/block.jpg"
+  }
+ },
+ "polyhaven/factory_wall.jpg": {
+  "source": "polyhaven",
+  "title": "factory_wall",
+  "url": "https://polyhaven.com/a/factory_wall",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/cladding.jpg"
+  }
+ },
+ "polyhaven/metal_plate_02.jpg": {
+  "source": "polyhaven",
+  "title": "metal_plate_02",
+  "url": "https://polyhaven.com/a/metal_plate_02",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/plate.jpg"
+  }
+ },
+ "polyhaven/anti_skid_tiles.jpg": {
+  "source": "polyhaven",
+  "title": "anti_skid_tiles",
+  "url": "https://polyhaven.com/a/anti_skid_tiles",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/tread.jpg"
+  }
+ },
+ "polyhaven/painted_metal_shutter.jpg": {
+  "source": "polyhaven",
+  "title": "painted_metal_shutter",
+  "url": "https://polyhaven.com/a/painted_metal_shutter",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/shutter.jpg"
+  }
+ },
+ "polyhaven/container_side.jpg": {
+  "source": "polyhaven",
+  "title": "container_side",
+  "url": "https://polyhaven.com/a/container_side",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/container.jpg"
+  }
+ },
+ "polyhaven/oriented_strand_board.jpg": {
+  "source": "polyhaven",
+  "title": "oriented_strand_board",
+  "url": "https://polyhaven.com/a/oriented_strand_board",
+  "license": "CC0",
+  "mods": {
+   "tex": "warehouse surface set: greyed for department tint, painterly filter, 1024 diffuse + 512 normal",
+   "out": "assets/warehouse/tex/osb.jpg"
+  }
+ },
+ "polyfork/boxy-delivery-van-a3ceae.glb": {
+  "source": "polyfork",
+  "title": "Boxy Delivery Van",
+  "url": "https://polyfork.dev/asset/boxy-delivery-van-a3ceae",
+  "license": "Polyfork licence (free; modify + ship in game OK; do not redistribute standalone)",
+  "tris": 1116,
+  "size_m": {
+   "x": 2.04,
+   "y": 2.9,
+   "z": 6
+  },
+  "rigged": false
+ }
+}

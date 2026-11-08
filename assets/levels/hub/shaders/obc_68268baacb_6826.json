@@ -1,0 +1,97 @@
+{
+ "name": "obc_68268baacb_6826",
+ "type": "onBeforeCompile",
+ "source": "(sh) => {\n    sh.uniforms.tDet = { value: tex }; sh.uniforms.uDet = { value: new THREE.Vector4(1 / scaleM, strength, gain, 0) };\n    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\\nvarying vec3 vWp;').replace('#include <begin_vertex>', '#include <begin_vertex>\\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');\n    sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\\nvarying vec3 vWp;\\nuniform sampler2D tDet;\\nuniform vec4 uDet;')\n      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }`);\n  }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "cityDetail1",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {},
+ "uses": 21,
+ "nodes": [
+  "",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch",
+  "static-batch"
+ ],
+ "variant_keys": [
+  "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {{\"tDet\":{\"type\":\"t\",\"file\":\"levels/_tex/1fe8b8113b4ff6f6_256x256.jpg\",\"srgb\":false},\"uDet\":{\"type\":\"v\",\"value\":[0.5,0.9,1.7,0]}}",
+  "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {{\"tDet\":{\"type\":\"t\",\"file\":\"levels/_tex/5a2860a2b673d13c_256x256.jpg\",\"srgb\":false},\"uDet\":{\"type\":\"v\",\"value\":[0.5,0.8,1.7,0]}}",
+  "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {{\"tDet\":{\"type\":\"t\",\"file\":\"levels/_tex/a0019625b401cbf3_256x256.jpg\",\"srgb\":false},\"uDet\":{\"type\":\"v\",\"value\":[0.41667,0.95,1.9,0]}}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "tDet": {
+     "type": "t",
+     "file": "levels/_tex/1fe8b8113b4ff6f6_256x256.jpg",
+     "srgb": false
+    },
+    "uDet": {
+     "type": "v",
+     "value": [
+      0.5,
+      0.9,
+      1.7,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "vertex": "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "tDet": {
+     "type": "t",
+     "file": "levels/_tex/5a2860a2b673d13c_256x256.jpg",
+     "srgb": false
+    },
+    "uDet": {
+     "type": "v",
+     "value": [
+      0.5,
+      0.8,
+      1.7,
+      0
+     ]
+    }
+   }
+  },
+  {
+   "vertex": "#include <common>\nvarying vec3 vWp;\n#include <begin_vertex>\nvWp = (modelMatrix * vec4(transformed, 1.0)).xyz;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\nvarying vec3 vWp;\nuniform sampler2D tDet;\nuniform vec4 uDet;\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n      { vec3 wn = abs(normalize(cross(dFdx(vWp), dFdy(vWp)))); vec2 p = wn.y > 0.6 ? vWp.xz : (wn.x > 0.6 ? vec2(vWp.z, vWp.y) : vWp.xy);\n        vec3 d = texture2D(tDet, p * uDet.x).rgb * uDet.z; float lit = max(totalEmissiveRadiance.r, max(totalEmissiveRadiance.g, totalEmissiveRadiance.b));\n        diffuseColor.rgb *= mix(vec3(1.0), d, uDet.y * (1.0 - smoothstep(0.02, 0.25, lit))); }\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "tDet": {
+     "type": "t",
+     "file": "levels/_tex/a0019625b401cbf3_256x256.jpg",
+     "srgb": false
+    },
+    "uDet": {
+     "type": "v",
+     "value": [
+      0.41667,
+      0.95,
+      1.9,
+      0
+     ]
+    }
+   }
+  }
+ ]
+}

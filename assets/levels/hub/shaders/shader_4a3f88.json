@@ -1,0 +1,148 @@
+{
+ "name": "shader_4a3f88",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vDir; void main(){ vDir = position; vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }",
+ "fragmentShader": "uniform float uTime, uMoonR, uCloud; uniform vec3 uMoon, uHor, uBand, uZen, uMoonCol, uHalo; varying vec3 vDir;\nfloat h2(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }\nfloat n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }\nfloat fbm(vec2 p){ float a = 0.5, s = 0.0; for (int i = 0; i < 4; i++) { s += a * n2(p); p = p * 2.07 + 9.3; a *= 0.5; } return s; }\nvoid main(){\n  vec3 d = normalize(vDir); float el = max(d.y, 0.0);\n  vec3 col = mix(uHor, uBand, smoothstep(0.0, 0.22, el));\n  col = mix(col, uZen, smoothstep(0.16, 0.72, el));\n  col *= 0.94 + 0.06 * sin(atan(d.x, d.z) * 1.7);\n  float md = dot(d, uMoon);\n  col += uMoonCol * smoothstep(uMoonR, uMoonR + 0.0013, md);\n  col += uHalo * pow(max(0.0, md), 90.0) + uHalo * 0.13 * pow(max(0.0, md), 30.0);   // the second term is the bloom around the disc: wide and strong here is exactly what makes a sun\n  vec2 cp = vec2(atan(d.x, d.z) * 1.5 + uTime * 0.004, el * 7.0 - uTime * 0.0012);\n  float c = smoothstep(0.46, 0.86, fbm(vec2(cp.x * 1.1, cp.y * 4.2)));\n  col = mix(col, mix(uZen * 1.6, uHor * 1.12, 1.0 - smoothstep(0.0, 0.42, el)), c * uCloud * (1.0 - smoothstep(0.3, 0.8, el)));\n  gl_FragColor = vec4(col, 1.0);\n  #include <tonemapping_fragment>\n  #include <colorspace_fragment>\n}",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 69.3955
+  },
+  "uMoon": {
+   "type": "v",
+   "value": [
+    0.3398,
+    0.73624,
+    -0.58522
+   ]
+  },
+  "uHor": {
+   "type": "v",
+   "value": [
+    0.04414,
+    0.01198,
+    0.0373
+   ]
+  },
+  "uBand": {
+   "type": "v",
+   "value": [
+    0.02408,
+    0.00797,
+    0.03182
+   ]
+  },
+  "uZen": {
+   "type": "v",
+   "value": [
+    0.00573,
+    0.00319,
+    0.01333
+   ]
+  },
+  "uMoonCol": {
+   "type": "v",
+   "value": [
+    0.41987,
+    0.39994,
+    0.49975
+   ]
+  },
+  "uHalo": {
+   "type": "v",
+   "value": [
+    0.01756,
+    0.01248,
+    0.02191
+   ]
+  },
+  "uMoonR": {
+   "type": "f",
+   "value": 0.998596
+  },
+  "uCloud": {
+   "type": "f",
+   "value": 0.501767
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 69.3955
+   },
+   "uMoon": {
+    "type": "v",
+    "value": [
+     0.3398,
+     0.73624,
+     -0.58522
+    ]
+   },
+   "uHor": {
+    "type": "v",
+    "value": [
+     0.04414,
+     0.01198,
+     0.0373
+    ]
+   },
+   "uBand": {
+    "type": "v",
+    "value": [
+     0.02408,
+     0.00797,
+     0.03182
+    ]
+   },
+   "uZen": {
+    "type": "v",
+    "value": [
+     0.00573,
+     0.00319,
+     0.01333
+    ]
+   },
+   "uMoonCol": {
+    "type": "v",
+    "value": [
+     0.41987,
+     0.39994,
+     0.49975
+    ]
+   },
+   "uHalo": {
+    "type": "v",
+    "value": [
+     0.01756,
+     0.01248,
+     0.02191
+    ]
+   },
+   "uMoonR": {
+    "type": "f",
+    "value": 0.998596
+   },
+   "uCloud": {
+    "type": "f",
+    "value": 0.501767
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uMoon\":{\"type\":\"v\",\"value\":[0.3398,0.73624,-0.58522]},\"uHor\":{\"type\":\"v\",\"value\":[0.04414,0.01198,0.0373]},\"uBand\":{\"type\":\"v\",\"value\":[0.02408,0.00797,0.03182]},\"uZen\":{\"type\":\"v\",\"value\":[0.00573,0.00319,0.01333]},\"uMoonCol\":{\"type\":\"v\",\"value\":[0.41987,0.39994,0.49975]},\"uHalo\":{\"type\":\"v\",\"value\":[0.01756,0.01248,0.02191]},\"uMoonR\":{\"type\":\"f\",\"value\":0.998596},\"uCloud\":{\"type\":\"f\",\"value\":0.501767}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "back",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "NightSky"
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "name": "obc_f7d9d0fb24_f7d9",
+ "type": "onBeforeCompile",
+ "source": "(sh) => { sh.fragmentShader = sh.fragmentShader.replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\r\n  totalEmissiveRadiance += diffuseColor.rgb * ${k.toFixed(2)} * (0.55 + 0.45 * clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));`); }",
+ "base": "MeshPhongMaterial",
+ "cacheKey": "",
+ "userData": {},
+ "uses": 138,
+ "nodes": [
+  "CarsTrim-sedan",
+  "CarsTrim-hatch",
+  "CarsTrim-taxi",
+  "CarsTrim-van",
+  "CarsTrim-truck",
+  "CarsTrim-bus",
+  "CarsTrim-saucerG",
+  "CarsTrim-saucerN"
+ ],
+ "variant_keys": [
+  "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.40 * (0.55 + 0.45 * clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));\n#include <opaque_fragment>\nvoid main() {{}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.40 * (0.55 + 0.45 * clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {}
+  }
+ ]
+}

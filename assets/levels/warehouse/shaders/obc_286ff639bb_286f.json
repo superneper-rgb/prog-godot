@@ -1,0 +1,40 @@
+{
+ "name": "obc_286ff639bb_286f",
+ "type": "onBeforeCompile",
+ "source": "s=>{\r\n    s.vertexShader='varying vec3 vFmP;varying vec3 vFmN;\\n'+s.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\\n'+\r\n      'vFmP=transformed*vec3(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz),length(modelMatrix[2].xyz));vFmN=normal;');\r\n    const tri=['#ifdef USE_MAP','vec3 fw=pow(abs(vFmN),vec3(6.));fw/=(fw.x+fw.y+fw.z+1e-4);',\r\n      'vec4 fmT=texture2D(map,vFmP.zy*.3)*fw.x+texture2D(map,vFmP.xz*.3)*fw.y+texture2D(map,vFmP.xy*.3)*fw.z;',\r\n      'diffuseColor*=fmT;float fmL=dot(fmT.rgb,vec3(.33));','#endif'].join('\\n');\r\n    const rough=['#include <roughnessmap_fragment>','#ifdef USE_MAP','roughnessFactor=clamp(roughnessFactor*(1.35-fmL*1.1),.2,1.);','#endif'].join('\\n');\r\n    s.fragmentShader='varying vec3 vFmP;varying vec3 vFmN;\\n'+s.fragmentShader.replace('#include <map_fragment>',tri).replace('#include <roughnessmap_fragment>',rough);\r\n  }",
+ "base": "MeshStandardMaterial",
+ "cacheKey": "foreman-skin-v1",
+ "defines": {
+  "STANDARD": ""
+ },
+ "userData": {},
+ "uses": 146,
+ "nodes": [
+  "FmFalling",
+  "FmFalling",
+  "FmFalling",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmTorso",
+  "FmShoulder_-1",
+  "FmTorso",
+  "FmTorso"
+ ],
+ "variant_keys": [
+  "varying vec3 vFmP;varying vec3 vFmN;\n#include <common>\n#include <begin_vertex>\nvFmP=transformed*vec3(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz),length(modelMatrix[2].xyz));vFmN=normal;\n#include <project_vertex>\nvoid main() {//FRAGvarying vec3 vFmP;varying vec3 vFmN;\n#include <common>\n#ifdef USE_MAP\nvec3 fw=pow(abs(vFmN),vec3(6.));fw/=(fw.x+fw.y+fw.z+1e-4);\nvec4 fmT=texture2D(map,vFmP.zy*.3)*fw.x+texture2D(map,vFmP.xz*.3)*fw.y+texture2D(map,vFmP.xy*.3)*fw.z;\ndiffuseColor*=fmT;float fmL=dot(fmT.rgb,vec3(.33));\n#endif\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{}"
+ ],
+ "variants": [
+  {
+   "vertex": "varying vec3 vFmP;varying vec3 vFmN;\n#include <common>\n#include <begin_vertex>\nvFmP=transformed*vec3(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz),length(modelMatrix[2].xyz));vFmN=normal;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "varying vec3 vFmP;varying vec3 vFmN;\n#include <common>\n#ifdef USE_MAP\nvec3 fw=pow(abs(vFmN),vec3(6.));fw/=(fw.x+fw.y+fw.z+1e-4);\nvec4 fmT=texture2D(map,vFmP.zy*.3)*fw.x+texture2D(map,vFmP.xz*.3)*fw.y+texture2D(map,vFmP.xy*.3)*fw.z;\ndiffuseColor*=fmT;float fmL=dot(fmT.rgb,vec3(.33));\n#endif\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {}
+  }
+ ]
+}

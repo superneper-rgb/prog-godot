@@ -1,0 +1,44 @@
+{
+ "name": "shader_c6108c",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 vN; varying vec3 vP; void main() { vN = normalize(normalMatrix * normal); vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+ "fragmentShader": "\n  uniform float uTime, uFlare; varying vec3 vN; varying vec3 vP;\n  float h(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\n  float n3(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);\n    return mix(mix(mix(h(i), h(i + vec3(1,0,0)), f.x), mix(h(i + vec3(0,1,0)), h(i + vec3(1,1,0)), f.x), f.y), mix(mix(h(i + vec3(0,0,1)), h(i + vec3(1,0,1)), f.x), mix(h(i + vec3(0,1,1)), h(i + vec3(1,1,1)), f.x), f.y), f.z); }\n  void main() {\n    vec3 p = normalize(vP) * 3.; float t = uTime;\n    float a = n3(p + vec3(t * .3, -t * .2, t * .25)) * .6 + n3(p * 2.7 - t * .6) * .4;\n    float veins = 1. - smoothstep(.0, .08, abs(a - .5));\n    float rim = pow(1. - abs(vN.z), 2.);\n    vec3 c = mix(vec3(.15, .9, .55), vec3(.85, 1., .9), veins) * (1.2 + 1.4 * veins + rim * 1.5) * (1. + uFlare * 1.4);\n    gl_FragColor = vec4(1. - exp(-c * 1.1), 1.);                                                   // rolled off, not clipped: running hot it stays a mint glow with white veins, not a flat white disc\n  }",
+ "uniforms": {
+  "uTime": {
+   "type": "f",
+   "value": 87.7041
+  },
+  "uFlare": {
+   "type": "f",
+   "value": 1.88484
+  }
+ },
+ "variants": [
+  {
+   "uTime": {
+    "type": "f",
+    "value": 87.7041
+   },
+   "uFlare": {
+    "type": "f",
+    "value": 1.88484
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uFlare\":{\"type\":\"f\",\"value\":1.88484}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "om-core"
+ ]
+}

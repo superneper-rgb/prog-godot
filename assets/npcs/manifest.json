@@ -1,0 +1,7 @@
+{
+  "_help": "Every entry here shows up in the DEV level's NPC spawner. To add an NPC: drop a .glb (skinned or not, Y up, facing +Z, metres) into assets/npcs/ and add a line below. 'clip' = animation clip to loop (default: the first one), 'scale' = uniform scale, 'radius'/'height'/'hp' = hit capsule, 'yaw' = extra turn in degrees if the model faces another way.",
+  "npcs": [
+    { "id": "count", "name": "THE COUNT", "note": "Stocky vampire-coat brute, hands on hips", "file": "assets/npcs/count.glb", "clip": "Idle", "scale": 1, "radius": 0.4, "height": 1.45, "hp": 160 },
+    { "id": "pxr", "name": "0002PXR", "note": "Purple box with a human face on eight spider legs (blender/build_pxr.py). Clips: Idle, Walk, Alert, Attack", "file": "assets/npcs/pxr/model.glb", "clip": "Idle", "scale": 1, "radius": 0.9, "height": 1.25, "hp": 90 }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+ "name": "shader_89ebf4",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying float vL; varying vec3 vN; varying vec3 vV; void main(){ vL = uv.y; vec4 w = modelViewMatrix * vec4(position, 1.); vV = normalize(-w.xyz); vN = normalize(normalMatrix * normal); gl_Position = projectionMatrix * w; }",
+ "fragmentShader": "uniform float uA; varying float vL; varying vec3 vN; varying vec3 vV; void main(){ float a = uA * pow(abs(dot(vN, vV)), 2.) * vL * vL; gl_FragColor = vec4(vec3(1., .93, .78) * a, 1.); }",
+ "uniforms": {
+  "uA": {
+   "type": "f",
+   "value": 0.05
+  }
+ },
+ "variants": [
+  {
+   "uA": {
+    "type": "f",
+    "value": 0.05
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"uA\":{\"type\":\"f\",\"value\":0.05}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "double",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "vh-rental-cone"
+ ]
+}

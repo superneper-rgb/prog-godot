@@ -1,0 +1,36 @@
+{
+ "name": "shader_9fb716",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec3 direction;void main(){direction=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+ "fragmentShader": "varying vec3 direction;uniform float time;\n      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+1.),f.x),f.y);}\n      void main(){vec3 d=normalize(direction);vec2 uv=d.xz/(abs(d.y)+.24)*1.8+vec2(time*.002,0.);\n        float cloud=noise(uv)*.57+noise(uv*2.1)*.28+noise(uv*4.3)*.15;\n        float horizon=pow(1.-abs(d.y),5.);vec3 color=mix(vec3(.002,.004,.009),vec3(.018,.029,.048),horizon);\n        color+=vec3(.008,.012,.018)*smoothstep(.3,.8,cloud);\n        float glow=pow(max(0.,dot(d,normalize(vec3(-.4,.18,-.8)))),18.);\n        color+=vec3(.025,.035,.055)*glow*(1.-cloud*.8);gl_FragColor=vec4(color,1.);\n        #include <tonemapping_fragment>\n        #include <colorspace_fragment>\n      }",
+ "uniforms": {
+  "time": {
+   "type": "f",
+   "value": 14.276
+  }
+ },
+ "variants": [
+  {
+   "time": {
+    "type": "f",
+    "value": 14.276
+   }
+  }
+ ],
+ "variant_keys": [
+  "{}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "back",
+ "blend": "mix",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "Storm cloud skybox"
+ ]
+}

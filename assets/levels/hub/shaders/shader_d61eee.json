@@ -1,0 +1,102 @@
+{
+ "name": "shader_d61eee",
+ "type": "ShaderMaterial",
+ "vertexShader": "varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
+ "fragmentShader": "\nprecision highp float;\nvarying vec2 vUv;\nuniform sampler2D src; uniform float time, glitch, roll, squash, power, seed; uniform vec2 fit;\nfloat hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7)) + seed) * 43758.5453); }\nvec2 bend(vec2 uv) { uv = uv * 2.0 - 1.0; vec2 o = abs(uv.yx) / vec2(5.2, 4.2); uv += uv * o * o; return uv * 0.5 + 0.5; }\nvoid main() {\n  vec2 uv = bend(vUv);\n  if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }\n  vec2 p = uv;\n  p.y = (p.y - 0.5) / max(squash, 0.002) + 0.5;                                     // collapse to a bright line (power cut / glitch)\n  float inside = step(0.0, p.y) * step(p.y, 1.0);\n  p.y = fract(p.y + roll);                                                            // vertical hold slipping\n  p = (p - 0.5) / fit + 0.5;                                                          // letterbox / pillarbox a picture of another shape\n  float pic = step(0.0, p.x) * step(p.x, 1.0) * step(0.0, p.y) * step(p.y, 1.0);\n  float row = floor(p.y * 28.0), tick = floor(time * 24.0);\n  float band = step(0.62, hash(vec2(row, tick)));                                     // which rows tear this instant\n  float shift = (hash(vec2(floor(p.y * 90.0), tick)) - 0.5) * 0.16 * glitch * band;\n  shift += sin(p.y * 38.0 + time * 6.0) * 0.0012 + sin(p.y * 3.0 + time * 1.3) * 0.0008;      // the picture never sits quite still\n  float ca = 0.0016 + 0.014 * glitch;\n  vec3 c;\n  c.r = texture2D(src, vec2(p.x + shift + ca, p.y)).r;\n  c.g = texture2D(src, vec2(p.x + shift, p.y)).g;\n  c.b = texture2D(src, vec2(p.x + shift - ca, p.y)).b;\n  c *= pic;                                                                           // black bars\n  float n = hash(p * vec2(330.0, 250.0) + fract(time * 7.13) * 91.0);\n  c = mix(c, vec3(n), 0.045 + 0.55 * glitch * band);                                  // snow, heavy on the torn rows\n  c *= 0.74 + 0.26 * sin(uv.y * 250.0 * 3.14159);                                     // scanlines\n  float m = mod(floor(uv.x * 540.0), 3.0);                                            // aperture grille\n  c *= vec3(m == 0.0 ? 1.12 : 0.78, m == 1.0 ? 1.12 : 0.78, m == 2.0 ? 1.12 : 0.78);\n  c *= 1.0 + 0.07 * smoothstep(0.75, 1.0, sin((uv.y + time * 0.11) * 6.2832));       // slow rolling brighter bar\n  c *= 0.95 + 0.05 * sin(time * 113.0) + 0.03 * (hash(vec2(tick, 3.0)) - 0.5);       // flicker\n  vec2 d = uv - 0.5; c *= 1.0 - dot(d, d) * 1.5;                                      // vignette toward the curved edges\n  c += vec3(0.03, 0.035, 0.04) * (1.0 - dot(d, d) * 2.0);                             // glass glow\n  c *= inside * power;\n  gl_FragColor = vec4(c, 1.0);\n}",
+ "uniforms": {
+  "src": {
+   "type": "t",
+   "file": "levels/_tex/f8f379b4b72f4cd8_512x384.jpg",
+   "name": "",
+   "srgb": true
+  },
+  "time": {
+   "type": "f",
+   "value": 0
+  },
+  "glitch": {
+   "type": "f",
+   "value": 0
+  },
+  "roll": {
+   "type": "f",
+   "value": 0
+  },
+  "squash": {
+   "type": "f",
+   "value": 1
+  },
+  "power": {
+   "type": "f",
+   "value": 1.25
+  },
+  "seed": {
+   "type": "f",
+   "value": 0
+  },
+  "fit": {
+   "type": "v",
+   "value": [
+    1,
+    1
+   ]
+  }
+ },
+ "variants": [
+  {
+   "src": {
+    "type": "t",
+    "file": "levels/_tex/f8f379b4b72f4cd8_512x384.jpg",
+    "name": "",
+    "srgb": true
+   },
+   "time": {
+    "type": "f",
+    "value": 0
+   },
+   "glitch": {
+    "type": "f",
+    "value": 0
+   },
+   "roll": {
+    "type": "f",
+    "value": 0
+   },
+   "squash": {
+    "type": "f",
+    "value": 1
+   },
+   "power": {
+    "type": "f",
+    "value": 1.25
+   },
+   "seed": {
+    "type": "f",
+    "value": 0
+   },
+   "fit": {
+    "type": "v",
+    "value": [
+     1,
+     1
+    ]
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"src\":{\"type\":\"t\",\"file\":\"levels/_tex/f8f379b4b72f4cd8_512x384.jpg\",\"name\":\"\",\"srgb\":true},\"glitch\":{\"type\":\"f\",\"value\":0},\"roll\":{\"type\":\"f\",\"value\":0},\"squash\":{\"type\":\"f\",\"value\":1},\"power\":{\"type\":\"f\",\"value\":1.25},\"seed\":{\"type\":\"f\",\"value\":0},\"fit\":{\"type\":\"v\",\"value\":[1,1]}}"
+ ],
+ "defines": {},
+ "transparent": false,
+ "side": "front",
+ "blend": "mix",
+ "depthWrite": true,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [],
+ "uses": 1,
+ "nodes": [
+  "CrtScreen"
+ ]
+}

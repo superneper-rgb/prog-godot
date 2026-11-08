@@ -1,0 +1,22 @@
+{
+ "name": "obc_a7e129a18c_a7e1",
+ "type": "onBeforeCompile",
+ "source": "shader => {\n      shader.fragmentShader = shader.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\\nif (max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)) < 0.004) discard;');\n    }",
+ "base": "MeshBasicMaterial",
+ "cacheKey": "",
+ "userData": {},
+ "uses": 1,
+ "nodes": [
+  "Club 9 bat-wing neon marquee"
+ ],
+ "variant_keys": [
+  "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {//FRAG#include <common>\n#include <map_fragment>\nif (max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)) < 0.004) discard;\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{}"
+ ],
+ "variants": [
+  {
+   "vertex": "#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvoid main() {",
+   "fragment": "#include <common>\n#include <map_fragment>\nif (max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b)) < 0.004) discard;\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {}
+  }
+ ]
+}

@@ -1,0 +1,34 @@
+{
+ "name": "obc_whBurst_rackRelayB_f610",
+ "type": "onBeforeCompile",
+ "source": "shader=>{\r\n        before.call(original,shader);shader.uniforms.arenaSides=sides;\r\n        shader.vertexShader=(baked?'attribute vec3 warehouseAnchor;\\n':'')+'varying vec3 vArenaWorld;varying vec3 vArenaAnchor;\\n'+shader.vertexShader;\r\n        shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>\r\n          vec4 arenaP=vec4(transformed,1.0),arenaAnchor=vec4(${baked?'warehouseAnchor':'0.0,0.0,0.0'},1.0);\r\n          #ifdef USE_INSTANCING\r\n          arenaP=instanceMatrix*arenaP;\r\n          arenaAnchor=instanceMatrix*arenaAnchor;\r\n          #endif\r\n          vArenaWorld=(modelMatrix*arenaP).xyz;\r\n          vArenaAnchor=(modelMatrix*arenaAnchor).xyz;`);\r\n        shader.fragmentShader='varying vec3 vArenaWorld;varying vec3 vArenaAnchor;uniform vec4 arenaSides;\\n'+shader.fragmentShader;\r\n        shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>\r\n          if(vArenaWorld.y>.85 && vArenaWorld.x>260. && vArenaWorld.x<327. && vArenaWorld.z>145. && vArenaWorld.z<230.){\r\n            if((arenaSides.x>.5 && vArenaAnchor.x>299.5) || (arenaSides.y>.5 && vArenaAnchor.z>210.5) ||\r\n               (arenaSides.z>.5 && vArenaAnchor.z<156.5) || (arenaSides.w>.5 && vArenaAnchor.x<267.5))discard;\r\n          }`);\r\n      }",
+ "base": "MeshBasicMaterial",
+ "cacheKey": "onBeforeCompile( /* shaderobject, renderer */ ) {}-arena-cutaway-v3-false",
+ "userData": {
+  "mergeSafe": false
+ },
+ "uses": 1,
+ "nodes": [
+  "WhBurst_rackRelayB"
+ ],
+ "variant_keys": [
+  "varying vec3 vArenaWorld;varying vec3 vArenaAnchor;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\n          vec4 arenaP=vec4(transformed,1.0),arenaAnchor=vec4(0.0,0.0,0.0,1.0);\n          #ifdef USE_INSTANCING\n          arenaP=instanceMatrix*arenaP;\n          arenaAnchor=instanceMatrix*arenaAnchor;\n          #endif\n          vArenaWorld=(modelMatrix*arenaP).xyz;\n          vArenaAnchor=(modelMatrix*arenaAnchor).xyz;\nvoid main() {//FRAGvarying vec3 vArenaWorld;varying vec3 vArenaAnchor;uniform vec4 arenaSides;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {{\"arenaSides\":{\"type\":\"v\",\"value\":[0,0,0,0]}}"
+ ],
+ "variants": [
+  {
+   "vertex": "varying vec3 vArenaWorld;varying vec3 vArenaAnchor;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\n          vec4 arenaP=vec4(transformed,1.0),arenaAnchor=vec4(0.0,0.0,0.0,1.0);\n          #ifdef USE_INSTANCING\n          arenaP=instanceMatrix*arenaP;\n          arenaAnchor=instanceMatrix*arenaAnchor;\n          #endif\n          vArenaWorld=(modelMatrix*arenaP).xyz;\n          vArenaAnchor=(modelMatrix*arenaAnchor).xyz;\nvoid main() {",
+   "fragment": "varying vec3 vArenaWorld;varying vec3 vArenaAnchor;uniform vec4 arenaSides;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {
+    "arenaSides": {
+     "type": "v",
+     "value": [
+      0,
+      0,
+      0,
+      0
+     ]
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,29 @@
+{
+ "name": "obc_5546464f20_5546",
+ "type": "onBeforeCompile",
+ "source": "(sh) => { f(sh);\r\n    sh.vertexShader = 'varying vec3 vLp;\\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\\n  vLp = position;');\r\n    sh.fragmentShader = `varying vec3 vLp;\r\nfloat gH(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\r\nfloat gN(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);\r\n  return mix(mix(mix(gH(i), gH(i + vec3(1, 0, 0)), f.x), mix(gH(i + vec3(0, 1, 0)), gH(i + vec3(1, 1, 0)), f.x), f.y), mix(mix(gH(i + vec3(0, 0, 1)), gH(i + vec3(1, 0, 1)), f.x), mix(gH(i + vec3(0, 1, 1)), gH(i + vec3(1, 1, 1)), f.x), f.y), f.z); }\r\n` + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>\r\n  float gs = fract(dot(diffuseColor.rgb, vec3(12.9, 78.2, 37.7)) * 43.7) * 40.0; vec3 gp = vLp + gs;\r\n  float dirt = (1.0 - smoothstep(0.22, 0.78, vLp.y)) * (0.45 + 0.55 * gN(gp * 3.5)) + smoothstep(0.55, 0.9, gN(vec3(gp.x * 11.0, gp.y * 1.3, gp.z * 11.0))) * 0.35 * (1.0 - smoothstep(0.6, 1.1, vLp.y))\r\n    + smoothstep(1.0, 1.4, vLp.y) * 0.25 * gN(gp * 6.0);\r\n  float rust = smoothstep(0.74, 0.8, gN(gp * 5.0) * 0.7 + gN(gp * 17.0) * 0.3);\r\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.055, 0.045), clamp(dirt, 0.0, 1.0) * 0.6);\r\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.08, 0.035) * (0.6 + 0.4 * gN(gp * 23.0)), rust * 0.6);`)\r\n      .replace('#include <specularmap_fragment>', `#include <specularmap_fragment>\r\n  specularStrength *= 1.0 - clamp(dirt * 0.9 + rust, 0.0, 0.95);`);\r\n  }",
+ "base": "MeshPhongMaterial",
+ "cacheKey": "",
+ "userData": {},
+ "uses": 138,
+ "nodes": [
+  "Cars-sedan",
+  "Cars-hatch",
+  "Cars-taxi",
+  "Cars-van",
+  "Cars-truck",
+  "Cars-bus",
+  "Cars-saucerG",
+  "Cars-saucerN"
+ ],
+ "variant_keys": [
+  "varying vec3 vLp;\n#include <common>\n#include <begin_vertex>\n  vLp = position;\n#include <project_vertex>\nvoid main() {//FRAGvarying vec3 vLp;\nfloat gH(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\nfloat gN(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);\n  return mix(mix(mix(gH(i), gH(i + vec3(1, 0, 0)), f.x), mix(gH(i + vec3(0, 1, 0)), gH(i + vec3(1, 1, 0)), f.x), f.y), mix(mix(gH(i + vec3(0, 0, 1)), gH(i + vec3(1, 0, 1)), f.x), mix(gH(i + vec3(0, 1, 1)), gH(i + vec3(1, 1, 1)), f.x), f.y), f.z); }\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n  float gs = fract(dot(diffuseColor.rgb, vec3(12.9, 78.2, 37.7)) * 43.7) * 40.0; vec3 gp = vLp + gs;\n  float dirt = (1.0 - smoothstep(0.22, 0.78, vLp.y)) * (0.45 + 0.55 * gN(gp * 3.5)) + smoothstep(0.55, 0.9, gN(vec3(gp.x * 11.0, gp.y * 1.3, gp.z * 11.0))) * 0.35 * (1.0 - smoothstep(0.6, 1.1, vLp.y))\n    + smoothstep(1.0, 1.4, vLp.y) * 0.25 * gN(gp * 6.0);\n  float rust = smoothstep(0.74, 0.8, gN(gp * 5.0) * 0.7 + gN(gp * 17.0) * 0.3);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.055, 0.045), clamp(dirt, 0.0, 1.0) * 0.6);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.08, 0.035) * (0.6 + 0.4 * gN(gp * 23.0)), rust * 0.6);\n#include <specularmap_fragment>\n  specularStrength *= 1.0 - clamp(dirt * 0.9 + rust, 0.0, 0.95);\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.42 * (0.55 + 0.45 * clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));\n#include <opaque_fragment>\nvoid main() {{}"
+ ],
+ "variants": [
+  {
+   "vertex": "varying vec3 vLp;\n#include <common>\n#include <begin_vertex>\n  vLp = position;\n#include <project_vertex>\nvoid main() {",
+   "fragment": "varying vec3 vLp;\nfloat gH(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }\nfloat gN(vec3 p) { vec3 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);\n  return mix(mix(mix(gH(i), gH(i + vec3(1, 0, 0)), f.x), mix(gH(i + vec3(0, 1, 0)), gH(i + vec3(1, 1, 0)), f.x), f.y), mix(mix(gH(i + vec3(0, 0, 1)), gH(i + vec3(1, 0, 1)), f.x), mix(gH(i + vec3(0, 1, 1)), gH(i + vec3(1, 1, 1)), f.x), f.y), f.z); }\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n  float gs = fract(dot(diffuseColor.rgb, vec3(12.9, 78.2, 37.7)) * 43.7) * 40.0; vec3 gp = vLp + gs;\n  float dirt = (1.0 - smoothstep(0.22, 0.78, vLp.y)) * (0.45 + 0.55 * gN(gp * 3.5)) + smoothstep(0.55, 0.9, gN(vec3(gp.x * 11.0, gp.y * 1.3, gp.z * 11.0))) * 0.35 * (1.0 - smoothstep(0.6, 1.1, vLp.y))\n    + smoothstep(1.0, 1.4, vLp.y) * 0.25 * gN(gp * 6.0);\n  float rust = smoothstep(0.74, 0.8, gN(gp * 5.0) * 0.7 + gN(gp * 17.0) * 0.3);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.06, 0.055, 0.045), clamp(dirt, 0.0, 1.0) * 0.6);\n  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.08, 0.035) * (0.6 + 0.4 * gN(gp * 23.0)), rust * 0.6);\n#include <specularmap_fragment>\n  specularStrength *= 1.0 - clamp(dirt * 0.9 + rust, 0.0, 0.95);\n#include <emissivemap_fragment>\n  totalEmissiveRadiance += diffuseColor.rgb * 0.42 * (0.55 + 0.45 * clamp(normal.y * 0.5 + 0.5, 0.0, 1.0));\n#include <opaque_fragment>\nvoid main() {",
+   "uniforms": {}
+  }
+ ]
+}

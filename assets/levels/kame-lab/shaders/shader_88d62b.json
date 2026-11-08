@@ -1,0 +1,50 @@
+{
+ "name": "shader_88d62b",
+ "type": "ShaderMaterial",
+ "vertexShader": "attribute float size; attribute vec4 col; varying vec4 vC; uniform float scale;\nvoid main() { vC = col; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = min(size * scale / max(0.05, -mv.z), 360.0); gl_Position = projectionMatrix * mv; }",
+ "fragmentShader": "uniform sampler2D map; varying vec4 vC;\nvoid main() { float a = texture2D(map, gl_PointCoord).a; if (vC.a * a < 0.004) discard; gl_FragColor = vec4(vC.rgb, vC.a * a); }",
+ "uniforms": {
+  "map": {
+   "type": "t",
+   "file": "levels/_tex/ed99ffffaf8672f9_64x64.webp",
+   "name": ""
+  },
+  "scale": {
+   "type": "f",
+   "value": 449.35546
+  }
+ },
+ "variants": [
+  {
+   "map": {
+    "type": "t",
+    "file": "levels/_tex/ed99ffffaf8672f9_64x64.webp",
+    "name": ""
+   },
+   "scale": {
+    "type": "f",
+    "value": 449.35546
+   }
+  }
+ ],
+ "variant_keys": [
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/ed99ffffaf8672f9_64x64.webp\",\"name\":\"\"},\"scale\":{\"type\":\"f\",\"value\":449.35546}}"
+ ],
+ "defines": {},
+ "transparent": true,
+ "side": "front",
+ "blend": "add",
+ "depthWrite": false,
+ "depthTest": true,
+ "mergeSafe": false,
+ "userData": {},
+ "attributes": [
+  "col",
+  "size"
+ ],
+ "uses": 2,
+ "nodes": [
+  "kame-ki",
+  "kame-dust"
+ ]
+}

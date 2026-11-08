@@ -1,0 +1,64 @@
+<!-- Keyboard and mouse control diagram for the current default bindings. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Keyboard and mouse controls</title>
+  <desc id="desc">WASD move, hold Shift to run, hold F to strafe, Space jump, C crouch, left mouse fire, right mouse aim.</desc>
+  <style>
+    text{font-family:Segoe UI,Arial,sans-serif;fill:#e7f1f8}
+    .title{font-size:36px;font-weight:800;letter-spacing:9px}
+    .sub{font-size:15px;letter-spacing:4px;fill:#8cacc0}
+    .key{fill:#1b3244;stroke:#446579;stroke-width:2}
+    .move{stroke:#21c8ed}.combat{stroke:#ff9234}.weapon{stroke:#75e7a3}.utility{stroke:#b985f4}
+    .letter{font-size:25px;font-weight:800;text-anchor:middle}.label{font-size:15px;text-anchor:middle;fill:#c1d2df}
+    .hint{font-size:18px;fill:#b6ccda}.small{font-size:15px;fill:#8faabc}
+  </style>
+  <rect width="1600" height="900" fill="#071520"/>
+  <text x="800" y="72" text-anchor="middle" class="title">KEYBOARD &amp; MOUSE</text>
+  <text x="800" y="102" text-anchor="middle" class="sub">DEFAULT BINDINGS</text>
+
+  <text x="105" y="180" class="hint">Move, run and strafe</text>
+  <g transform="translate(90 205)">
+    <rect class="key move" x="92" y="0" width="92" height="94" rx="11"/><text class="letter" x="138" y="44">W</text><text class="label" x="138" y="71">forward</text>
+    <rect class="key move" x="0" y="102" width="88" height="94" rx="11"/><text class="letter" x="44" y="146">A</text><text class="label" x="44" y="173">left</text>
+    <rect class="key move" x="92" y="102" width="92" height="94" rx="11"/><text class="letter" x="138" y="146">S</text><text class="label" x="138" y="173">back</text>
+    <rect class="key move" x="188" y="102" width="92" height="94" rx="11"/><text class="letter" x="234" y="146">D</text><text class="label" x="234" y="173">right</text>
+    <rect class="key move" x="0" y="208" width="184" height="94" rx="11"/><text class="letter" x="92" y="252">SHIFT</text><text class="label" x="92" y="280">run (hold)</text>
+    <rect class="key move" x="188" y="208" width="92" height="94" rx="11"/><text class="letter" x="234" y="252">F</text><text class="label" x="234" y="280">strafe</text>
+    <rect class="key move" x="0" y="314" width="280" height="84" rx="11"/><text class="letter" x="140" y="350">SPACE</text><text class="label" x="140" y="377">jump / double jump</text>
+  </g>
+
+  <text x="425" y="180" class="hint">Combat and gear</text>
+  <g transform="translate(415 205)">
+    <rect class="key combat" x="0" y="0" width="96" height="94" rx="11"/><text class="letter" x="48" y="44">R</text><text class="label" x="48" y="71">reload</text>
+    <rect class="key combat" x="104" y="0" width="96" height="94" rx="11"/><text class="letter" x="152" y="44">V</text><text class="label" x="152" y="71">melee</text>
+    <rect class="key move" x="208" y="0" width="96" height="94" rx="11"/><text class="letter" x="256" y="44">C</text><text class="label" x="256" y="71">crouch</text>
+    <rect class="key utility" x="0" y="102" width="96" height="94" rx="11"/><text class="letter" x="48" y="146">X</text><text class="label" x="48" y="173">use</text>
+    <rect class="key utility" x="104" y="102" width="96" height="94" rx="11"/><text class="letter" x="152" y="146">E</text><text class="label" x="152" y="173">back</text>
+    <rect class="key move" x="208" y="102" width="96" height="94" rx="11"/><text class="letter" x="256" y="146">G</text><text class="label" x="256" y="173">recenter</text>
+    <rect class="key weapon" x="0" y="208" width="96" height="94" rx="11"/><text class="letter" x="48" y="252">Q</text><text class="label" x="48" y="279">wheel</text>
+    <rect class="key weapon" x="104" y="208" width="96" height="94" rx="11"/><text class="letter" x="152" y="252">Z</text><text class="label" x="152" y="279">power</text>
+    <rect class="key weapon" x="208" y="208" width="96" height="94" rx="11"/><text class="letter" x="256" y="252">N</text><text class="label" x="256" y="279">night vision</text>
+    <text x="0" y="350" class="hint">1–8  select weapon</text>
+    <text x="0" y="382" class="hint">0  fists</text>
+  </g>
+
+  <text x="824" y="180" class="hint">Game and menus</text>
+  <g transform="translate(815 205)">
+    <rect class="key utility" x="0" y="0" width="100" height="94" rx="11"/><text class="letter" x="50" y="44">ESC</text><text class="label" x="50" y="71">pause</text>
+    <rect class="key utility" x="108" y="0" width="100" height="94" rx="11"/><text class="letter" x="158" y="44">P</text><text class="label" x="158" y="71">pause</text>
+    <rect class="key utility" x="0" y="102" width="100" height="94" rx="11"/><text class="letter" x="50" y="146">F3</text><text class="label" x="50" y="173">tuning</text>
+    <rect class="key utility" x="108" y="102" width="100" height="94" rx="11"/><text class="letter" x="158" y="146">`</text><text class="label" x="158" y="173">console</text>
+  </g>
+
+  <text x="1240" y="180" text-anchor="middle" class="hint">Mouse</text>
+  <path d="M1170 215Q1170 195 1190 195H1290Q1310 195 1310 215V445Q1310 510 1240 510Q1170 510 1170 445Z" fill="#142637" stroke="#426a82" stroke-width="4"/>
+  <path d="M1170 285H1310M1240 195V285" fill="none" stroke="#ff9234" stroke-width="3"/>
+  <rect x="1233" y="225" width="14" height="44" rx="7" fill="#2d4c61" stroke="#547990" stroke-width="2"/>
+  <text x="1100" y="332" class="hint" text-anchor="middle">FIRE</text><text x="1100" y="355" class="small" text-anchor="middle">left button</text>
+  <text x="1380" y="332" class="hint" text-anchor="middle">AIM</text><text x="1380" y="355" class="small" text-anchor="middle">right button</text>
+  <text x="1240" y="555" text-anchor="middle" class="hint">LOOK</text><text x="1240" y="580" text-anchor="middle" class="small">move the mouse</text>
+
+  <line x1="90" y1="680" x2="1510" y2="680" stroke="#274256" stroke-width="2"/>
+  <text x="100" y="732" class="hint">Hold Shift while moving to run. Release it to return to normal speed.</text>
+  <text x="100" y="774" class="hint">Hold F to strafe: face the camera direction while moving sideways.</text>
+  <text x="100" y="816" class="small">Controller controls are shown on the other tab.</text>
+</svg>
