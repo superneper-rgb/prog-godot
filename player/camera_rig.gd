@@ -44,6 +44,9 @@ var swing_ok := false
 var swing_to := NAN  # the yaw the view is turning to when boxed in (NAN = none)
 var lift_acc := 0.0
 var too_close := false
+var squeezed := false   # indoors: the lens is pinned on the body (see update)
+var squeeze_t := 0.0    # how long the lens has been pinned with the body not walking out of it
+const SQUEEZE_WAIT := 0.4
 var fy_v := 0.0
 var lift_v := 0.0
 var leash_vx := 0.0
@@ -106,6 +109,8 @@ func snap_to(p: Player) -> void:
 	yaw_vel = 0.0
 	lift_acc = 0.0
 	lift_hold = 0.0
+	squeeze_t = 0.0
+	squeezed = false
 	room_w = float(world.camera_zone_weight.call(p)) if (p != null and world.camera_zone_weight.is_valid()) else 0.0
 	room_travel_x = 0.0
 	room_travel_z = 0.0
@@ -316,7 +321,20 @@ func update(dt: float, p: Player) -> void:
 			fx = p.x + ex / el * free
 			fz = p.z + ez / el * free
 
-	swing_ok = not look_active and not p.ads and not p.scoped and (p.mode == &"normal" or p.mode == &"swim") and not (pull_eff > 0.05) and not (W.camera_no_swing and room_w > 0.5)
+	# (Not in the JS, user 2026-11-09.) A no-swing room (Visiting Hours' block) could neither rise nor turn, so a boom squeezed onto the body stayed there:
+	# first person for as long as you stood with your back near a wall. Once the lens is that close the turn is the lesser evil, and it is allowed until it is done.
+	# The same goes for the rise (user 2026-11-09, after seeing both views side by side): squeezed, the lens goes up over his head and looks down, and comes back as soon as
+	# there is room behind him. It stays on while the rise is still up, so the boom's limits do not change under it.
+	# (User 2026-11-10: the rise yanked the view up to a bird's eye at every doorway, the jambs pinch the boom for a moment as he walks through.) So the pinch
+	# only counts once it has lasted (SQUEEZE_WAIT) with the body not walking away from the lens: a doorway passed through lets go by itself, a wall at his back does not.
+	var away := room_travel_x * sin(yaw) + room_travel_z * cos(yaw)     # metres per 0.4 s along the view, away from the lens
+	if clear_dist < 1.3 and away < 0.25:
+		squeeze_t += dt
+	else:
+		squeeze_t = 0.0
+	var rising := not is_nan(swing_to) or lift_t > 0.0 or lift > 0.02
+	squeezed = room_w > 0.5 and (squeeze_t > SQUEEZE_WAIT or (squeezed and rising))
+	swing_ok = not look_active and not p.ads and not p.scoped and (p.mode == &"normal" or p.mode == &"swim") and not (pull_eff > 0.05) and not (W.camera_no_swing and room_w > 0.5 and not squeezed)
 	foot_y = hold_y if holding else p.y
 	# indoors: the last few metres walked (the indoor boom can look back along them, see _place)
 	if room_w > 0.3:
@@ -372,10 +390,32 @@ func _cast(ppitch: float, cyaw: float, sk: float, oy: float, want: float, probe:
 	b.dz = -cos(cyaw) * cp
 	b.ox = fx + sx - cos(cyaw) * sk      # the shoulder offset turns with the yaw, so every probe starts from its own origin
 	b.oz = fz + sz + sin(cyaw) * sk
-	b.free = maxf(0.0, world.ray_clear(b.ox, oy, b.oz, b.dx, b.dy, b.dz, want + 0.3, probe, fine) - _gap)
+	b.free = maxf(0.0, _free(b.ox, oy, b.oz, b.dx, b.dy, b.dz, want + 0.3, probe, fine) - _gap)
 	return b
 
 var _gap := 0.0
+
+const NEAR := 1.3     # the first stretch of the boom, probed slim (see _free)
+const SLIM := 0.13    # the slim probe (the indoor boom's own radius)
+
+
+## Free length of a boom. (Not in the JS, user 2026-11-09: the camera kept dropping into the body beside walls.) The body is 0.36 m wide and the fat
+## probe 0.22 m, so with the player against a wall a boom running along it grazed the wall at its very start and read as no room at all: the lens
+## jumped inside the body. The first stretch is now probed slim (a wall there is one the boom really points into), the rest fat as before (where
+## the fat probe has no room to start because the wall is still alongside, World.ray_clear slims it by itself).
+func _free(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, max_d: float, probe: float, fine: bool) -> float:
+	var W := world
+	var slim := minf(probe, SLIM)
+	if probe <= slim:
+		return W.ray_clear(ox, oy, oz, dx, dy, dz, max_d, probe, fine)
+	var near := minf(NEAR, max_d * 0.5)
+	var a := W.ray_clear(ox, oy, oz, dx, dy, dz, near, slim, fine)
+	if a < near - 0.01:
+		return a
+	var bx := ox + dx * near
+	var by := oy + dy * near
+	var bz := oz + dz * near
+	return near + W.ray_clear(bx, by, bz, dx, dy, dz, max_d - near, probe, fine)
 
 
 func _place(dt: float, instant: bool) -> void:
@@ -430,8 +470,8 @@ func _place(dt: float, instant: bool) -> void:
 	var lens_max := W.camera_room_lens_max
 	var fy_ref := foot_y if not is_nan(foot_y) else oy - C.cam_height
 	var room_pmax := asin(clampf((lens_max - probe - (oy - fy_ref)) / want, -0.3, 0.9)) if (lens_max > 0.0 and want > 0.3) else 1.5
-	var PMAX := lerpf(1.5, minf(1.5, room_pmax), rw)
-	var lift_max := C.cam_lift_max * (1.0 - (pull_k if pull_lock else 0.0)) * (1.0 - rw if lens_max > 0.0 else 1.0)     # a set piece keeps its angle
+	var PMAX := lerpf(1.5, minf(1.5, room_pmax), rw)     # (caps the pitch the player set; the lift goes on top of it, up to 1.5: a rise indoors is not held under the door heads)
+	var lift_max := C.cam_lift_max * (1.0 - (pull_k if pull_lock else 0.0)) * ((1.0 if squeezed else 1.0 - rw) if lens_max > 0.0 else 1.0)     # a set piece keeps its angle; a low-lens room rises only when squeezed
 	# indoors the view may turn up to 0.4 rad off the controls' heading (vo) to look through a doorway instead of into its jamb; it eases back once the way is clear
 	var vo := view_off
 	var sk := side * (1.0 - sc)
@@ -439,7 +479,7 @@ func _place(dt: float, instant: bool) -> void:
 		vo_acc += dt
 		if vo_acc >= 0.05:      # a handful of boom casts: 20x a second
 			vo_acc = 0.0
-			var pc := minf(pitch + lift, PMAX)
+			var pc := minf(minf(pitch, PMAX) + lift, 1.5)
 			var tl := sqrt(room_travel_x * room_travel_x + room_travel_z * room_travel_z)
 			var ahead := minf(0.5, maxf(0.0, W.ray_clear(fx, oy, fz, room_travel_x / tl, 0.0, room_travel_z / tl, tl * 0.5 + probe, probe, true) - probe) / tl) if tl > 0.05 else 0.0
 			var room_f := func(o: float) -> float:
@@ -503,7 +543,7 @@ func _place(dt: float, instant: bool) -> void:
 		view_off = vo
 		vo_t = 0.0
 		vo_v = 0.0
-	var hit := _cast(minf(pitch + (0.0 if instant else lift), PMAX), yaw + vo, sk, oy, want, probe, fine)
+	var hit := _cast(minf(minf(pitch, PMAX) + (0.0 if instant else lift), 1.5), yaw + vo, sk, oy, want, probe, fine)
 	if not instant:
 		# blocked boom: get round it before the camera has to crawl in against the player. The cheapest way out wins (boom length minus a cost for each radian of tilt-up / turn):
 		# first rise over the obstacle; if that needs a near top-down view turn the view towards the open side instead. Never more than ~90 deg; manual look / ADS / scopes are left alone.
@@ -511,8 +551,21 @@ func _place(dt: float, instant: bool) -> void:
 		if lift_acc >= 0.05:      # the search is several boom casts: run it 20x a second
 			var ldt := lift_acc
 			lift_acc = 0.0
-			var bs := _cast(pitch, yaw + vo, sk, oy, want, probe, fine) if lift > 0.001 else hit
-			if bs.free >= want * 0.92:
+			# (Not in the JS, user 2026-11-09.) Running at the lens with a wall behind it squeezes the boom faster than the view can turn. So while the body
+			# is heading for the lens every boom here is also judged from where it will be in about half a second (never through a wall), and the way out starts that much sooner.
+			var ax := room_travel_x * 1.5
+			var az := room_travel_z * 1.5
+			var al := sqrt(ax * ax + az * az)
+			if al > 0.3:
+				var ak := clampf(W.ray_clear(fx, oy, fz, ax / al, 0.0, az / al, al + 0.35, 0.2) - 0.35, 0.0, al) / al
+				ax *= ak
+				az *= ak
+			var pre := -(ax * sin(yaw + vo) + az * cos(yaw + vo)) > 0.3
+			var free_at := func(pp: float, cy: float) -> float:
+				var f := _cast(pp, cy, sk, oy, want, probe, fine).free
+				return minf(f, _cast(pp, cy, sk, oy, want, probe, fine, ax, az).free) if pre else f
+			var bs_free: float = free_at.call(pitch, yaw + vo)
+			if bs_free >= want * 0.92:
 				lift_hold += ldt
 				if lift_hold > C.cam_clear_hold:
 					lift_t = 0.0
@@ -520,44 +573,53 @@ func _place(dt: float, instant: bool) -> void:
 			else:
 				lift_hold = 0.0
 				var COST := 2.2     # metres of boom a radian of tilt (or 0.6 rad of turn per rad) is worth
+				var TURN := COST
+				var need := 0.0     # a rise has to reach this far to count: under a low ceiling (the block's basement) it only hovered on top of his head, worse than staying put
+				if squeezed and lens_max > 0.0:
+					need = 1.25
+					COST = 0.5      # (a squeezed low-lens room: ceilings give a metre or two at most, so the rise has to be cheap to be taken at all)
 				var best_l := 0.0
-				var best_f := bs.free
-				var best_s := minf(bs.free, want)
+				var best_f := bs_free
+				var best_s := minf(bs_free, want)
 				var best_y := NAN
 				if lift_max > 0.0:
 					for k in range(1, 7):
 						var l := lift_max * k / 6.0
-						var c := _cast(minf(pitch + l, PMAX), yaw + vo, sk, oy, want, probe, fine)
-						var s := minf(c.free, want) - COST * l
-						if s > best_s + 0.05:
+						var cf: float = free_at.call(minf(minf(pitch, PMAX) + l, 1.5), yaw + vo)
+						var s := minf(cf, want) - COST * l
+						if s > best_s + 0.05 and cf >= need:
 							best_s = s
-							best_f = c.free
+							best_f = cf
 							best_l = l
+				var lift_here := best_l
 				# rising alone leaves a near top-down view or a short boom: also try turning towards the open side (hip-aiming: only when really squeezed)
 				if swing_ok and not (best_f >= want * 0.85 and best_l <= lift_max * 0.5) and (aw <= 0.3 or best_f < want * 0.5):
 					var offs: Array[float] = [0.4, -0.4, 0.8, -0.8, 1.2, -1.2, 1.6, -1.6]
 					if not is_nan(swing_to):
 						offs.append(U.wrap_angle(swing_to - yaw))    # keep heading for the target already chosen (no dithering between two similar sides)
 					var s0 := best_s
+					var turn_k := 0.3 if (W.camera_no_swing and rw > 0.5) else 0.6     # (a squeezed no-swing room: rooms are small, so a turn has to be cheap to be worth anything)
 					for off in offs:
 						for l: float in [0.0, lift_max * 0.5]:
-							var c := _cast(minf(pitch + l, PMAX), yaw + off, sk, oy, want, probe, fine)
-							var s := minf(c.free, want) - COST * (l + 0.6 * absf(off))
+							var cf: float = free_at.call(minf(minf(pitch, PMAX) + l, 1.5), yaw + off)
+							var s := minf(cf, want) - COST * l - TURN * turn_k * absf(off)
 							if s > maxf(best_s, s0 + 0.4):
 								best_s = s
-								best_f = c.free
+								best_f = cf
 								best_l = l
 								best_y = yaw + off
-				lift_t = best_l
+				# (Not in the JS, user 2026-11-09.) Until a turn has got there the boom still points at the wall: keep the rise this heading needs meanwhile,
+				# or the lens is driven into the body half-way round. It lets go by itself as the heading opens up. (No more than the half rise a turn may use: never the top-down view the turn is there to avoid.)
+				lift_t = best_l if is_nan(best_y) else maxf(best_l, minf(lift_here, lift_max * 0.5))
 				swing_to = best_y
 		var nl := maxf(0.0, U.spring_to(lift, lift_v, lift_t, 20.0 if lift_t > lift else 5.0, dt))
 		lift_v = U.spring_v
 		if absf(nl - lift) > 1e-4:
 			lift = nl
-			hit = _cast(minf(pitch + lift, PMAX), yaw + vo, sk, oy, want, probe, fine)
+			hit = _cast(minf(minf(pitch, PMAX) + lift, 1.5), yaw + vo, sk, oy, want, probe, fine)
 		if not is_nan(swing_to):
 			yaw = U.wrap_angle(yaw + clampf(U.wrap_angle(swing_to - yaw) * 6.0, -C.cam_swing_max, C.cam_swing_max) * dt)
-			hit = _cast(minf(pitch + lift, PMAX), yaw + vo, sk, oy, want, probe, fine)
+			hit = _cast(minf(minf(pitch, PMAX) + lift, 1.5), yaw + vo, sk, oy, want, probe, fine)
 
 	# distance: pull in at once (never clips), ease back out only after the obstruction has been gone for cam_clear_hold -> no pumping along pillars
 	var target := minf(want, hit.free)
@@ -565,17 +627,20 @@ func _place(dt: float, instant: bool) -> void:
 		# Anticipate jambs and desk corners along the travel direction, so the boom has time to contract before its mandatory no-clipping limit changes.
 		var tl := sqrt(room_travel_x * room_travel_x + room_travel_z * room_travel_z)
 		var reach := minf(1.0, maxf(0.0, W.ray_clear(hit.ox, oy, hit.oz, room_travel_x / tl, 0.0, room_travel_z / tl, tl + probe, probe, true) - probe) / tl) if tl > 0.05 else 0.0
+		# (Not in the JS, user 2026-11-09: these looks ahead stopped at 0.6 m, which is inside the body, so walking along a wall or turning the view sent the camera
+		# into first person with the boom itself free. A guess about the next wall never brings the lens closer than SEEN, where the body is still in view; a real wall still does.)
+		const SEEN := 1.25
 		for ahead: float in [0.33, 0.67, 1.0]:
 			var a := minf(ahead, reach)
 			var future := W.ray_clear(hit.ox + room_travel_x * a, oy, hit.oz + room_travel_z * a, hit.dx, hit.dy, hit.dz, want + 0.2, probe, true)
-			target = minf(target, maxf(0.6, future - _gap))
+			target = minf(target, maxf(SEEN, future - _gap))
 		# ...and along the way the view is turning (a jamb it swings onto), and a little either side of the boom (a corner closing on it): the boom starts in early and eases
-		var p_now := minf(pitch + lift, PMAX)
+		var p_now := minf(minf(pitch, PMAX) + lift, 1.5)
 		var yr := clampf(yaw_rate * 0.22, -0.6, 0.6)
 		if absf(yr) > 0.03:
-			target = minf(target, maxf(0.6, _cast(p_now, yaw + vo + yr, sk, oy, want, probe, fine).free))
+			target = minf(target, maxf(SEEN, _cast(p_now, yaw + vo + yr, sk, oy, want, probe, fine).free))
 		for s: float in [-0.22, 0.22]:
-			target = minf(target, _cast(p_now, yaw + vo + s, sk, oy, want, probe, fine).free + 0.5)
+			target = minf(target, maxf(SEEN, _cast(p_now, yaw + vo + s, sk, oy, want, probe, fine).free + 0.5))
 	last_tgt = target
 	var obstructed := hit.free < minf(want - 0.02, clear_dist + 0.04)   # geometry is holding the boom at (or inside) its current length
 	var room := rw > 0.5 and not instant
@@ -589,12 +654,15 @@ func _place(dt: float, instant: bool) -> void:
 			obs_t = 0.0
 		else:
 			obs_t += dt
-		var hold := lerpf(C.cam_clear_hold, 0.15, rw)
-		var out_k := lerpf(C.cam_clear_out_k, 5.0, rw)     # indoors walls come and go every metre: the boom goes back out sooner and quicker
+		# (Not in the JS, user 2026-11-09.) A lens squeezed in on the body does not wait to back out: the hold and the slow start are there to stop pumping
+		# along pillars at a distance, and up close they left the view inside the character for most of a second with the way clear.
+		var cramped := clampf((1.6 - clear_dist) / 0.8, 0.0, 1.0)
+		var hold := lerpf(C.cam_clear_hold, 0.15, rw) * (1.0 - cramped)
+		var out_k := lerpf(lerpf(C.cam_clear_out_k, 5.0, rw), 9.0, cramped)     # indoors walls come and go every metre: the boom goes back out sooner and quicker
 		if room:
 			# indoors the boom length is a critically damped spring, in quick and out slow
 			var going_in := target < clear_dist
-			var w := 20.0 if going_in else (6.0 if obs_t > hold else 0.0)
+			var w := 20.0 if going_in else (lerpf(6.0, 12.0, cramped) if obs_t > hold else 0.0)     # (squeezed onto the body: back out twice as fast)
 			cd_v = cd_v + (w * w * (target - clear_dist) - 2.0 * w * cd_v) * dt if w > 0.0 else U.damp(cd_v, 0.0, 20.0, dt)
 			clear_dist += cd_v * dt
 			if w > 0.0 and (clear_dist < target if going_in else clear_dist > target):     # (no overshoot past the target it was heading for)
@@ -624,7 +692,11 @@ func _place(dt: float, instant: bool) -> void:
 		occ_t = 0.0
 	pos = Vector3(hit.ox + hit.dx * d, oy + hit.dy * d, hit.oz + hit.dz * d)
 	var i := 0
-	while i < 6 and d > 0.0 and W.point_solid(pos.x, pos.y, pos.z, true):     # last-resort guard includes camera-only scenery
+	# (Not in the JS, user 2026-11-09.) The guard is no help when the boom's own origin is inside camera-only scenery, which the body can walk into (MEAT SPIRE's
+	# core is wrapped in a camera volume 8.1 m wide and the gastric arena's floor reaches inside it): every step in is still "solid", so it dragged the lens
+	# all the way into the body. There the boom's own cast places the lens.
+	var guard := not W.point_solid(hit.ox, oy, hit.oz, true)
+	while guard and i < 6 and d > 0.0 and W.point_solid(pos.x, pos.y, pos.z, true):     # last-resort guard includes camera-only scenery
 		d = maxf(0.0, d - 0.15)
 		pos = Vector3(hit.ox + hit.dx * d, oy + hit.dy * d, hit.oz + hit.dz * d)
 		i += 1
@@ -639,8 +711,10 @@ func _place(dt: float, instant: bool) -> void:
 		d *= 1.0 - 0.97 * sc
 		pos = Vector3(hit.ox + hit.dx * d, oy + hit.dy * d, hit.oz + hit.dz * d)
 	look = Vector3(hit.ox, focus_y + 0.15 + 0.1 * ad, hit.oz)
-	# indoors, a boom squeezed short (a door jamb) keeps looking the way the boom points
-	var lm := 1.2 * rw * (1.0 - sc)
+	# a boom squeezed short (a door jamb, a wall at the lens) keeps looking the way the boom points.
+	# (The JS did this indoors only. Everywhere now, user 2026-11-09: outdoors a boom squeezed to nothing left the lens on the focus looking at a point
+	# 15 cm above itself, so the view swung straight up and rolled over: the camera "flip" against walls.)
+	var lm := 1.2 * (1.0 - sc)
 	if d < lm:
 		var k := d - lm
 		look += Vector3(hit.dx * k, hit.dy * k, hit.dz * k)

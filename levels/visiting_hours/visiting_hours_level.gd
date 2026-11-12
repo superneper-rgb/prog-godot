@@ -131,6 +131,8 @@ func _prepare() -> void:
 		audio.say("b-made-car" if why == "car" else ("b-made-tower" if why == "tower" else "b-made-guard"), {"urgent": true})
 	dress = VhDress.new(self, vh.dress, admin.floors[&"f2"])
 	finale = VhFinale.new(self, admin, people, sniper, audio, func() -> VhStorm: return vh_storm, VhLayout.deck)
+	audio.warm()      # (every synth cue rendered now, off the main thread: see MsSound.prewarm)
+	finale.warm()
 	# the exported cable stays out of it: the kit builds its own
 	for nm: String in ["zipline", "zipline cable"]:
 		for n: Node3D in node_named(nm):

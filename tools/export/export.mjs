@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.resolve(HERE, '../..');
-const JS_ROOT = path.resolve(PROJECT, '../progalpha-20261016T082732Z-1-001/progalpha');
+const JS_ROOT = (await import('../js_root.mjs')).JS_ROOT;
 const ASSETS = path.join(PROJECT, 'assets');
 // the harness keeps its sheets and peek state in the OS temp folder: a private one here, so no other worker's run gets in the way
 const TMP = 'F:/prog-godot-cache/tmp/export';
@@ -56,6 +56,10 @@ function ensureLevelsDir() {
 }
 /** Levels left out of the Godot game by the user's decision: never exported, and their files never copied in. */
 const NOT_PORTED = new Set(['bloodgulch', 'jetpack-yard', 'parkour-yard', 'reality-slip', 'ship-combat']);
+/** Levels PROG renamed: the JS registry id -> the id (and assets/levels folder) it has here. The JS game is not renamed (CLAUDE.md), so its old id is kept in this table only. `level` takes either id. */
+const RENAMED = { maktar: 'foint-dome' };
+const godotId = (id) => RENAMED[id] || id;
+const jsId = (id) => Object.keys(RENAMED).find((k) => RENAMED[k] === id) || id;
 /** every level the JS game knows and the Godot game keeps: LEVELS in index.html, then levels/registry.js */
 function allLevels() {
   const html = fs.readFileSync(path.join(JS_ROOT, 'index.html'), 'utf8'), reg = fs.readFileSync(path.join(JS_ROOT, 'levels/registry.js'), 'utf8');
@@ -67,6 +71,7 @@ function allLevels() {
 /** POST /put?f=<relative path under assets/>: how the page hands files over */
 function receiver() {
   const written = [];
+  let partN = 0;
   const srv = http.createServer((req, res) => {
     const u = new URL(req.url, 'http://x');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -74,9 +79,15 @@ function receiver() {
     const rel = u.searchParams.get('f'), file = path.join(ASSETS, rel);
     if (!path.resolve(file).startsWith(path.resolve(ASSETS))) { res.writeHead(403); return res.end(); }
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    const out = fs.createWriteStream(file + '.part');
+    // (each request its own part file: the page can send the same texture twice at once, and on Windows the second rename onto a file still open fails with EPERM)
+    const part = file + '.' + (++partN) + '.part', out = fs.createWriteStream(part);
     req.pipe(out);
-    out.on('finish', () => { fs.renameSync(file + '.part', file); written.push(rel); res.writeHead(200); res.end('ok'); });
+    out.on('finish', () => {
+      for (let i = 0; ; i++) {
+        try { fs.renameSync(part, file); break; } catch (e) { if ((e.code !== 'EPERM' && e.code !== 'EBUSY') || i >= 100) throw e; Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100); }      // (up to 10 s: a virus scan or an open editor can hold a fresh file a while)
+      }
+      written.push(rel); res.writeHead(200); res.end('ok');
+    });
     out.on('error', (e) => { console.error('write failed', rel, e.message); res.writeHead(500); res.end(); });
   });
   return new Promise((ok) => srv.listen(0, '127.0.0.1', () => ok({ url: 'http://127.0.0.1:' + srv.address().port, close: () => srv.close(), written })));
@@ -194,12 +205,13 @@ function writeTextureImports(dirRel, textures) {
 }
 
 // ---- commands ----
-async function exportLevel(id) {
+async function exportLevel(anyId) {
+  const id = godotId(anyId);
   const rc = await receiver();
-  const h = await bootGame(id, { god: true });
+  const h = await bootGame(jsId(id), { god: true });
   try {
     await waitMerge(h);
-    const r = await h.page.evaluate((o) => window.__exp.exportLevel(o), { recv: rc.url, sampleMs: +(flags.sample || 6000), maxTex: +(flags['max-tex'] || 2048), cell: +(flags.cell || 64), cellInst: +(flags['cell-inst'] || 128), probes: +(flags.probes || 3000), ignoreName: flags['ignore-name'] || null, name: id });
+    const r = await h.page.evaluate((o) => window.__exp.exportLevel(o), { recv: rc.url, sampleMs: +(flags.sample || 6000), maxTex: +(flags['max-tex'] || 2048), cell: +(flags.cell || 64), cellInst: +(flags['cell-inst'] || 128), probes: +(flags.probes || 3000), ignoreName: flags['ignore-name'] || null, name: id, out: id });
     writeTextureImports('levels/_tex', [...r.textures, ...r.life_textures]);
     glbImport(path.join(ASSETS, 'levels', id, 'scene.glb'), `res://assets/levels/${id}/scene.glb`, { tangents: r.normal_maps, lods: !flags['no-lods'] });
     const pageErrs = h.errors.length;
@@ -232,12 +244,13 @@ async function waitMerge(h) {
   await h.page.waitForFunction(() => { const G = window.__game; const a = G.view.autoMerges[G.view.autoMerges.length - 1]; return !a || a.stats.phase === 'watch' || a.stats.phase === 'disposed'; }, null, { timeout: 60000 }).catch(() => console.log('auto-merge did not finish: going on'));
 }
 /** the data of the city's life alone (city_life.json, life.json, life.bin), when only that changed: about a minute instead of the scene's six */
-async function exportLifeOnly(id) {
+async function exportLifeOnly(anyId) {
+  const id = godotId(anyId);
   const rc = await receiver();
-  const h = await bootGame(id, { god: true });
+  const h = await bootGame(jsId(id), { god: true });
   try {
     await waitMerge(h);
-    const r = await h.page.evaluate((o) => window.__exp.exportLife(o), { recv: rc.url });
+    const r = await h.page.evaluate((o) => window.__exp.exportLife(o), { recv: rc.url, out: id });
     writeTextureImports('levels/_tex', r.textures);
     console.log(JSON.stringify({ id, textures: r.textures.length, species: r.bytes, errors: h.errors.length }));
   } finally { await h.close(); rc.close(); }
@@ -274,7 +287,7 @@ async function exportSuits() {
   }
 }
 function list() {
-  for (const id of allLevels()) {
+  for (const id of allLevels().map(godotId)) {
     const f = path.join(ASSETS, 'levels', id, 'scene.glb');
     console.log(id.padEnd(16) + (fs.existsSync(f) ? `${(fs.statSync(f).size / 1048576).toFixed(1)} MB glb` : '-'));
   }

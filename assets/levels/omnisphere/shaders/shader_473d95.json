@@ -32,7 +32,7 @@
   },
   "uOp": {
    "type": "f",
-   "value": 0.850532
+   "value": 1
   }
  },
  "variants": [
@@ -65,12 +65,12 @@
    },
    "uOp": {
     "type": "f",
-    "value": 0.850532
+    "value": 1
    }
   }
  ],
  "variant_keys": [
-  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/5184e9a87a4e5dd6_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uOp\":{\"type\":\"f\",\"value\":0.850532}}"
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/5184e9a87a4e5dd6_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uOp\":{\"type\":\"f\",\"value\":1}}"
  ],
  "defines": {},
  "transparent": true,

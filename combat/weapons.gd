@@ -79,7 +79,7 @@ const PRICE := {
 }
 
 # Arena prototype weapons: Saw-Loop, Moon Yoke, Electranator, Bellows Beast. Always in WEAPONS (one list for the whole session: levels are swapped in one page, and weapon
-# indexes must mean the same weapon everywhere), but only sold / handed out where a level says so (JS arenaWeaponsHere: Foint arena = `maktar`, the dev level, the Meat Spire).
+# indexes must mean the same weapon everywhere), but only sold / handed out where a level says so (JS arenaWeaponsHere: FOINT DOME = `foint-dome`, the dev level, the Meat Spire).
 const ARENA_IDS: Array[String] = ["saw", "yoke", "arc", "bellows"]
 
 # Saw-Loop tuning (JS SAW)
@@ -219,7 +219,7 @@ static func _index() -> Dictionary:
 ## JS arenaWeaponsHere: where the arena prototype weapons are sold / handed out.
 static func arena_weapons_here() -> bool:
 	var lv := Game.level
-	return lv != null and (lv.id == "maktar" or lv.id == "dev" or lv.id == "spire")
+	return lv != null and (lv.id == "foint-dome" or lv.id == "dev" or lv.id == "spire")
 
 
 ## Weapon number for an id, -1 if there is none (JS WEAPONS.findIndex).

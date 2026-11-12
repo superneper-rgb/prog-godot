@@ -9,6 +9,7 @@ var J: Dictionary = {}
 var bin := PackedByteArray()
 var plan: CityPlan
 var traffic: CityTraffic
+var cars: CityCars             # what the city's cars look like (city_cars.gd)
 var crowd: CityCrowd
 var _water_mat: ShaderMaterial = null
 var _water_cand := PackedVector4Array()
@@ -28,6 +29,12 @@ var _warm: Array[OmniLight3D] = []
 var _tgt: Array = []
 var _pick := 0.0
 var _sky_mats: Array[ShaderMaterial] = []
+## the flying cars' kinds (tools/cars/sky_cars.py) and where their glows sit on each model: (forward, up), the engines (forward, side, up)
+const SKY_KINDS := {
+	&"skyLimo": {"head": Vector2(2.72, 0.09), "tail": Vector2(-2.66, 0.2), "strobe": Vector2(-2.66, 0.8), "engine": Vector3(-2.24, 1.1, -0.04)},
+	&"skyDart": {"head": Vector2(2.12, 0.04), "tail": Vector2(-2.05, 0.2), "strobe": Vector2(-0.45, 0.72), "engine": Vector3(-2.42, 0.78, 0.02)},
+}
+const SKY_HIGH := [4, 5, 8]      # the high crossings and the express ring
 var _pod_rid: RID
 var _pod_pts := PackedVector3Array()
 var _pod_cum := PackedFloat32Array()
@@ -35,6 +42,10 @@ var _pod_len := 0.0
 var _pod_loop := 1.0
 var _pods: Array = []          # [s, v]
 var _pod_lamps: MultiMesh = null
+var dome: FointDomeLife = null
+var trees: CityTrees = null       # levels/hub/city_trees.gd
+var _beams: Array = []         # [node, sx]: the bridge's two searchlights (JS city-bridge.js)
+var _bulb_m: ShaderMaterial = null      # the B-9 alley's door bulb (JS district-view.js)
 
 
 static func load_for(lv: ExportedLevel) -> HubLife:
@@ -53,7 +64,8 @@ static func load_for(lv: ExportedLevel) -> HubLife:
 func _build() -> void:
 	plan = CityPlan.new(J["plan"])
 	folk = CityFolk.new(J, bin)
-	traffic = CityTraffic.new(level, plan, J)
+	cars = CityCars.new()
+	traffic = CityTraffic.new(level, plan, J, cars)
 	crowd = CityCrowd.new(level, plan, traffic, J, folk)
 	crowd.aliens = CityAliens.new(level, crowd.GY)
 	crowd.targets.append_array(crowd.aliens.targets)
@@ -78,6 +90,8 @@ func _build() -> void:
 	_build_warm_lights()
 	_build_sky_traffic()
 	_build_pods()
+	_build_glints()
+	trees = CityTrees.new(level, J["obstacles"], float(J["GY"]))
 
 
 ## What the export froze where it stood: the live ones above take over.
@@ -158,6 +172,7 @@ func _build_signals() -> void:
 
 
 ## JS city-atmos.js sky traffic: flying cars on five kinds of lane above the avenues and round the island. All of it runs in shaders/sky_traffic_*: one `t` a frame.
+## 2026-11-10: the JS's one blocky unlit hull is replaced by two lit models of our own (tools/cars/sky_cars.py), polished where the street's cars are worn, each craft its own paint and engine colour.
 func _build_sky_traffic() -> void:
 	var src: Array = level.node_named("SkyTraffic")
 	if src.is_empty() or not (src[0] is MultiMeshInstance3D):
@@ -176,9 +191,14 @@ func _build_sky_traffic() -> void:
 		[[Vector2(-121, 174), Vector2(-121, 373), Vector2(-115, 373), Vector2(-115, 174)], 24.0, 6, 13.0],     # slow local hoppers down Shore Dr W
 	]
 	var rng := CityPlan.Rng.new(1117)
-	var buf := PackedFloat32Array()
+	var bufs := {}      # kind -> its crafts' instance data
+	var counts := {}
+	for k: StringName in SKY_KINDS:
+		bufs[k] = PackedFloat32Array()
+		counts[k] = 0
 	var count := 0
-	for L: Array in lanes:
+	for li in lanes.size():
+		var L: Array = lanes[li]
 		var P: Array = L[0]
 		var ln := 0.0
 		for i in 4:
@@ -188,34 +208,31 @@ func _build_sky_traffic() -> void:
 			var v: float = float(L[3]) * (0.85 + rng.next() * 0.3)
 			var bob := rng.next() * 6.0
 			var y := gy + float(L[1]) + (rng.next() - 0.5) * 6.0
+			var kind: StringName = &"skyLimo" if rng.next() < (0.7 if SKY_HIGH.has(li) else 0.35) else &"skyDart"      # (the yachts keep to the high lanes)
+			var r := rng.next()
+			var paint := 0 if r < 0.3 else (1 if r < 0.5 else (2 if r < 0.7 else (3 if r < 0.82 else (4 if r < 0.92 else 5))))
 			var p0: Vector2 = P[0]
 			var p1: Vector2 = P[1]
 			var p2: Vector2 = P[2]
 			var p3: Vector2 = P[3]
-			buf.append_array([p1.x, p2.y, s0, p0.x, p1.y, p3.x, v, y, p2.x, p3.y, bob, p0.y, float(count % 3), 0.0, 0.0, 0.0])
+			var kb: PackedFloat32Array = bufs[kind]      # (a packed array comes out of a Dictionary as a copy: put it back)
+			kb.append_array([p1.x, p2.y, s0, p0.x, p1.y, p3.x, v, y, p2.x, p3.y, bob, p0.y, float(count % 3), float(paint), 0.0, 0.0])
+			bufs[kind] = kb
+			counts[kind] += 1
 			count += 1
 	var old: MultiMeshInstance3D = src[0]
-	var hull_mesh := old.multimesh.mesh
 	old.visible = false
 	for o: Node in level.node_named("SkyTrafficLights"):
 		(o as Node3D).visible = false
 	var d: Array = level.node_named("FointDistrict")
 	var parent: Node = d[0] if not d.is_empty() else level.scene_root
 	_sky_mats.clear()
-	var hm := ShaderMaterial.new()
-	hm.shader = load("res://levels/shaders/sky_traffic_hull.gdshader")
-	var lm := ShaderMaterial.new()
-	lm.shader = load("res://levels/shaders/sky_traffic_lights.gdshader")
-	if J.get("glow") != null:
-		lm.set_shader_parameter(&"map", load("res://assets/" + String(J["glow"])))
-	_sky_mats.append(hm)
-	_sky_mats.append(lm)
 	var lights := ArrayMesh.new()
 	var arr: Array = []
 	arr.resize(Mesh.ARRAY_MAX)
 	var v3 := PackedVector3Array()
 	var ix := PackedInt32Array()
-	for li in 4:
+	for li in 5:
 		for c: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(1, 1), Vector2(-1, 1)]:
 			v3.append(Vector3(c.x, c.y, li))
 		var b := li * 4
@@ -223,20 +240,40 @@ func _build_sky_traffic() -> void:
 	arr[Mesh.ARRAY_VERTEX] = v3
 	arr[Mesh.ARRAY_INDEX] = ix
 	lights.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
-	for pair: Array in [[hull_mesh, hm, "SkyTraffic2"], [lights, lm, "SkyTrafficLights2"]]:
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_custom_data = true
-		mm.mesh = pair[0]
-		mm.instance_count = count
-		mm.buffer = buf
-		mm.custom_aabb = AABB(Vector3(-4000, -100, -4000), Vector3(8000, 600, 8000))
-		var mi := MultiMeshInstance3D.new()
-		mi.name = pair[2]
-		mi.multimesh = mm
-		mi.material_override = pair[1]
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		parent.add_child(mi)
+	var hull_shader: Shader = load("res://levels/shaders/sky_traffic_hull.gdshader")
+	for k: StringName in SKY_KINDS:
+		if counts[k] == 0:
+			continue
+		var K: Dictionary = SKY_KINDS[k]
+		var hull := traffic.kit.sky_mesh(k)
+		for si in hull.get_surface_count():
+			var hm := ShaderMaterial.new()
+			hm.shader = hull_shader
+			hm.set_shader_parameter(&"part", CityCars.GROUPS.find(StringName(hull.surface_get_name(si))))
+			traffic.kit.follow_sky(hm)
+			hull.surface_set_material(si, hm)
+			_sky_mats.append(hm)
+		var lm := ShaderMaterial.new()
+		lm.shader = load("res://levels/shaders/sky_traffic_lights.gdshader")
+		if J.get("glow") != null:
+			lm.set_shader_parameter(&"map", load("res://assets/" + String(J["glow"])))
+		for p: StringName in [&"head", &"tail", &"strobe", &"engine"]:
+			lm.set_shader_parameter(p, K[p])
+		_sky_mats.append(lm)
+		for pair: Array in [[hull, null, "SkyTraffic2_" + String(k)], [lights, lm, "SkyTrafficLights2_" + String(k)]]:
+			var mm := MultiMesh.new()
+			mm.transform_format = MultiMesh.TRANSFORM_3D
+			mm.use_custom_data = true
+			mm.mesh = pair[0]
+			mm.instance_count = counts[k]
+			mm.buffer = bufs[k]
+			mm.custom_aabb = AABB(Vector3(-4000, -100, -4000), Vector3(8000, 600, 8000))
+			var mi := MultiMeshInstance3D.new()
+			mi.name = pair[2]
+			mi.multimesh = mm
+			mi.material_override = pair[1]
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			parent.add_child(mi)
 
 
 ## JS city-deck.js: the freight pods: one instanced draw running the whole U, terminal to terminal. A pod comes out of one terminal gate, climbs a descent, runs the Deck round to the other descent and goes back into the shed through the other gate; inside the shed it is out of sight for as long as the shed is long. Pods keep to the right of their own direction.
@@ -346,6 +383,44 @@ func _pods_tick(dt: float) -> void:
 		if _pod_lamps != null:
 			_pod_lamps.set_instance_transform(i, xf)
 		i += 1
+
+
+## The district's small lights that move on their own clock: the FOINT DOME (levels/hub/foint_dome.gd), the bridge's searchlights and the alley's door bulb. The export has them where they stood; these find them by their JS colours.
+func _build_glints() -> void:
+	dome = FointDomeLife.new(level)
+	var dn: Array = level.node_named("FointDistrict")
+	if dn.is_empty():
+		return
+	var st: Array[Node] = [dn[0]]
+	while not st.is_empty():
+		var n: Node = st.pop_back()
+		st.append_array(n.get_children())
+		var mi := n as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		var m := mi.get_active_material(0) as BaseMaterial3D
+		if m == null:
+			continue
+		if FointDomeLife._is(m, 0xffd9a8) and m.blend_mode == BaseMaterial3D.BLEND_MODE_ADD:
+			var piv := mi.get_parent() as Node3D      # (the export folded the JS pivot and the beam into this one node)
+			piv.rotation_order = EULER_ORDER_YXZ
+			_beams.append([piv, signf(piv.position.x)])
+		elif FointDomeLife._is(m, 0xff8a4a) and mi.mesh.surface_get_primitive_type(0) == Mesh.PRIMITIVE_POINTS:
+			_bulb_m = GlowPoints.replace(mi, 6.5)
+	if _beams.size() != 2 or _bulb_m == null:
+		push_warning("HubLife: expected two bridge searchlights and the alley bulb, found %d and %s" % [_beams.size(), _bulb_m != null])
+
+
+## JS city-bridge.js (the searchlights sweep), district-view.js (the bulb sputters), foint-arena.js (the dome), all on the district's clock t.
+func _glints_tick(t: float) -> void:
+	if dome != null:
+		dome.update(t)
+	for b: Array in _beams:
+		var sx: float = b[1]
+		(b[0] as Node3D).rotation = Vector3(0.62 + 0.1 * sin(t * 0.37 + sx * 2.0), sx * 0.6 + 0.3 * sin(t * 0.26 + sx), sx * 0.22)
+	if _bulb_m != null:
+		var f := sin(t * 37.0) * sin(t * 5.3) * sin(t * 2.1)
+		_bulb_m.set_shader_parameter(&"opacity", 0.15 if f > 0.62 else 0.85 + 0.15 * sin(t * 11.0))
 
 
 ## JS district-view.js warmL: three roaming lamp lights: the nearest lamps get them, so lit things (cars, people, the player) read under the baked street light.
@@ -486,3 +561,4 @@ func update(dt: float, t: float, cam: Vector3, district_visible: bool) -> void:
 	RenderingServer.material_set_param(folk.material.get_rid(), &"uTime", sim_t)
 	for m: ShaderMaterial in _sky_mats:
 		RenderingServer.material_set_param(m.get_rid(), &"t", t)
+	_glints_tick(t)

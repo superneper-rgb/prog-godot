@@ -2,7 +2,7 @@ class_name CreatureAudio
 extends RefCounted
 ## JS enemies/creature-audio.js class CreatureAudio: when creatures make a sound. The organ voices and beats themselves were rendered (creature.<kind>.<cue> in the bank), so only the rate limits and the event map remain here.
 
-const FLAGS: Array = [[&"alien", "alien"], [&"floater", "spore"], [&"follower", "follower"], [&"prophet", "prophet"], [&"scream", "scream"], [&"worm", "worm"], [&"crawler", "crawler"], [&"mimic", "mimic"], [&"warden", "warden"], [&"brute", "brute"]]
+const FLAGS: Array = [[&"alien", "alien"], [&"floater", "spore"], [&"follower", "follower"], [&"prophet", "prophet"], [&"scream", "scream"], [&"worm", "worm"], [&"crawler", "crawler"], [&"mimic", "mimic"], [&"warden", "warden"], [&"brute", "brute"], [&"dervish", "brute"]]      # (the Briar Dervish borrows the brute's grinding voice until it has its own bank)
 const DURATIONS := {"step": 0.12, "idle": 0.55, "pain": 0.38, "death": 1.15, "alert": 0.85, "wind": 0.7, "impact": 0.3, "roar": 1.3, "inhale": 0.6, "wheeze": 0.7, "squelch": 0.3, "whoosh": 0.22, "thud": 0.32, "crack": 0.15}
 
 var recent := {}

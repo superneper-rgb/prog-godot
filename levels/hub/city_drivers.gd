@@ -101,7 +101,7 @@ func _fit(M: Seat, ty: CityTraffic.CarType) -> Dictionary:
 		return M.fit[ty.kind]
 	var s: Dictionary = ty.seat["seat"]
 	var w: Dictionary = ty.seat["wheel"]
-	var sc := minf(float(s["scale"]), (ty.h - 0.1 - float(s["y"])) / (M.head_top - M.hip_y))
+	var sc := minf(float(s["scale"]), (float(s.get("roof", ty.h)) - 0.1 - float(s["y"])) / (M.head_top - M.hip_y))      # (roof: the new body's, city_cars.gd SEATS; the type's height is the old body's)
 	var fwd := (float(w["x"]) - float(s["x"])) / sc
 	var upv := (float(w["y"]) - float(s["y"])) / sc - (M.sh_y - M.hip_y)
 	var D := U.hyp(fwd, upv)

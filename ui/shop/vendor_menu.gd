@@ -104,13 +104,19 @@ func cm(key: String, pct: float) -> Color:
 	return Color(c.r, c.g, c.b, c.a * pct / 100.0)
 
 
+## The one 3D preview view, made on first use (the shops and the pause terminal's inventory share it and its cache of built subjects).
+static func ensure_stage() -> VendorStage:
+	if stage == null:
+		stage = VendorStage.new()
+		Game.add_child(stage)
+	return stage
+
+
 func _build() -> void:
 	if _built:
 		return
 	_built = true
-	if stage == null:
-		stage = VendorStage.new()
-		Game.add_child(stage)
+	ensure_stage()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	z_index = 60      # above the HUD, under the version line (.vd z-index 40)
 	dim = ColorRect.new()

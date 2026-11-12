@@ -51,7 +51,7 @@ class Cine:
 
 
 var cine := Cine.new()
-const STORM := {"rain_n": 7200, "rain_speed": 44.0, "slant": 0.38, "opacity": 0.44, "len": 1.4}      # a wind-driven downpour (CityLife; storm.gd's gusts lean it further over)
+const STORM := {"rain_n": 4200, "rain_speed": 44.0, "slant": 0.38, "opacity": 0.44, "len": 1.4}      # a wind-driven downpour (rain_n was 7200 until 2026-11-11: too much, said the user) (CityLife; storm.gd's gusts lean it further over)
 
 
 func tick_level(dt: float) -> void:

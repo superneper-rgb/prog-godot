@@ -21,3 +21,11 @@ vec3 lane_at(mat4 M, float time, out float yaw, out float turn, out float bob) {
 	turn = u > 0.9 ? (u - 0.9) * 4.0 : 0.0;
 	return vec3(at.x, M[3].y + sin(time * 0.7 + bob) * 0.8, at.y);
 }
+
+mat3 sky_rX(float a) { float c = cos(a), s = sin(a); return mat3(vec3(1.0, 0.0, 0.0), vec3(0.0, c, s), vec3(0.0, -s, c)); }
+mat3 sky_rY(float a) { float c = cos(a), s = sin(a); return mat3(vec3(c, 0.0, -s), vec3(0.0, 1.0, 0.0), vec3(s, 0.0, c)); }
+mat3 sky_rZ(float a) { float c = cos(a), s = sin(a); return mat3(vec3(c, s, 0.0), vec3(-s, c, 0.0), vec3(0.0, 0.0, 1.0)); }
+// the craft's attitude: its heading, a slow pitch and roll, and the bank into a turn (JS Euler YXZ). The hull and its lights share it, so the lights stay on the model.
+mat3 sky_basis(float yaw, float turn, float bob) {
+	return sky_rY(yaw) * sky_rX(sin(t * 0.9 + bob) * 0.04) * sky_rZ(-turn * 0.5 + sin(t * 0.5 + bob) * 0.05);
+}

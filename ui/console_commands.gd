@@ -9,6 +9,28 @@ static func _num(v: Variant, d: float) -> float:
 	return s.to_float() if s.is_valid_float() else d
 
 
+static func _hot_reload_scripts(dir: String = "res://") -> int:
+	## Re-reads every .gd whose file changed on disk since it loaded, so edited code runs without restarting. Returns how many it reloaded.
+	var n := 0
+	for f in DirAccess.get_files_at(dir):
+		if not f.ends_with(".gd"):
+			continue
+		var path := dir.path_join(f)
+		var sc := load(path) as GDScript
+		if sc == null:
+			continue
+		var disk := FileAccess.get_file_as_string(path)
+		if disk != sc.source_code:
+			sc.source_code = disk
+			if sc.reload(true) == OK:
+				n += 1
+	for d in DirAccess.get_directories_at(dir):
+		if d.begins_with(".") or d in ["addons", "tools", "work"]:
+			continue
+		n += _hot_reload_scripts(dir.path_join(d))
+	return n
+
+
 static func _on_off(v: Variant, cur: bool) -> bool:
 	if v == null:
 		return not cur
@@ -134,6 +156,29 @@ static func _player_commands(con: DebugConsole) -> void:
 			f.disable()
 			Game.rig.snap_to(Game.player)
 		return "Free cam " + ("ON" if f.on else "OFF")})
+	con.register({"name": "forge", "usage": "[on|off|save|undo|redo]", "desc": "FORGE, the level editor (also F8): place, move and delete things in this level; saved to assets/levels/<id>/edits.json", "aliases": ["edit"], "category": "level",
+		"complete": func(_args: Array) -> Array: return ["on", "off", "save", "undo", "redo"],
+		"run": func(a: Array, c: DebugConsole, _r: String) -> Variant:
+		var f: Forge = Game.forge
+		var w := String(a[0]) if not a.is_empty() else ""
+		match w:
+			"save":
+				f.save()
+				return f.message
+			"undo":
+				f.undo()
+				return "undone"
+			"redo":
+				f.redo()
+				return "redone"
+		var want := _on_off(w if w != "" else null, f.is_open)
+		if want and not f.is_open:
+			c.close()
+			f.set_edit(true)
+			return "FORGE: EDIT" if f.is_open else "FORGE cannot open here (no level, paused, or a scene is playing)"
+		if not want and f.is_open:
+			f.set_edit(false)
+		return "FORGE: " + ("EDIT" if f.is_open else "PLAY")})
 	# hub only: jump to the sights of FOINT CITY (JS levels/hub/district-view.js `places`) or back to the street
 	var places := {"bridge": [0.0, 90.0], "landing": [0.0, 192.0], "arena": [0.0, 224.0], "alley": [84.0, 330.0], "office": [117.6, 330.0], "quay": [127.5, 186.0], "street": null}
 	con.register({"name": "go", "usage": "<place>", "desc": "Hub: teleport to bridge, landing, arena, alley, office, quay (by a ladder into the harbour) or street", "aliases": ["goto"], "category": "player",
@@ -438,7 +483,7 @@ static func _game_commands(con: DebugConsole) -> void:
 			c.warn("usage: cutscene list | cutscene play <name>")
 			return null})
 	con.register({"name": "level", "usage": "list | load <id> | reload | <id>", "desc": "List every level, load one, or reload the current one", "aliases": ["map", "levels"], "category": "game",
-		"details": "level list         show every level (the current one is marked)\nlevel load maktar  load a level by id or name (also: level maktar)\nlevel reload       re-enter the current level",
+		"details": "level list         show every level (the current one is marked)\nlevel load foint-dome  load a level by id or name (also: level foint-dome)\nlevel reload       re-enter the current level",
 		"complete": func(args: Array) -> Array:
 			var ids: Array = Game.LEVELS.keys()
 			if args.is_empty():
@@ -459,8 +504,9 @@ static func _game_commands(con: DebugConsole) -> void:
 				return null
 			if sub == "reload" or sub == "rl":
 				var id: String = Game.level.id
+				var n := _hot_reload_scripts()      # edited scripts are re-read first, so a code change shows without restarting
 				await Game.enter_level(id)
-				return "Reloaded " + id + "."
+				return "Reloaded " + id + " (" + str(n) + " scripts refreshed)."
 			var q := " ".join(PackedStringArray(a.slice(1) if (sub == "load" or sub == "go") else a)).strip_edges().to_lower()
 			if q == "":
 				c.error("usage: level load <id>  (\"level list\" shows the levels)")

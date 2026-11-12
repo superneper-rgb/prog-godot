@@ -1,4 +1,4 @@
 All fonts here come from Google Fonts (github.com/google/fonts) under the SIL Open Font License 1.1.
 VT323 (Peter Hull), Rajdhani (Indian Type Foundry), Orbitron (Matt McInerney), Share Tech Mono (Carrois), Inconsolata (Raph Levien).
-Cinzel (Natanael Gama): the FOINT ARENA screen headings.
+Cinzel (Natanael Gama): the FOINT DOME screen headings.
 Caveat (Pablo Impallari): the handwriting in Marsh's journal (DEAD AIR).

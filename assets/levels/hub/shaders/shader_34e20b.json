@@ -16,7 +16,7 @@
   },
   "uPulse": {
    "type": "f",
-   "value": 0.903851
+   "value": 1.057393
   },
   "uSkyNear": {
    "type": "f",
@@ -37,7 +37,7 @@
    },
    "uPulse": {
     "type": "f",
-    "value": 0.903851
+    "value": 1.057393
    },
    "uSkyNear": {
     "type": "f",
@@ -46,7 +46,7 @@
   }
  ],
  "variant_keys": [
-  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":15552},\"uPulse\":{\"type\":\"f\",\"value\":0.903851},\"uSkyNear\":{\"type\":\"f\",\"value\":1300}}"
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/7ee2077b0c5fc3e4_128x128.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":15552},\"uPulse\":{\"type\":\"f\",\"value\":1.057393},\"uSkyNear\":{\"type\":\"f\",\"value\":1300}}"
  ],
  "defines": {},
  "transparent": true,

@@ -510,7 +510,8 @@ func _kill_em(e: Em) -> void:
 	for L: Array in e.leaves:
 		(L[0] as Node3D).visible = false
 	var n := ems_dead()
-	Game.hud.toast("EMITTER %s DOWN  -  %d TO GO" % ["ABC"[e.k], 3 - n] if n < 3 else "CONTAINMENT IS GONE", 2.4)
+	# BUG-110 (tracker): the last emitter only said the containment was gone, so nothing told the player the objective was done. Godot only; the three.js toast had no such line.
+	Game.hud.toast("EMITTER %s DOWN  -  %d TO GO" % ["ABC"[e.k], 3 - n] if n < 3 else "OBJECTIVE COMPLETE  -  CONTAINMENT IS GONE", 2.4 if n < 3 else 3.2)
 	_after(.45, func() -> void:
 		power = n
 		_strike()

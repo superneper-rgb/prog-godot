@@ -1,4 +1,4 @@
-// FOINT ARENA's giant screen (JS tournament-tv.js picture: toneMapped false): shows the broadcast / menu viewport as the display colours it holds.
+// FOINT DOME's giant screen (JS tournament-tv.js picture: toneMapped false): shows the broadcast / menu viewport as the display colours it holds.
 shader_type spatial;
 render_mode unshaded, shadows_disabled, fog_disabled;
 

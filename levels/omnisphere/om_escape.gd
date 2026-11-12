@@ -24,6 +24,7 @@ class Fall:
 	var v := 0.0
 	var rot := 0.0
 	var at := 0.0
+	var rails: Array[World.Solid] = []      # (the bridge's side rails ride with the piece)
 
 
 class Plat extends Fall:
@@ -63,6 +64,7 @@ class Chase:
 	var fire_t := 0.0
 	var passes := 0
 	var crash_v := Vector3.ZERO
+	var leave_dir := Vector3.ZERO
 	var done := false
 	var wait_t := 2.5
 
@@ -106,6 +108,8 @@ const WRECK_H := 1.8
 var PATH: Array = []
 var stomp_cd := 0.0
 var chase: Chase = null
+## BUG-108 (tracker): true once the service lift is moving (set by the level from the summit). The chase gunship aims each pass at where PROG stands when the pass starts, but the lift carries him 7.5 m/s up, so its track went through the rider. It breaks off instead. Godot only.
+var chase_clear := Callable()
 var debris: Array[Debris] = []
 var esc := {"on": false, "t": 0.0, "surge_t": 7.0, "surge": null, "conduit": false, "sphere_down": false, "ring_cut": false, "pulsed": false}
 var cs := {"ph": "idle", "t": 0.0, "dy": 0.0, "v": 0.0, "cross_t": 0.0}
@@ -146,6 +150,7 @@ func _init(p_lv: ExportedLevel, p_sec: OmSecurity, p_sets: OmSets, p_craft: OmCr
 		b.s = (sol["bridge-%d" % i] as Array)[0]
 		b.g = VhKit.one(lv, "om-bridge-%d" % i)
 		b.z = -122.0 - i * 12.0 - 6.0
+		b.rails = OmRails.bridge_rails(W, b.z)
 		b.rot = (randf() - .5) * .6
 		bridge.append(b)
 	for i in SPEC.size():
@@ -384,9 +389,23 @@ func _update_chase(dt: float, P: Player, C: Combat) -> void:
 			g.visible = false
 			c.done = true
 		return
+	if c.ph != "leave" and not chase_clear.is_null() and chase_clear.call():
+		c.ph = "leave"
+		c.t = 0.0
+		var away := Vector3(g.position.x - P.x, 0.0, g.position.z - P.z) if P != null else Vector3(0, 0, 1)
+		c.leave_dir = away.normalized() if away.length() > .01 else Vector3(0, 0, 1)
 	var want := c.yaw
 	var bank := 0.0
-	if c.ph == "wait":
+	if c.ph == "leave":      # climbs away from him, then is gone
+		c.pos += (c.leave_dir * 30.0 + Vector3(0, 14.0, 0)) * dt
+		want = atan2(c.leave_dir.x, c.leave_dir.z)
+		if c.t > 4.0:
+			g.visible = false
+			T.dead = true
+			c.hb.drop()
+			c.done = true
+			return
+	elif c.ph == "wait":
 		c.wait_t -= dt
 		c.pos.y += sin(c.t) * .02
 		if c.wait_t <= 0.0 and P != null:
@@ -434,8 +453,12 @@ func _fall_piece(b: Fall, dt: float, floor_y: float) -> void:
 	b.g.rotation.z += b.rot * dt
 	var top := b.g.position.y
 	b.s.set_span(top - .8, top)
+	for r: World.Solid in b.rails:
+		r.set_span(top, top + OmRails.H)
 	if b.g.position.y < floor_y:
 		b.s.set_off(true)
+		for r: World.Solid in b.rails:
+			r.set_off(true)
 		b.g.visible = false
 
 
@@ -722,6 +745,9 @@ func _restore_all() -> void:
 		b.g.rotation = Vector3.ZERO
 		b.s.set_off(false)
 		b.s.set_span(17.2, 18.0)
+		for r: World.Solid in b.rails:
+			r.set_off(false)
+			r.set_span(18.0, 18.0 + OmRails.H)
 	for p in plats:
 		p.shake = 0.0
 		p.fall = 0.0
@@ -802,6 +828,8 @@ func reset(stage: String, obj: int, retry: bool) -> void:
 		for b in bridge:
 			b.g.visible = false
 			b.s.set_off(true)
+			for r: World.Solid in b.rails:
+				r.set_off(true)
 		act2.door_s.lock(true)
 		act2.smash_frame(true)
 		act2.breach_west(true)

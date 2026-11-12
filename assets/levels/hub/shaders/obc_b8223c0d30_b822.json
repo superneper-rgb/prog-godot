@@ -18,9 +18,9 @@
   "DyoStation"
  ],
  "variant_keys": [
-  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (-0.999 + 1.998 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.34);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00202,0.00054,0.00173]}}",
-  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (-0.999 + 1.998 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.16);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00202,0.00054,0.00173]}}",
-  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (0.99992 + 0.00006 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.16);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00202,0.00054,0.00173]}}"
+  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (-0.999 + 1.998 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.34);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00208,0.00053,0.00165]}}",
+  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (-0.999 + 1.998 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.16);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00208,0.00053,0.00165]}}",
+  "uniform float uSkyNear;\n#include <common>\n#include <begin_vertex>\n#include <project_vertex>\nvec4 mvSky = mvPosition; float skyK = clamp((-mvSky.z - uSkyNear) / 400.0, 0.0, 1.0); gl_Position.z = (0.99992 + 0.00006 * skyK) * gl_Position.w;\nvoid main() {//FRAGuniform vec3 uHaze;\n#include <common>\n#include <map_fragment>\n#include <color_fragment>\n#include <specularmap_fragment>\n#include <emissivemap_fragment>\n#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, 0.16);\nvoid main() {{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uHaze\":{\"type\":\"c\",\"value\":[0.00208,0.00053,0.00165]}}"
  ],
  "variants": [
   {
@@ -34,9 +34,9 @@
     "uHaze": {
      "type": "c",
      "value": [
-      0.00202,
-      0.00054,
-      0.00173
+      0.00208,
+      0.00053,
+      0.00165
      ]
     }
    }
@@ -52,9 +52,9 @@
     "uHaze": {
      "type": "c",
      "value": [
-      0.00202,
-      0.00054,
-      0.00173
+      0.00208,
+      0.00053,
+      0.00165
      ]
     }
    }
@@ -70,9 +70,9 @@
     "uHaze": {
      "type": "c",
      "value": [
-      0.00202,
-      0.00054,
-      0.00173
+      0.00208,
+      0.00053,
+      0.00165
      ]
     }
    }

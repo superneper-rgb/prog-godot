@@ -7,7 +7,7 @@ const ITEMS: Array = [["continue", "CONTINUE"], ["new", "NEW GAME"], ["load", "L
 # the JS level registry's names and blurbs; the level list shows the ones that exist here, and only the ones listed there
 const LEVEL_INFO := {
 	"hub": ["HUBWORLD", "The noir city street: vendors, gunshop, free roam."],
-	"maktar": ["FOINT ARENA", "Televised challenges, escalating rounds and cash prizes."],
+	"foint-dome": ["FOINT DOME", "Televised challenges, escalating rounds and cash prizes."],
 	"spire": ["MEAT SPIRE", "Climb a living flesh creature, organ by organ. A warden, a heart, a boss."],
 	"worldbackalley": ["BACK ALLEY", "A thunderstorm, a long straight street, gray aliens all the way down it."],
 	"mothership": ["THE MOTHERSHIP", "Crash the Godmother's wedding aboard the grays' mansion-shaped UFO."],
@@ -18,7 +18,7 @@ const LEVEL_INFO := {
 }
 const LEVEL_NAMES := {
 	"club": "CLUB 9", "warehouse": "WAREHOUSE ROBBERY", "dev": "DEV LEVEL", "blockout-demo": "BLOCKOUT DEMO", 
-	"kame-lab": "KAME LAB", 
+	"kame-lab": "KAME LAB", "jungle-test": "JUNGLE TEST", 
 }
 
 const C_ITEM := Color("9ea6ad")
@@ -317,10 +317,24 @@ func step_level(d: int) -> void:
 func pad() -> void:
 	if not enabled:
 		return
-	if Inp.btn(&"d_up").pressed or Inp.key_hit(KEY_UP, true) or Inp.key_hit(KEY_W):
-		move(-1)
-	elif Inp.btn(&"d_down").pressed or Inp.key_hit(KEY_DOWN, true) or Inp.key_hit(KEY_S):
-		move(1)
+	var up: bool = Inp.btn(&"d_up").pressed or Inp.key_hit(KEY_UP, true) or Inp.key_hit(KEY_W)
+	var down: bool = Inp.btn(&"d_down").pressed or Inp.key_hit(KEY_DOWN, true) or Inp.key_hit(KEY_S)
+	# BUG-104 (tracker): with a sub-menu open, up/down used to keep moving the main menu behind it while left/right moved the sub-menu. Now up/down belong to the open sub-menu (Godot only; the three.js menu was driven by mouse). B closes it and gives them back to the main menu.
+	if panel == "levels":
+		if up:
+			step_level(-1)
+		elif down:
+			step_level(1)
+	elif panel == "slots":
+		if up:
+			step_slot(-1)
+		elif down:
+			step_slot(1)
+	elif panel == "":
+		if up:
+			move(-1)
+		elif down:
+			move(1)
 	var left: bool = Inp.btn(&"d_left").pressed or Inp.key_hit(KEY_LEFT) or (panel == "chars" and Inp.key_hit(KEY_A))
 	var right: bool = Inp.btn(&"d_right").pressed or Inp.key_hit(KEY_RIGHT) or (panel == "chars" and Inp.key_hit(KEY_D))
 	if panel == "levels":
@@ -351,7 +365,11 @@ func pad() -> void:
 			_chars.toggle_costume()
 		refresh()
 	if Inp.btn(&"jump").pressed or Inp.key_hit(KEY_ENTER) or Inp.key_hit(KEY_KP_ENTER):
-		act(_act_idx())
+		if panel == "chars":      # BUG-103: A / Enter picks the highlighted character (B closes the panel)
+			_chars.confirm()
+			refresh()
+		else:
+			act(_act_idx())
 	elif panel != "" and (Inp.btn(&"b").pressed or Inp.key_hit(KEY_ESCAPE)):
 		set_panel(panel)
 
@@ -585,10 +603,13 @@ func _draw_chars(v: Control) -> void:
 	for id: String in ["prog", "tommy"]:
 		var r: Rect2 = _rects["ch:" + id]
 		var sel := Game.char_pick == id
+		var foc := _chars.focus == id and not sel      # BUG-103: the highlighted card, not yet the picked one
 		v.draw_rect(r, Color(10.0 / 255.0, 14.0 / 255.0, 18.0 / 255.0, 0.45))
 		if sel:
 			CrtTheme.glow_box(v, r, Color(95.0 / 255.0, 227.0 / 255.0, 106.0 / 255.0, 0.16), 2.0)
-		v.draw_rect(r, Color("5fe36a") if sel else Color(143.0 / 255.0, 240.0 / 255.0, 154.0 / 255.0, 0.14), false, 1.0)
+		elif foc:
+			CrtTheme.glow_box(v, r, Color(95.0 / 255.0, 227.0 / 255.0, 106.0 / 255.0, 0.07), 2.0)
+		v.draw_rect(r, Color("5fe36a") if sel else (Color(143.0 / 255.0, 240.0 / 255.0, 154.0 / 255.0, 0.55) if foc else Color(143.0 / 255.0, 240.0 / 255.0, 154.0 / 255.0, 0.14)), false, 1.0)
 		if sel:
 			CrtTheme.draw_text(v, fh, r.position.x + 10.0, r.position.y + 19.0, "▶ SELECTED", 11, Color("8ff09a"), 2.0)
 		var cy := r.position.y + 8.0 + 190.0 + 6.0
@@ -626,6 +647,11 @@ func _gui_input(event: InputEvent) -> void:
 			for i in SaveGame.SLOT_COUNT:
 				if (_rects.get("sl:%d" % i, Rect2()) as Rect2).has_point(p) and slot_idx != i:
 					slot_idx = i
+					refresh()
+		elif panel == "chars":      # BUG-103: hovering a card highlights it; a click picks it
+			for id: String in ["prog", "tommy"]:
+				if (_rects["ch:" + id] as Rect2).has_point(p) and _chars.focus != id:
+					_chars.focus = id
 					refresh()
 	elif event is InputEventMouseButton:
 		var b := event as InputEventMouseButton

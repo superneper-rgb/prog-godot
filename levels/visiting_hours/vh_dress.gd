@@ -1,6 +1,6 @@
 class_name VhDress
 extends RefCounted
-## VISITING HOURS: the far dressing's and the claims floor's small moving things (JS dressing.js, furnish.js update): the fog rings that follow the camera, blinking masts, lamps on their last legs, the shack's TV, the road's cat's-eyes, the mist cards, and the staff room's TV showing FOINT ARENA.
+## VISITING HOURS: the far dressing's and the claims floor's small moving things (JS dressing.js, furnish.js update): the fog rings that follow the camera, blinking masts, lamps on their last legs, the shack's TV, the road's cat's-eyes, the mist cards, and the staff room's TV showing FOINT DOME.
 
 class Flick:
 	var sp: Node3D
@@ -45,7 +45,7 @@ func _init(p_lv: ExportedLevel, info: Dictionary, f2: Node3D) -> void:
 	tv_light = VhKit.light(lv, "vh-shack-tvl")
 	eyes = lv.shader_ports.mats.get("shader_6c1b3c#0")
 	mist = lv.shader_ports.mats.get("shader_ea8496#0")
-	# the staff room's TV: FOINT ARENA live
+	# the staff room's TV: FOINT DOME live
 	tv_floor = f2
 	tv = VhKit.Canvas.new(128, 96, _draw_tv)
 	lv.add_child(tv)
@@ -66,7 +66,7 @@ func _draw_tv(g: Control) -> void:
 	g.draw_rect(Rect2(44.0 + sin(k) * 6.0 + (6.0 if hit else 0.0), 30.0, 14.0, 26.0), Color("#e04020"))
 	g.draw_rect(Rect2(70.0 - sin(k * 1.3) * 5.0, 28.0 + (4.0 if hit else 0.0), 16.0, 28.0), Color("#e04020"))
 	g.draw_rect(Rect2(0.0, 0.0, 128.0, 14.0), Color("#ff7a20"))
-	g.draw_string(ThemeDB.fallback_font, Vector2(6.0, 10.0), "FOINT ARENA  LIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+	g.draw_string(ThemeDB.fallback_font, Vector2(6.0, 10.0), "FOINT DOME  LIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
 	for _i in 300:
 		g.draw_rect(Rect2(randf() * 128.0, randf() * 96.0, 1.0, 1.0), Color(1.0, 1.0, 1.0, randf() * 0.12))
 

@@ -14,7 +14,7 @@
   },
   "uPulse": {
    "type": "f",
-   "value": 1.093094
+   "value": 0.957129
   }
  },
  "variants": [
@@ -29,12 +29,12 @@
    },
    "uPulse": {
     "type": "f",
-    "value": 1.093094
+    "value": 0.957129
    }
   }
  ],
  "variant_keys": [
-  "{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uSize\":{\"type\":\"f\",\"value\":256},\"uPulse\":{\"type\":\"f\",\"value\":1.093094}}"
+  "{\"uSkyNear\":{\"type\":\"f\",\"value\":1300},\"uSize\":{\"type\":\"f\",\"value\":256},\"uPulse\":{\"type\":\"f\",\"value\":0.957129}}"
  ],
  "defines": {},
  "transparent": true,

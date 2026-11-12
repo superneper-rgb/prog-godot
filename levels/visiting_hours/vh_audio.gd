@@ -61,8 +61,32 @@ func _loop(nm: String, fx: AudioEffect, g: float) -> Array:
 	return [p]
 
 
+## (Not in the JS: see MsSound.prewarm.) Every one-shot cue this level plays, with the arguments its callers pass (grep audio.<cue>), rendered at load
+## so none is first rendered mid-play. The finale's score cues hang on its timings: VhFinale.warm. A new call site with new arguments goes here too.
+func warm() -> void:
+	MsSound.prewarm(_thunder_all())
+	MsSound.warm(func() -> void:
+		_click(true)
+		_click(false)
+		siren()
+		gulp()
+		snipe()
+		sizzle(1.1)
+		for v: float in [0.1, 0.18, 0.4]:      # (the pipe's drips: 0.1 + randf() * 0.08)
+			splash(v)
+		for k in 11:      # (the sniper's casing: any volume, in 0.1 steps)
+			clink(k * 0.1)
+		for b: Array in [[0.15, 0.15], [0.3, 0.18], [1.0, 0.22], [1.0, 1.4]]:
+			noise_burst(b[0], b[1])
+		for v: float in [0.3, 0.35, 0.4, 0.5, 0.7, 0.9]:
+			thud(v)
+		for t: Array in [[110.0, 0.6, 0.16, &"sawtooth"], [110.0, 0.7, 0.18, &"sawtooth"], [1400.0, 0.05, 0.06, &"square"], [1800.0, 0.03, 0.03, &"sine"], [2400.0, 0.4, 0.08, &"sawtooth"],
+				[48.0, 0.55, 0.045, &"sawtooth"], [660.0, 0.25, 0.1, &"sine"], [660.0, 0.4, 0.12, &"sine"], [70.0, 1.2, 0.2, &"sawtooth"], [880.0, 0.3, 0.12, &"sine"], [900.0, 0.08, 0.08, &"square"]]:
+			tone(t[0], t[1], t[2], t[3]))
+
+
 func _ready() -> void:
-	if _noise == null:      # white with a low-passed walk under it (rain, wind, thunder)
+	if _noise == null:    # white with a low-passed walk under it (rain, wind, thunder)
 		var n := OfflineSynth.make(2.0, RATE)
 		var b := 0.0
 		for i in n.size():
@@ -280,17 +304,29 @@ func _after(delay: float, fn: Callable) -> void:
 ## a roll of thunder delay s from now, from dist m away (close = a crack first)
 func thunder(delay: float, dist: float, big: bool) -> void:
 	var near := snappedf(maxf(0.0, 1.0 - dist / 700.0), 0.2)
+	_after(delay, func() -> void: MsSound.play(_thunder_parts(near, big), 0.3))
+
+
+## every thunder there can be: near is in 0.2 steps (0..1), big or not. Rendered at load (MsSound.prewarm): a new one rendered at its strike was the drive's hitch.
+static func _thunder_all() -> Array:
+	var list: Array = []
+	for big: bool in [false, true]:
+		for k in 6:
+			list.append(_thunder_parts(snappedf(k * 0.2, 0.2), big))
+	return list
+
+
+static func _thunder_parts(near: float, big: bool) -> Array:
 	var len_ := snappedf(2.6 + (1.0 - near) * 2.5 + (1.5 if big else 0.0), 0.5)
-	_after(delay, func() -> void:
-		var parts: Array = []
-		if near > 0.45 or big:
-			parts.append(["noise", 0.0, {"type": &"highpass", "f0": 900.0, "gain": 0.9 * maxf(near, 0.5), "dur": 0.5}])
-		var peak := (0.55 + near * 0.6) * (1.3 if big else 1.0)
-		var t := 0.0      # it rolls: lumps of loudness decaying
-		while t < len_:
-			parts.append(["noise", t, {"type": &"lowpass", "f0": lerpf(380.0 + near * 600.0, 70.0, t / len_), "f1": 70.0, "gain": snappedf(peak * exp(-t / (len_ * 0.45)), 0.05), "dur": 0.7, "attack": 0.1}])
-			t += 0.35
-		MsSound.play(parts, 0.3))
+	var parts: Array = []
+	if near > 0.45 or big:
+		parts.append(["noise", 0.0, {"type": &"highpass", "f0": 900.0, "gain": 0.9 * maxf(near, 0.5), "dur": 0.5}])
+	var peak := (0.55 + near * 0.6) * (1.3 if big else 1.0)
+	var t := 0.0      # it rolls: lumps of loudness decaying
+	while t < len_:
+		parts.append(["noise", t, {"type": &"lowpass", "f0": lerpf(380.0 + near * 600.0, 70.0, t / len_), "f1": 70.0, "gain": snappedf(peak * exp(-t / (len_ * 0.45)), 0.05), "dur": 0.7, "attack": 0.1}])
+		t += 0.35
+	return parts
 
 
 ## the sump pumps kicking in (heard down the pipe): a heavy motor thump and its hum winding up; vol 0..1 by distance

@@ -15,11 +15,12 @@ const LEVELS := {
 	"visiting-hours": "res://levels/visiting_hours/visiting_hours_level.gd",
 	"spire": "res://levels/spire/spire_level.gd",
 	"mothership": "res://levels/mothership/mothership_level.gd",
-	"maktar": "res://levels/maktar/maktar_level.gd",
+	"foint-dome": "res://levels/foint_dome/foint_dome_level.gd",
 	"hub": "res://levels/hub/hub_level.gd",
 	"dev": "res://levels/dev/dev_level.gd",
 	"blockout-demo": "res://levels/blockout_demo/level.gd",
 	"worldbackalley": "res://levels/worldbackalley/level.gd",
+	"jungle-test": "res://levels/jungle_test/jungle_test_level.gd",
 }
 const DEFAULT_LEVEL := "hub"      # JS START_LEVEL: a new game, CONTINUE with nowhere saved and the menu's world behind it all start on the hub street (the arena is the movement test ground: --level=arena)
 
@@ -62,6 +63,7 @@ var doors: Doors = Doors.new()            # level doors, world actions, what X a
 var cur_spawn_at := ""                    # the door the current level was entered by (JS curSpawnAt)
 var cutscenes: Dictionary = {}   # name -> running cutscene object; the names and their priority are View.CUTSCENE_ORDER
 var freecam = null      # dev console fly camera
+var forge: Forge = null  # forge/forge.gd: the in-game level editor (FORGE, F8; new on purpose, not a port). One of `menus` while it edits, so the world holds still
 var city_ambience: CityAmbience = null
 var night_vision = null # gear/night-vision: light amplification around the draw
 var player_clones := PlayerClones.new()      # player/player_clones.gd: AI allies on the player rig (the dev console's clone)
@@ -69,7 +71,7 @@ var power_store: PowerStore = null      # powers/power_store.gd   which implants
 var power: Power = null                 # powers/power.gd         power mode, mana, the implants
 var implant_cs: ImplantInject = null    # cutscenes/implant_inject.gd
 var arena_tv = null     # the arena's broadcast camera
-var arena_blocked := false      # JS arenaBlocked: FOINT ARENA between runs: no shooting, no wheel, the world held
+var arena_blocked := false      # JS arenaBlocked: FOINT DOME between runs: no shooting, no wheel, the world held
 var frame_dt := 0.0     # this frame's dt and real dt, for a level whose tick also runs parts the game does not freeze
 var frame_real_dt := 0.0
 var menu_cam := Callable()   # the camera while the main menu owns the frame
@@ -189,6 +191,7 @@ func enter_level(id: String, spawn_at: String = "") -> void:
 	view.reset_render_state()       # the look of a fresh View: every level starts from it (JS BASE_LOOK.restore)
 	level.build()
 	view.level_built(level)         # its grade, glow and mist (core/looks.gd; a level's own `look` wins)
+	ForgeLayer.attach(level)        # what the editor placed here (assets/levels/<id>/edits.json): part of the level, built with it
 	# colliders join the physics broadphase on the next physics step
 	await get_tree().physics_frame
 	await get_tree().physics_frame
@@ -265,6 +268,8 @@ func sync_armor(_id: String = "") -> void:
 
 
 func leave_level() -> void:
+	if forge != null:
+		forge.level_left()      # (out of EDIT, and unsaved edits written, while the level still exists)
 	save_game()
 	if vehicles != null and vehicles.driving:      # JS enterLevel: nobody drives across a level change
 		vehicles.exit(true)
@@ -443,6 +448,8 @@ func _kind_script(kind: String) -> GDScript:
 			return MawLedge
 		"warden":
 			return MarrowWarden
+		"dervish":
+			return BriarDervish
 		"goon":
 			return FointGoon
 		"wh_robot":
@@ -488,7 +495,7 @@ func _on_reinforce(_src: Robot) -> Array:
 		var d := 13.0 + randf() * 9.0
 		var x := P.x + sin(a) * d
 		var z := P.z + cos(a) * d
-		if level.id == "maktar" and U.hyp(x, z) > 38.0:
+		if level.id == "foint-dome" and U.hyp(x, z) > 38.0:
 			continue
 		var g := world.ground_height(x, z, AI.r, P.y + 1.5)
 		if not (g > -INF) or absf(g - P.y) > 2.5:
@@ -553,7 +560,7 @@ func _kill_money() -> void:
 		if e.t != "kill" or e.get("crowd", false) or int(e.get("tid", -1)) == HubLevel.CHERUB_ID:
 			continue
 		var npc: bool = e.get("npc", false)
-		if level.id == "dev" or level.id == "maktar":
+		if level.id == "dev" or level.id == "foint-dome":
 			if npc and hud != null:
 				hud.toast("NPC DOWN")
 			continue
@@ -565,7 +572,7 @@ func _kill_money() -> void:
 
 ## JS playerLife: he lies where he fell, the screen fades, then he reboots at the spawn with brief invulnerability (the arena runs its own).
 func _player_life() -> void:
-	if level.id != "maktar" and player.dead and player.dead_t > 5.6:
+	if level.id != "foint-dome" and player.dead and player.dead_t > 5.6:
 		player.respawn()
 		rig.snap_to(player)
 		if combat.enemies != null:

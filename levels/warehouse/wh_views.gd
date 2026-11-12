@@ -487,8 +487,9 @@ func _approach(P: Player, stance: Vector3, target: Vector3, dt: float, face: Vec
 	var k := minf(1.0, dt * 3.0 / maxf(0.001, U.hyp(sx, sz)))
 	var x := P.x + sx * k
 	var z := P.z + sz * k
-	var y := L.world.ground_height(x, z, P.r, P.y + 0.42)
-	if not is_finite(y) or absf(y - P.y) > 0.35 or L.world.blocked(x, z, y, P.h, P.r, 0.1):
+	# The player's radius is Config.radius (Player has no `r`; reading P.r errored every frame, so no console hold ever counted, the Foreman's Export Loader included).
+	var y := L.world.ground_height(x, z, Config.radius, P.y + 0.42)
+	if not is_finite(y) or absf(y - P.y) > 0.35 or L.world.blocked(x, z, y, P.h, Config.radius, 0.1):
 		return false
 	P.x = x
 	P.z = z

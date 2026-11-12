@@ -4,6 +4,7 @@ extends KitLevel
 
 const A := {"spawn": {"x": 2.5, "y": 6.0, "z": 5.5, "yaw": -2.5}, "pad": [0.0, 6.0, 0.0], "ramp_top": [21.0, 13.0, -76.0], "tower_door_e": [-38.8, 13.0, -76.0], "tower_door_w": [-53.2, 13.0, -76.0], "p1": [-73.0, 13.0, -72.0], "p2": [-86.0, 15.0, -64.0], "p3": [-99.0, 15.0, -55.0]}
 const FOG := 0x24120e
+const BEAM := preload("res://levels/shaders/lamp_beam.gdshader")
 const LOADOUT := ["deagle", "rifle", "shotgun", "rocket"]      # (the AEROLIFT-7 is on his back from the start: he jumps in wearing it)
 const EQUIP := "rifle"
 
@@ -22,6 +23,7 @@ var summit: OmSummit
 var chamber: OmChamber
 var towers: OmTowers
 var tram: OmTram
+var field: OmField
 var sky: OmSkyFoes
 var ff: OmFreefall
 var dock: OmDockhand
@@ -116,6 +118,7 @@ func _enter_stage(_b: Blockout, o: Dictionary) -> void:
 	chamber.reset(stage)
 	towers.reset(stage, objective)
 	tram.reset(stage, objective)
+	field.reset(bo, stage)
 	var dead := stage == "escape"
 	draw.stop(dead)
 	if dead:      # Juniper is out: nothing feeds the sphere and it runs wild
@@ -170,6 +173,10 @@ func _split_coplanar() -> void:
 
 
 func setup() -> void:
+	OmRocks.fit(world)      # the basalt masses collide as drawn, not as round discs (om_rocks.gd)
+	OmPipes.fit(world)      # the conduit's pieces are round pipes, not flat ramps (om_pipes.gd)
+	OmRocks.ledge(world, self)      # the molten ledge under the docks bridge gets a floor (om_rocks.gd)
+	OmRails.build(world)      # the drawn railings that had no collider stop feet (not shots or the camera) (om_rails.gd)
 	_split_coplanar()
 	# (hemi, sun, exposure: the export's own look, as the JS onMount set them. The density is put back: the export's tour ends on the opening drop's thin haze)
 	Game.view.set_fog_exp2(Game.view.fog_color, .0017)
@@ -196,9 +203,16 @@ func setup() -> void:
 		if q.has("light"):
 			L.light = VhKit.light(self, q.light)
 		else:
-			for mi in VhKit.meshes(VhKit.one(self, q.cone)):
-				L.cone = mi.get_active_material(0).duplicate()
-				mi.material_override = L.cone
+			for mi in VhKit.meshes(VhKit.one(self, q.cone)):      # (the beam shader, not the export's lit additive copy: see lamp_beam.gdshader)
+				var src := mi.get_active_material(0) as StandardMaterial3D
+				var beam := ShaderMaterial.new()
+				beam.shader = BEAM
+				beam.set_shader_parameter(&"tint", src.albedo_color if src != null else Color.WHITE)
+				beam.set_shader_parameter(&"beam_len", -mi.get_aabb().position.y)
+				beam.set_shader_parameter(&"opacity", L.base)
+				mi.material_override = beam
+				mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+				L.cone = beam
 		lamps.append(L)
 	var fields: Array[ShaderMaterial] = []
 	for n: Node3D in node_named("om-glow"):
@@ -214,10 +228,12 @@ func setup() -> void:
 	esc = OmEscape.new(self, sec, sets, craft, audio, marks, act2, _alarm)
 	summit = OmSummit.new(self, sec, sets, craft, audio, marks, act2, _alarm)
 	summit_cine.S = summit
+	esc.chase_clear = func() -> bool: return summit.lift.ph != "down"      # BUG-108: the chase gunship leaves once the service lift moves
 	cine_chain.L = self
 	fly = OmFlyoff.new(self, summit, marks, act2.jun, audio, act2, _go_home)
 	dive = OmDive.new(self, summit, audio, func(P: Player) -> void: fly.start(P))
 	tram = OmTram.new(self, bo, sets, sec, audio, _alarm)
+	field = OmField.new(self, audio)      # (new, user 2026-11-09: the docks' perimeter field, so the tram and Gamma cannot jetpack to the docks: om_field.gd)
 	towers = OmTowers.new(self, sec, sets, audio, marks, esc.bridge, _alarm)
 	sky = OmSkyFoes.new(self, craft, audio)
 	ff = OmFreefall.new(self, bo, craft, audio, sky)
@@ -543,6 +559,7 @@ func _tick(dt: float, P: Player, C: Combat, b: Blockout) -> void:
 	dive.update(dt, P)
 	fly.update(dt, P)
 	towers.update(dt, P, C)
+	field.update(dt, P, C)
 	for i in range(heavies.size() - 1, -1, -1):      # (JS updateHeavies: the lasers follow their robots, one whose robot was despawned goes)
 		var h := heavies[i]
 		if C == null or not C.enemies.robots.has(h.r):

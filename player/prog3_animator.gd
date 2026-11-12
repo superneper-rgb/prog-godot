@@ -303,7 +303,7 @@ func _choose(dt: float, P: Player, gun: String, show: bool) -> void:
 		_seek("hammer_fist", 1.2 if P.slam_drop else lerpf(0.78, 1.1, P.slam_u))
 		held = false
 	elif P.punching:
-		var st := clampi(P.punch_stage, 0, 2)
+		var st := clampi(P.punch_stage - 1, 0, 2)      # (Combat counts the punches 1, 2, 3)
 		var a2: float = [0.0, 0.34, 0.74][st]
 		var b2: float = [0.34, 0.74, 1.25][st]
 		_seek("punch_combo", lerpf(a2, b2, clampf(P.punch_u, 0.0, 1.0)))
@@ -539,6 +539,35 @@ func _place_gun(P: Player, dt: float, show: bool, gun: String) -> void:
 				n.global_transform = wv.group.global_transform * Transform3D(Basis(Quaternion(v[3], v[4], v[5], v[6])), Vector3(v[0], v[1], v[2]))
 
 
+## The animation viewer (tools/anim_viewer) plays one clip as authored, at time `ct`, with no state machine: the body where P stands, the gun in his hand at its socket
+func preview_clip(dt: float, P: Player, clip: String, ct: float) -> void:
+	if not _clips.has(clip):
+		return
+	dt = minf(dt, 0.05)
+	t += dt
+	_dt = dt
+	_P = P
+	var l := _want(clip, 0.0)
+	l.w = 1.0
+	l.t = ct
+	_gait_ph = ct / maxf(l.anim.length, 0.001)      # (a gait layer reads its time from the gait phase)
+	_upper = null
+	_upper_held = null
+	_w_upper = 0.0
+	_write_pose(dt)
+	actor.position = Vector3(P.x, P.y + B.pivot * B.scale, P.z)
+	actor.rotation = Vector3(0.0, P.yaw, 0.0)
+	model.scale.x = 1.0
+	_refresh_xf()
+	var gun := ""
+	if P.armed and P.weapon_idx >= 0 and P.weapon_idx < Weapons.WEAPONS.size():
+		gun = Weapons.WEAPONS[P.weapon_idx].id
+	_w_aim2 = 1.0 if clip.contains("_aim") else 0.0
+	_upper = l if clip.ends_with("_reload") else null      # (the magazine and bolt follow a reload clip)
+	_place_gun(P, dt, P.armed, gun)
+	_upper = null
+
+
 func update(dt: float, P: Player) -> void:
 	# cutscenes, seats and machine work pose him through the old code until they get their own moves
 	var fi := P.factory_interaction
@@ -577,7 +606,7 @@ func update(dt: float, P: Player) -> void:
 	if P.mode == &"hang" and P.ledge != null:
 		_refresh_xf()
 		var hy := maxf(bone_world_pos(_hand_l).y, bone_world_pos(_hand_r).y)
-		lift = P.ledge.t + 0.03 - (hy - _lift)
+		lift = P.ledge.t + 0.03 - hy      # (the actor was just put back where P stands, so the hands' height holds no lift yet)
 	_lift = U.damp(_lift, lift, 30.0, dt)
 	actor.position.y += _lift
 	_refresh_xf()

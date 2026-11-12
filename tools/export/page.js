@@ -671,7 +671,7 @@
         for (let i = 0; i < n; i++) {
           o.getMatrixAt(i, M); W.multiplyMatrices(o.matrixWorld, M);
           if (W.elements[0] ** 2 + W.elements[1] ** 2 + W.elements[2] ** 2 < 1e-10) continue;
-          for (const [m, start, count] of mats) if (m && m.isMaterial && m.visible !== false) await this.addPiece({ matrixWorld: W.clone(), castShadow: o.castShadow, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder, name: o.name }, g, m, start, count, en, 'tri');
+          for (const [m, start, count] of mats) if (m && m.isMaterial && m.visible !== false) await this.addPiece({ matrixWorld: W.clone(), castShadow: o.castShadow, receiveShadow: o.receiveShadow, renderOrder: o.renderOrder, name: o.name, __pid: this.pid(o) + '#' + i, __src: o }, g, m, start, count, en, 'tri');
         }
         return;
       }
@@ -694,7 +694,7 @@
         const info = { key: '', idx: this.keys.size + 100000 + this.instances.length, d, cast: !!o.castShadow, receive: !!o.receiveShadow, order: d.alpha === 'BLEND' ? (o.renderOrder || 0) : 0, mode: 'tri', sprite: false, colors: new Set([d.color.map((x) => x.toFixed(4)).join(',')]), anyVC: d.vc && !!g.attributes.color, useVC: hasCol, nodes: 0 };
         const piece = { o, g, m, d, start, count, M: new THREE.Matrix4(), mode: 'tri', hasVC: d.vc && !!g.attributes.color };
         const inst = { o, en, g, info, piece, name: o.name || '', moves, hidden: !o.visible, hasCol, entries: [] };      // (its own switch only: a parent that hides it is a node above it in Godot too)
-        for (const [k, c] of cells) { const a = Float32Array.from(c); inst.entries.push({ cell: k, off: this.instOff, count: a.length / stride }); this.instBuf.push(a); this.instOff += a.byteLength; }
+        for (const [k, c] of cells) { const a = Float32Array.from(c); inst.entries.push({ cell: k, off: this.instOff, count: a.length / stride, arr: a, stride }); this.instBuf.push(a); this.instOff += a.byteLength; }
         this.instances.push(inst);
       }
       if (moves) this.dynamic.push({ name: o.name || '', type: 'InstancedMesh', why: ['instances move'], count: n, parent: en.name || '' });
@@ -739,6 +739,7 @@
         mesh.name = 'm' + info.idx + (b.ck ? '_' + b.ck.replace(':', '_').replace(/-/g, 'm') : '') + '_n' + b.en.idx;
         const x = {}; if (!info.cast) x.no_cast = 1; if (info.d.kind === 'shader') x.shader = info.d.shaderName; if (info.d.obc) x.obc = info.d.obc; mesh.userData = x;
         if (!b.en.obj) continue;
+        this.recordBucket(mesh.name, b);
         b.en.obj.add(mesh); bakedN++; b.pieces = null;
         if (bakedN % 64 === 0) await nextFrame();
       }
@@ -760,6 +761,151 @@
       this.glbBytes = buf.byteLength;
       return buf.byteLength;
     }
+    // -------------------------------- the piece index (FORGE, the Godot level editor) --------------------------------
+    // Godot reorders the triangles inside each merged mesh on import but keeps the meshes and their names. So pieces.json says, per merged mesh, which parts it holds
+    // (one per source object: its bounds in the mesh's own space), and FORGE finds a part's triangles again with one rule: a triangle belongs to the smallest part whose bounds
+    // hold all three corners. The few triangles that rule gets wrong are listed by their centre (`exc`). Objects carry a stable id (their path in the JS scene) and the
+    // colliders that belong to them: the JS solid's own `mesh` link when it has one, else the smallest object around it.
+
+    /** a stable id: the object's path from the level root, by name (or type) and index among same-named siblings */
+    pid(o) {
+      if (o.__pid) return o.__pid;
+      this.pids = this.pids || new Map(); this.sib = this.sib || new Map();
+      let id = this.pids.get(o); if (id) return id;
+      const segs = []; let n = o;
+      while (n && n.parent && n !== this.root) {
+        const p = n.parent; let m = this.sib.get(p);
+        if (!m) { m = new Map(); const seen = new Map(); for (const c of p.children) { const k = c.name || c.type; const j = seen.get(k) || 0; seen.set(k, j + 1); m.set(c, j); } this.sib.set(p, m); }
+        const j = m.get(n) || 0; segs.push(safeName(n.name || n.type) + (j ? '.' + j : ''));
+        n = p;
+      }
+      id = segs.reverse().join('/') || safeName(o.name || o.type); this.pids.set(o, id); return id;
+    }
+    nameUp(o) { let n = o; while (n && !n.name) n = n.parent; return n ? n.name : ''; }
+
+    recordBucket(name, b) {
+      if (b.info.mode !== 'tri' || !b.pieces) return;
+      this.objects = this.objects || []; this.objIndex = this.objIndex || new Map(); this.pbuckets = this.pbuckets || {};
+      let ntri = 0; for (const p of b.pieces) ntri += Math.floor((p.tris ? p.tris.length : p.count) / 3);
+      const V = new Float32Array(ntri * 9), T = new Int32Array(ntri), parts = [], W = b.en.world.elements, I = Infinity;
+      let t = 0;
+      for (const p of b.pieces) {
+        const g = p.g, ix = p.tris || (g.index ? g.index.array : null), P = this.floatsOf(g.attributes.position), e = p.M.elements;
+        const s0 = p.tris ? 0 : p.start, n = p.tris ? p.tris.length : p.count;
+        const id = this.pid(p.o); let oi = this.objIndex.get(id);
+        if (oi === undefined) { oi = this.objects.length; this.objIndex.set(id, oi); this.objects.push({ id, name: p.o.name || this.nameUp(p.o.__src || p.o), parts: [], tris: 0, box: [I, I, I, -I, -I, -I], dyn: !!b.en.moved, hidden: !!b.en.hidden, solids: [] }); }
+        const ob = this.objects[oi], pi = parts.length, box = [I, I, I, -I, -I, -I];
+        for (let i = s0; i + 2 < s0 + n; i += 3) {
+          for (let k = 0; k < 3; k++) {
+            const v = ix ? ix[i + k] : i + k, px = P[v * 3], py = P[v * 3 + 1], pz = P[v * 3 + 2];
+            const x = e[0] * px + e[4] * py + e[8] * pz + e[12], y = e[1] * px + e[5] * py + e[9] * pz + e[13], z = e[2] * px + e[6] * py + e[10] * pz + e[14];
+            V[t * 9 + k * 3] = x; V[t * 9 + k * 3 + 1] = y; V[t * 9 + k * 3 + 2] = z;
+            if (x < box[0]) box[0] = x; if (y < box[1]) box[1] = y; if (z < box[2]) box[2] = z; if (x > box[3]) box[3] = x; if (y > box[4]) box[4] = y; if (z > box[5]) box[5] = z;
+          }
+          T[t++] = pi;
+        }
+        parts.push({ oi, box });
+        ob.parts.push([name, pi]); ob.tris += Math.floor(n / 3);
+        for (let c = 0; c < 8; c++) {      // its bounds in the world
+          const x = c & 1 ? box[3] : box[0], y = c & 2 ? box[4] : box[1], z = c & 4 ? box[5] : box[2];
+          const wx = W[0] * x + W[4] * y + W[8] * z + W[12], wy = W[1] * x + W[5] * y + W[9] * z + W[13], wz = W[2] * x + W[6] * y + W[10] * z + W[14];
+          ob.box[0] = Math.min(ob.box[0], wx); ob.box[1] = Math.min(ob.box[1], wy); ob.box[2] = Math.min(ob.box[2], wz); ob.box[3] = Math.max(ob.box[3], wx); ob.box[4] = Math.max(ob.box[4], wy); ob.box[5] = Math.max(ob.box[5], wz);
+        }
+      }
+      // the rule FORGE runs (forge/forge_pieces.gd): the smallest part (by bounds volume, then index) whose bounds, grown by EPS, hold the triangle.
+      // EPS grows with the mesh: Godot stores positions in 16 bits across the mesh's bounds, so a corner of a mesh hundreds of metres wide moves by centimetres on import
+      let lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+      for (const q of parts) for (let c = 0; c < 3; c++) { lo[c] = Math.min(lo[c], q.box[c]); hi[c] = Math.max(hi[c], q.box[c + 3]); }
+      const EPS = rnd(Math.max(0.01, Math.max(hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]) / 16000), 4), vol = parts.map((q) => Math.max(q.box[3] - q.box[0], 0.01) * Math.max(q.box[4] - q.box[1], 0.01) * Math.max(q.box[5] - q.box[2], 0.01));
+      const order = parts.map((_, i) => i).sort((a, c) => vol[a] - vol[c] || a - c), exc = [];
+      if (parts.length > 1) {
+        for (let k = 0; k < ntri; k++) {
+          let got = -1;
+          for (const pi of order) {
+            const bx = parts[pi].box; let ok = true;
+            for (let c = 0; c < 3 && ok; c++) { const o = k * 9 + c * 3; ok = V[o] >= bx[0] - EPS && V[o] <= bx[3] + EPS && V[o + 1] >= bx[1] - EPS && V[o + 1] <= bx[4] + EPS && V[o + 2] >= bx[2] - EPS && V[o + 2] <= bx[5] + EPS; }
+            if (ok) { got = pi; break; }
+          }
+          if (got !== T[k]) { const o = k * 9; exc.push(rnd((V[o] + V[o + 3] + V[o + 6]) / 3, 3), rnd((V[o + 1] + V[o + 4] + V[o + 7]) / 3, 3), rnd((V[o + 2] + V[o + 5] + V[o + 8]) / 3, 3), T[k]); }
+        }
+      }
+      this.pbuckets[name] = { node: b.en.obj ? b.en.obj.name : '', parts: parts.map((q) => [q.oi, ...q.box.map((v) => rnd(v, 4))]), tris: ntri, eps: EPS, ...(exc.length ? { exc } : {}) };
+    }
+
+    /** pieces.json: the parts of every merged mesh, the objects they belong to and the colliders that go with them. owners: [{s, d}] per entry of colliders.json solids */
+    async writePieces(dir, owners) {
+      const objs = this.objects || [], I = Infinity;
+      // instanced things are objects too (for their colliders): one per instance, kept only if a collider goes with it
+      const inst = [];
+      this.instances.forEach((X, k) => {
+        if (X.o.count > 4096 || !X.g) return;
+        if (!X.g.boundingBox) X.g.computeBoundingBox();
+        const bb = X.g.boundingBox, Wn = X.en.world.elements, tpl = 'i' + k + (X.name ? '_' + safeName(X.name) : '');
+        X.entries.forEach((en, ord) => {
+          for (let j = 0; j < en.count; j++) {
+            const a = en.arr, q = j * en.stride, box = [I, I, I, -I, -I, -I];
+            for (let c = 0; c < 8; c++) {
+              const x = c & 1 ? bb.max.x : bb.min.x, y = c & 2 ? bb.max.y : bb.min.y, z = c & 4 ? bb.max.z : bb.min.z;
+              const lx = a[q] * x + a[q + 1] * y + a[q + 2] * z + a[q + 3], ly = a[q + 4] * x + a[q + 5] * y + a[q + 6] * z + a[q + 7], lz = a[q + 8] * x + a[q + 9] * y + a[q + 10] * z + a[q + 11];
+              const wx = Wn[0] * lx + Wn[4] * ly + Wn[8] * lz + Wn[12], wy = Wn[1] * lx + Wn[5] * ly + Wn[9] * lz + Wn[13], wz = Wn[2] * lx + Wn[6] * ly + Wn[10] * lz + Wn[14];
+              box[0] = Math.min(box[0], wx); box[1] = Math.min(box[1], wy); box[2] = Math.min(box[2], wz); box[3] = Math.max(box[3], wx); box[4] = Math.max(box[4], wy); box[5] = Math.max(box[5], wz);
+            }
+            inst.push({ id: 'inst:' + tpl + '#' + ord + '#' + j, name: X.name, inst: [tpl, ord, j], box, solids: [], parts: [], tris: 0 });
+          }
+        });
+      });
+      const all = objs.concat(inst);
+      const volOf = (b) => Math.max(b[3] - b[0], 0.01) * Math.max(b[4] - b[1], 0.01) * Math.max(b[5] - b[2], 0.01);
+      // a grid over x / z, so each collider only looks at what is near it
+      const CELL = 8, grid = new Map(), big = [];
+      all.forEach((o, i) => {
+        const x0 = Math.floor(o.box[0] / CELL), x1 = Math.floor(o.box[3] / CELL), z0 = Math.floor(o.box[2] / CELL), z1 = Math.floor(o.box[5] / CELL);
+        if (!Number.isFinite(x0) || (x1 - x0 + 1) * (z1 - z0 + 1) > 64) { big.push(i); return; }
+        for (let x = x0; x <= x1; x++) for (let z = z0; z <= z1; z++) { const k = x + ':' + z; let l = grid.get(k); if (!l) grid.set(k, l = []); l.push(i); }
+      });
+      const SKIP_TAG = new Set(['bound', 'guard']);
+      let exact = 0, near = 0, none = 0;
+      owners.forEach(({ s, d }, si) => {
+        if (SKIP_TAG.has(d.tag) || d.kind === 'field' || d.kind === 'mesh') return;
+        // exact: the JS solid knows what it draws
+        if (s && s.mesh && s.mesh.isObject3D && this.objIndex) {
+          const hit = new Set(); s.mesh.traverse((c) => { const oi = this.objIndex.get(this.pid(c)); if (oi !== undefined) hit.add(oi); });
+          if (hit.size) { for (const oi of hit) objs[oi].solids.push(si); exact++; return; }
+        }
+        // else the smallest object whose bounds hold it, or failing that the one that overlaps it most (over half)
+        let x0, x1, z0, z1;
+        if (d.kind === 'disc') { x0 = d.cx - d.r; x1 = d.cx + d.r; z0 = d.cz - d.r; z1 = d.cz + d.r; }
+        else { const c = Math.abs(Math.cos(d.yaw || 0)), sn = Math.abs(Math.sin(d.yaw || 0)), ex = c * d.hx + sn * d.hz, ez = sn * d.hx + c * d.hz; x0 = d.cx - ex; x1 = d.cx + ex; z0 = d.cz - ez; z1 = d.cz + ez; }
+        const sb = [x0, d.bottom, z0, x1, d.top, z1], sv = volOf(sb), T = 0.1;
+        const cand = new Set(big); for (const i of grid.get(Math.floor(d.cx / CELL) + ':' + Math.floor(d.cz / CELL)) || []) cand.add(i);
+        let best = -1, bv = I, iou = -1, bi = 0.5;
+        for (const i of cand) {
+          const b = all[i].box;
+          if (sb[0] >= b[0] - T && sb[3] <= b[3] + T && sb[1] >= b[1] - T && sb[4] <= b[4] + T && sb[2] >= b[2] - T && sb[5] <= b[5] + T) { const v = volOf(b); if (v < bv) { bv = v; best = i; } continue; }
+          const ix = Math.max(0, Math.min(b[3], sb[3]) - Math.max(b[0], sb[0])), iy = Math.max(0, Math.min(b[4], sb[4]) - Math.max(b[1], sb[1])), iz = Math.max(0, Math.min(b[5], sb[5]) - Math.max(b[2], sb[2]));
+          const inter = ix * iy * iz, u = inter / (sv + volOf(b) - inter);
+          if (u > bi) { bi = u; iou = i; }
+        }
+        const pick = best >= 0 ? best : iou;
+        if (pick >= 0) { all[pick].solids.push(si); near++; } else none++;
+      });
+      const r3 = (b) => b.map((v) => rnd(v, 3));
+      const out = { v: 1, buckets: this.pbuckets || {}, objects: [], links: { exact, near, none } };
+      for (const o of all) {
+        if (!o.parts.length && !o.solids.length) continue;
+        const j = { id: o.id, name: o.name || '', box: r3(o.box) };
+        if (o.parts.length) { j.parts = o.parts; j.tris = o.tris; }
+        if (o.solids.length) j.solids = o.solids;
+        if (o.dyn) j.dyn = 1;
+        if (o.hidden) j.hidden = 1;
+        if (o.inst) j.inst = o.inst;
+        out.objects.push(j);
+      }
+      await put(dir + '/pieces.json', JSON.stringify(out));
+      return { objects: out.objects.length, buckets: Object.keys(out.buckets).length, exceptions: Object.values(out.buckets).reduce((n, b) => n + (b.exc ? b.exc.length / 4 : 0), 0), links: out.links };
+    }
+
+
     /** the node index of level.json: everything kept, by its JS name */
     nodeTable() {
       const out = []; for (const n of this.nodes) if (n.parent && n.obj) out.push({ node: n.obj.name, name: n.name, why: n.why, hidden: n.hidden, moved: n.moved, kind: n.kind });
@@ -836,11 +982,12 @@
   }
 
   /** colliders.json (and fields.bin / tris.bin) */
-  async function writeColliders(dir, world, S) {
+  async function writeColliders(dir, world, S, owners = []) {
     const fields = { parts: [], bytes: 0 };
     const moves = (s) => !!(S && S.solids.get(s) && S.solids.get(s).moves);
     const each = (s) => (Object.prototype.hasOwnProperty.call(s, 'topAt') ? topAtBoxes(s, moves(s)) : [solidJSON(s, moves(s), fields)]);
-    const out = { solids: ((window.__game && window.__game.level && window.__game.level.allSolids) || world.solids).flatMap(each),      /* (a level that culls world.solids per frame keeps them all in allSolids) */ cam_solids: (world.camSolids || []).flatMap(each), custom: !!world.customQueries };
+    const own = (s) => { const r = each(s); for (const d of r) owners.push({ s, d }); return r; };      // (pieces.json: which JS solid each entry came from)
+    const out = { solids: ((window.__game && window.__game.level && window.__game.level.allSolids) || world.solids).flatMap(own),      /* (a level that culls world.solids per frame keeps them all in allSolids) */ cam_solids: (world.camSolids || []).flatMap(each), custom: !!world.customQueries };
     let tris = 0;
     const col = customCollision(world);
     if (col) {
@@ -1125,7 +1272,7 @@
   /** The city's life on its own, without the 6 minute scene export (the JS data changed, the scene did not). */
   async function exportLife(opt) {
     RECV = opt.recv; GLTFExporter = (await import('three/addons/exporters/GLTFExporter.js')).GLTFExporter;
-    const C = G.view.city, dir = 'levels/' + G.LEVEL, b = new Build({ S: null, tm: 'aces', exposure: G.view.renderer.toneMappingExposure, cell: 64, cellInst: 128, maxTex: 2048, texDir: 'levels/_tex', texUri: '../_tex/', sceneName: G.LEVEL });
+    const C = G.view.city, dir = 'levels/' + (opt.out || G.LEVEL), b = new Build({ S: null, tm: 'aces', exposure: G.view.renderer.toneMappingExposure, cell: 64, cellInst: 128, maxTex: 2048, texDir: 'levels/_tex', texUri: '../_tex/', sceneName: G.LEVEL });
     const life = C && C.district ? await hubLife(C, b, G.world, dir) : null;
     await put(dir + '/city_life.json', JSON.stringify(await cityLifeJSON(C, b)));
     if (life) await put(dir + '/life.json', JSON.stringify(life));
@@ -1134,7 +1281,7 @@
 
   /** rigs.json + rigs.bin: a kit level's talkers (those whose id starts with its rigPrefix) as bones and skinned surfaces, the same files HubNpcs builds the hub's talkers from */
   async function exportRigs(opt) {
-    const dir = 'levels/' + G.LEVEL, b = new Build({ S: null, tm: 'aces', exposure: G.view.renderer.toneMappingExposure, cell: 64, cellInst: 128, maxTex: 2048, texDir: 'levels/_tex', texUri: '../_tex/', sceneName: G.LEVEL });
+    const dir = 'levels/' + (opt.out || G.LEVEL), b = new Build({ S: null, tm: 'aces', exposure: G.view.renderer.toneMappingExposure, cell: 64, cellInst: 128, maxTex: 2048, texDir: 'levels/_tex', texUri: '../_tex/', sceneName: G.LEVEL });
     const bin = { parts: [], bytes: 0 }, npcs = {};
     for (const t of G.talkers) {
       if (!t.id.startsWith(G.level.rigPrefix)) continue;
@@ -1153,7 +1300,7 @@
   // ------------------------------------------------------------------------------------------------ export a level ----
   async function exportLevel(opt) {
     RECV = opt.recv; GLTFExporter = (await import('three/addons/exporters/GLTFExporter.js')).GLTFExporter;
-    const t0 = performance.now(), id = G.LEVEL, root = rootOf(), world = G.world, view = G.view, dir = 'levels/' + id, b0warn = [];
+    const t0 = performance.now(), id = opt.out || G.LEVEL, root = rootOf(), world = G.world, view = G.view, dir = 'levels/' + id, b0warn = [];
     root.updateMatrixWorld(true);
     const spawn0 = { ...world.spawn };
     const CV = G.view.city && G.view.city.flick ? G.view.city : null;
@@ -1187,6 +1334,7 @@
     const renderer = view.renderer, tm = TM_NAMES[renderer.toneMapping] || 'none', exposure = renderer.toneMappingExposure;
     const b = new Build({ S, tm, exposure, cell: opt.cell || 64, cellInst: opt.cellInst || 128, maxTex: opt.maxTex || 2048, texDir: 'levels/_tex', texUri: '../_tex/', sceneName: id, ignoreName: opt.ignoreName ? new RegExp(opt.ignoreName) : null, skipName: new RegExp(opt.skipName || '^Blockout guidance$') });
     for (const w of b0warn) b.warn(w);
+    b.root = root;
     const top = b.newNode(root, null, '', {});
     root.traverse((o) => { if (o.name) b.nameCount.set(o.name, (b.nameCount.get(o.name) || 0) + 1); });
     say('walking the scene');
@@ -1196,7 +1344,10 @@
     say('glb ' + (size / 1048576).toFixed(1) + ' MB');
     if (b.instBuf.length) await put(dir + '/instances.bin', new Blob(b.instBuf));
     if (b.fieldBuf.length) await put(dir + '/shader_fields.bin', new Blob(b.fieldBuf));
-    const colliders = await writeColliders(dir, world, S);
+    const owners = [];
+    const colliders = await writeColliders(dir, world, S, owners);
+    const pieces = await b.writePieces(dir, owners);
+    say(`pieces: ${pieces.objects} objects, ${pieces.buckets} meshes, ${pieces.exceptions} exceptions, colliders linked ${pieces.links.exact} exact / ${pieces.links.near} near / ${pieces.links.none} not`);
     const probes = writeProbes(world, opt.probes || 3000);
     await put(dir + '/probes.json', JSON.stringify(probes));
     // shaders: the work list for the hand-ported versions

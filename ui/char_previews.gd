@@ -13,6 +13,8 @@ class Turntable:
 
 var _views: Array[Turntable] = []
 var _built_costume := ""
+## BUG-103 (tracker): the card the pad / mouse is on. It is only a highlight; the card that says SELECTED is `Game.char_pick`, set by A / Enter / a click (`pick`). (The three.js game had the mouse only, where a click was both.)
+var focus := "prog"
 
 
 func _init() -> void:
@@ -22,6 +24,8 @@ func _init() -> void:
 
 func set_active(on: bool) -> void:
 	visible = on
+	if on:
+		focus = Game.char_pick
 	if on and (_views.is_empty() or _built_costume != Builds.prog_costume):
 		_free_all()
 		_built_costume = Builds.prog_costume
@@ -155,15 +159,24 @@ func pick(id: String, quiet: bool = false) -> void:
 	if not Builds.BUILDS.has(id) or Game.started:
 		return
 	Game.char_pick = id
+	focus = id
 	Game.ui.prefs_save()
 	if not quiet:
 		CrtTheme.sfx("uiMove")
 
 
+## Pad / arrows move the highlight only; `confirm` makes it the pick.
 func step(d: int) -> void:
+	if Game.started:
+		return
 	var ids: Array = Builds.BUILDS.keys()
-	var k := ids.find(Game.char_pick)
-	pick(ids[posmod(k + d, ids.size())])
+	var k := ids.find(focus)
+	focus = ids[posmod(k + d, ids.size())]
+	CrtTheme.sfx("uiMove")
+
+
+func confirm() -> void:
+	pick(focus)
 
 
 func toggle_costume() -> void:

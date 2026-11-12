@@ -7,7 +7,8 @@
   "map": {
    "type": "t",
    "file": "levels/_tex/ed99ffffaf8672f9_64x64.webp",
-   "name": ""
+   "name": "",
+   "srgb": true
   },
   "scale": {
    "type": "f",
@@ -19,7 +20,8 @@
    "map": {
     "type": "t",
     "file": "levels/_tex/ed99ffffaf8672f9_64x64.webp",
-    "name": ""
+    "name": "",
+    "srgb": true
    },
    "scale": {
     "type": "f",
@@ -28,7 +30,7 @@
   }
  ],
  "variant_keys": [
-  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/ed99ffffaf8672f9_64x64.webp\",\"name\":\"\"},\"scale\":{\"type\":\"f\",\"value\":449.35546}}"
+  "{\"map\":{\"type\":\"t\",\"file\":\"levels/_tex/ed99ffffaf8672f9_64x64.webp\",\"name\":\"\",\"srgb\":true},\"scale\":{\"type\":\"f\",\"value\":449.35546}}"
  ],
  "defines": {},
  "transparent": true,

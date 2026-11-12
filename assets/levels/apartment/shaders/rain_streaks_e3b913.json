@@ -6,7 +6,7 @@
  "uniforms": {
   "uTime": {
    "type": "f",
-   "value": 20.7693
+   "value": 20.8865
   },
   "uWind": {
    "type": "v",
@@ -29,7 +29,7 @@
   {
    "uTime": {
     "type": "f",
-    "value": 20.7693
+    "value": 20.8865
    },
    "uWind": {
     "type": "v",

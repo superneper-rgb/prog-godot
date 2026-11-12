@@ -6,27 +6,27 @@
  "uniforms": {
   "uTime": {
    "type": "f",
-   "value": 87.7041
+   "value": 92.2884
   },
   "uFlare": {
    "type": "f",
-   "value": 1.88484
+   "value": 1.83486
   }
  },
  "variants": [
   {
    "uTime": {
     "type": "f",
-    "value": 87.7041
+    "value": 92.2884
    },
    "uFlare": {
     "type": "f",
-    "value": 1.88484
+    "value": 1.83486
    }
   }
  ],
  "variant_keys": [
-  "{\"uFlare\":{\"type\":\"f\",\"value\":1.88484}}"
+  "{\"uFlare\":{\"type\":\"f\",\"value\":1.83486}}"
  ],
  "defines": {},
  "transparent": false,

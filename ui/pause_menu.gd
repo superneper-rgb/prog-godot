@@ -1,7 +1,8 @@
 class_name PauseMenu
 extends Control
-## The pause terminal: resume, music volume, controls diagrams, in the green phosphor CRT inside the SchleedTech monitor (assets/ui/pausecrt-2400.png, the glass cut out by tools/build_ui_art.py).
+## The pause terminal: resume, inventory, music volume, controls diagrams, in the green phosphor CRT inside the SchleedTech monitor (assets/ui/pausecrt-2400.png, the glass cut out by tools/build_ui_art.py).
 ## Ported from index.html (pause menu section) with its CSS. The controls page zooms the monitor in until its glass fills the window, and the diagram fills the glass.
+## INVENTORY (ui/inventory.gd, added here) zooms the same way and takes the whole glass, at its own 960-wide page size.
 
 const KEYBOARD_IMG := "res://assets/ui/cut/controls-keyboard.png"     # the SVG's live text does not survive Godot's SVG import: rendered once in a browser, see PORT_STATUS
 const GAMEPAD_IMG := "res://assets/ui/controls-gamepad.webp"
@@ -19,6 +20,8 @@ var pause_focus := "pResume"
 var _nav_dir := 0
 var _nav_t := 0.0
 var _controls := false
+var _inv: Inventory
+var _inv_open := false
 var _bg: ColorRect
 var _stage: Control
 var _view: CrtScreen
@@ -84,7 +87,12 @@ func _ready() -> void:
 	_img.material = CrtTheme.mat("res://ui/css_filter.gdshader")
 	_img.visible = false
 	_view.content.add_child(_img)
-	_art = TextureRect.new()
+	_inv = Inventory.new()
+	_inv.back = func() -> void:
+		show_inventory(false)
+		set_pause_focus("pInventory", true)
+	_view.content.add_child(_inv)
+	_art =TextureRect.new()
 	_art.texture = load("res://assets/ui/cut/pausecrt.png")
 	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_art.stretch_mode = TextureRect.STRETCH_SCALE
@@ -127,9 +135,11 @@ func pc_layout() -> void:
 	_art.size = Vector2(_sw, _sh)
 	_view.position = Vector2(_gx, _gy)
 	_view.size = Vector2(_gw, _gh)
-	_view.set_logical(Vector2(_gw / _k, _gh / _k))
-	_page.size = _view.logical
-	if _controls:
+	_page.size = Vector2(_gw / _k, _gh / _k)
+	_view.set_logical(Vector2(Inventory.W, Inventory.W * _gh / _gw) if _inv_open else _page.size)
+	_inv.size = _view.logical
+	_inv.layout()
+	if _controls or _inv_open:
 		_view.fit(_zoom)
 	var pad := Vector2(_sw * 0.06, _sw * 0.06)
 	var sw := _sw
@@ -179,9 +189,11 @@ func _layout_page() -> void:
 		var btn := 24.0 * 1.1 + 14.0 + 2.0
 		var f := CrtTheme.font(&"vt323")
 		var lines := CrtTheme.wrap(f, HELP_TEXT, 17, w, 17.0 * 0.06).size()
-		var total := h1 + 6.0 + btn * 2.0 + 9.0 + 10.0 + btn + (12.0 + 10.0 + 1.0 + 26.0 if music else 0.0) + 12.0 + lines * 17.0 * 1.5
+		var total := h1 + 6.0 + btn * 3.0 + 9.0 * 2.0 + 10.0 + btn + (12.0 + 10.0 + 1.0 + 26.0 if music else 0.0) + 12.0 + lines * 17.0 * 1.5
 		var y := 30.0 + maxf(0.0, (ch - 30.0 - 22.0 - total) * 0.5) + h1 + 6.0
 		_rects["pResume"] = Rect2(x, y, w, btn)
+		y += btn + 9.0
+		_rects["pInventory"] = Rect2(x, y, w, btn)
 		y += btn + 9.0
 		_rects["pControls"] = Rect2(x, y, w, btn)
 		y += btn + 10.0
@@ -217,7 +229,7 @@ func _layout_page() -> void:
 	_view.refresh()
 
 
-const HELP_TEXT := "Click outside, or press Start / Esc to resume.\nPress C / Y to see the controls."
+const HELP_TEXT := "Click outside, or press Start / Esc to resume.\nPress I for the inventory, C / Y for the controls."
 
 
 func _draw_page(v: Control) -> void:
@@ -232,6 +244,7 @@ func _draw_page(v: Control) -> void:
 		if fmod(_time, 1.0) < 0.5:
 			CrtTheme.draw_text(v, f, x + 30.0 * 0.12, y, "_", 30, CrtTheme.PH_HI, 30.0 * 0.2)
 		_button(v, "pResume", "RESUME", 24, 40.0, 0.16)
+		_button(v, "pInventory", "INVENTORY", 24, 40.0, 0.16)
 		_button(v, "pControls", "CONTROLS", 24, 40.0, 0.16)
 		_button(v, "pMenu", "RETURN TO MENU", 24, 40.0, 0.16)
 		if _rects.has("musicVol"):
@@ -302,6 +315,36 @@ func show_controls(on: bool, pad: Variant = null) -> void:
 	_layout_page()
 
 
+## The inventory page: the monitor zooms in as for the controls, and the glass takes the inventory's page size while it is up.
+func show_inventory(on: bool) -> void:
+	if on == _inv_open:
+		return
+	_inv_open = on
+	_controls = false
+	_z_from = _z
+	_z_to = 1.0 if on else 0.0
+	_z_u = 0.0
+	_page.visible = not on
+	_view.logical = Vector2(Inventory.W, Inventory.W * _gh / _gw) if on else _page.size
+	_view.fit(_zoom)      # (zooming out, the page stays at the magnified size until the zoom is done)
+	_inv.size = _view.logical
+	if on:
+		_inv.open()
+	else:
+		_inv.close()
+	_layout_page()
+
+
+func inventory_open() -> bool:
+	return _inv_open
+
+
+## Boot warm-up: the inventory page drawn once on the glass.
+func warm_inventory(on: bool) -> void:
+	_inv.warm(on)
+	_view.refresh()
+
+
 func controls_open() -> bool:
 	return _controls
 
@@ -309,7 +352,7 @@ func controls_open() -> bool:
 func pause_targets() -> Array:
 	if _controls:
 		return ["tabKb", "tabPad", "pBack"]
-	var t := ["pResume", "pControls", "pMenu"]
+	var t := ["pResume", "pInventory", "pControls", "pMenu"]
 	if Game.music != null:
 		t.append("musicVol")
 	return t
@@ -330,6 +373,12 @@ func set_pause_focus(id: String, quiet: bool = false) -> void:
 
 ## The pad and keyboard, every frame while paused (updatePausePad + the keydown handlers).
 func update_pause_pad(dt: float) -> void:
+	if _inv_open:
+		_inv.update(dt)
+		return
+	if Inp.key_hit(KEY_I):
+		_press("pInventory")
+		return
 	if Inp.btn(&"quick").pressed:
 		show_controls(not controls_open(), true)
 		set_pause_focus("tabPad" if controls_open() else "pResume")
@@ -411,6 +460,8 @@ func _press(id: String) -> void:
 			Game.ui.lock()
 		"pMenu":
 			Game.ui.back_to_menu()
+		"pInventory":
+			show_inventory(true)
 		"pControls":
 			show_controls(true, Inp.using_pad)
 			set_pause_focus("tabPad" if ctl_pad else "tabKb", true)
@@ -433,6 +484,11 @@ func on_pause(p: bool) -> void:
 		_z = 0.0
 		_z_u = 1.0
 		_controls = false
+	if _inv_open or not p:
+		_inv_open = false
+		_inv.close()
+		_page.visible = true
+	if p:
 		pc_layout()
 		pause_focus = "pResume"
 	_view.arm_glitch(p)
@@ -453,13 +509,15 @@ func _process(delta: float) -> void:
 	(_glow_add.material as ShaderMaterial).set_shader_parameter(&"opacity", g)
 	(_glow_mul.material as ShaderMaterial).set_shader_parameter(&"opacity", g)
 	_page.queue_redraw()
+	if _inv_open:
+		_inv.frame(delta)
 
 
 # ---- the mouse ----
 
 func _to_page(p: Vector2) -> Vector2:
 	var l: Vector2 = _view.get_global_transform().affine_inverse() * p
-	return l * (_page.size.x / _view.size.x)
+	return l * (_view.logical.x / _view.size.x)
 
 
 func _target_at(p: Vector2) -> String:
@@ -470,6 +528,12 @@ func _target_at(p: Vector2) -> String:
 
 
 func _gui_input(event: InputEvent) -> void:
+	if _inv_open:
+		if event is InputEventMouseMotion:
+			_inv.mouse_move(_to_page((event as InputEventMouseMotion).global_position))
+		elif event is InputEventMouseButton and (event as InputEventMouseButton).pressed and (event as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			_inv.mouse_click(_to_page((event as InputEventMouseButton).global_position))
+		return
 	if event is InputEventMouseMotion:
 		var p := _to_page((event as InputEventMouseMotion).global_position)
 		if _dragging:

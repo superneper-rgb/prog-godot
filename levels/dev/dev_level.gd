@@ -21,13 +21,26 @@ const ENEMIES := [
 	{"id": "worm", "name": "DIRGEWORM", "note": "blind gut-worm: attacks on spawn, petal-maw slam up close, howling pressure-ring shoves, keeps growing longer", "kind": "worm"},
 	{"id": "assassin", "name": "NIGHT ASSASSIN", "note": "human in a stealth suit + night vision: suppressed pistol double-taps; up close a knife dash (1 s stun) and a backflip away", "kind": "assassin"},
 	{"id": "warden", "name": "THE MARROW WARDEN", "note": "mid-boss: NOTARIZE > INK BLOT > FILING > PAPER SHUFFLE > SEAL BROKEN (double damage)", "kind": "warden"},
+	{"id": "dervish", "name": "THE BRIAR DERVISH", "note": "mid-boss plant turret: drops from above, sap volleys when lined up, whirls on its roots; shoot it and it winds up, stop and it unwinds into a spin", "kind": "dervish"},
 ]
 const VM_X := -7.5
 const VM_Z := 2.5
 var vending := {"x": VM_X, "z": VM_Z, "prompt": {"x": VM_X + 1.9, "z": VM_Z, "r": 2.2}}      # front faces +X (towards the spawn)
 var vending_injector: VendingInjector = null
 const TOOLS := [["place", "PLACE"], ["move", "MOVE"], ["select", "SELECT"], ["delete", "DELETE"], ["teleport", "TELEPORT"]]
-const TABS := [["shape", "SHAPES"], ["prop", "PROPS"], ["vendor", "VENDORS"], ["npc", "NPCS"], ["enemy", "ENEMIES"], ["weapon", "WEAPONS"]]
+const TABS := [["shape", "SHAPES"], ["prop", "PROPS"], ["vendor", "VENDORS"], ["npc", "NPCS"], ["enemy", "ENEMIES"], ["weapon", "WEAPONS"], ["city", "CITY"]]
+## the CITY tab (2026-11-11, user: no more hunting them down in the city): FOINT CITY's cars and alien craft, drivable (levels/hub/city_car_lot.gd), and its trees (levels/hub/city_trees.gd).
+## Placed where you click, facing you; they are not selectable: CLEAR CITY in the tab (or clear_city()) removes them all. Console: Game.level.spawn_city("sedan"), or `vehicle sedan`.
+const CITY_TREES := [
+	{"id": "tree_street_0", "name": "STREET TREE A", "note": "city plane, shape 1 of 3", "tree": &"street", "shape": 0, "r": 0.3, "h": 9.0},
+	{"id": "tree_street_1", "name": "STREET TREE B", "note": "city plane, shape 2 of 3", "tree": &"street", "shape": 1, "r": 0.3, "h": 9.0},
+	{"id": "tree_street_2", "name": "STREET TREE C", "note": "city plane, shape 3 of 3", "tree": &"street", "shape": 2, "r": 0.3, "h": 9.0},
+	{"id": "tree_planter_0", "name": "PLANTER TREE A", "note": "columnar, shape 1 of 2", "tree": &"planter", "shape": 0, "r": 0.25, "h": 7.0},
+	{"id": "tree_planter_1", "name": "PLANTER TREE B", "note": "columnar, shape 2 of 2", "tree": &"planter", "shape": 1, "r": 0.25, "h": 7.0},
+	{"id": "shrub_0", "name": "SHRUB A", "note": "planter shrub, shape 1 of 3", "tree": &"shrub", "shape": 0, "r": 0.0, "h": 0.9},
+	{"id": "shrub_1", "name": "SHRUB B", "note": "planter shrub, shape 2 of 3", "tree": &"shrub", "shape": 1, "r": 0.0, "h": 0.9},
+	{"id": "shrub_2", "name": "SHRUB C", "note": "planter shrub, shape 3 of 3", "tree": &"shrub", "shape": 2, "r": 0.0, "h": 0.9},
+]
 const SAVE_PATH := "user://dev_layout.json"
 const PAGE_SIZE := 6      # palette paging: 6 items (3 rows) per page, current page remembered per tab
 const AMBER := Color("#ffd166")
@@ -110,6 +123,9 @@ var clock := 0.0
 var _rendered := false
 var r_o := Vector3.ZERO
 var r_d := Vector3.DOWN
+var car_lot: CityCarLot = null      # made the first time the CITY tab is used
+var city_trees: CityTrees = null
+var city_placed: Array = []         # [node, World.Solid or null]: the trees
 
 
 func build() -> void:
@@ -430,7 +446,50 @@ func clear_enemies() -> void:
 		remove_enemy(e)
 
 
+# ---- FOINT CITY's cars and trees (the CITY tab)
+func _city_items() -> Array:
+	if car_lot == null:
+		car_lot = CityCarLot.new()
+	return car_lot.kinds() + CITY_TREES
+
+
+## a city car (its kind: sedan hatch taxi van truck bus saucerG saucerN) or tree (a CITY_TREES id) at a place; with no place, 6 m in front of the player
+func spawn_city(id: String, at: Variant = null, yaw: float = NAN) -> Variant:
+	var P: Player = Game.player
+	var p: Vector3 = at if at != null else Vector3(P.x + sin(P.yaw) * 6.0, 0.0, P.z + cos(P.yaw) * 6.0)
+	if at == null:
+		var g := world.ground_height(p.x, p.z, 0.3, P.y + 3.0)
+		p.y = g if is_finite(g) else P.y
+	if is_nan(yaw):
+		yaw = atan2(P.x - p.x, P.z - p.z) + PI / 2.0      # side on to you
+	for d: Dictionary in CITY_TREES:
+		if d.id == id:
+			if city_trees == null:
+				city_trees = CityTrees.new()
+			var mi := city_trees.sample(d.tree, d.shape)
+			add_child(mi)
+			mi.position = p
+			mi.rotation.y = yaw
+			var solid: Variant = world.add({"kind": "disc", "cx": p.x, "cz": p.z, "r": float(d.r), "bottom": p.y, "top": p.y + float(d.h), "tag": "dev"}) if float(d.r) > 0.0 else null
+			city_placed.append([mi, solid])
+			return mi
+	if car_lot == null:
+		car_lot = CityCarLot.new()
+	return car_lot.spawn(id, p.x, p.y, p.z, yaw, self)
+
+
+func clear_city() -> void:
+	if car_lot != null:
+		car_lot.clear()
+	for e: Array in city_placed:
+		(e[0] as Node).queue_free()
+		if e[1] != null:
+			world.remove(e[1])
+	city_placed.clear()
+
+
 func clear_all() -> void:
+	clear_city()
 	clear_props()
 	clear_npcs()
 	clear_enemies()
@@ -794,7 +853,12 @@ func _do_place() -> void:
 		Game.hud.toast("CLICK A FLAT SURFACE")
 		return
 	var face := atan2(P.x - float(p.x), P.z - float(p.z))
-	if brush.cat == "weapon":
+	if brush.cat == "city":
+		if spawn_city(brush.id, Vector3(p.x, p.y, p.z)) != null:
+			Game.hud.toast("SPAWNED " + brush.id.to_upper())
+		else:
+			Game.hud.toast("NO SUCH CITY THING: " + brush.id)
+	elif brush.cat == "weapon":
 		var d: Variant = spawn_weapon_at(brush.id, p.x, p.y, p.z)
 		if d != null:
 			Game.hud.toast("SPAWNED " + String(Weapons.WEAPONS[d.i].name))
@@ -1064,6 +1128,8 @@ func tick(dt: float) -> void:
 	if P != null and god:
 		P.invuln = maxf(P.invuln, 1.0)
 	panel.visible = edit and not Game.paused and P != null
+	if car_lot != null:
+		car_lot.tick(clock, dt)
 	_update_ghost()
 	_update_sel_mark()
 	var txt := ""
@@ -1077,6 +1143,8 @@ func tick(dt: float) -> void:
 
 
 func on_exit() -> void:
+	if car_lot != null:
+		car_lot.detach()
 	Inp.orbit_btn = 0
 	Inp.capture_blocked = false
 	if saved_cam != null:
@@ -1304,6 +1372,8 @@ func _items() -> Array:
 			return DevProps.VENDORS
 		"enemy":
 			return ENEMIES
+		"city":
+			return _city_items()
 		"weapon":
 			var out: Array = []
 			for w: Variant in Weapons.WEAPONS:
@@ -1360,6 +1430,8 @@ func _render_panel() -> void:
 	for i in range(pg * PAGE_SIZE, mini(items.size(), pg * PAGE_SIZE + PAGE_SIZE)):
 		var d: Dictionary = items[i]
 		pal.add_child(_btn(String(d.name) + "\n" + String(d.get("note", "")).left(46), func() -> void: _pick(d.id), brush.cat == tab and brush.id == d.id, true))
+	if tab == "city":
+		pal.add_child(_btn("CLEAR CITY\nremoves every car and tree placed from this tab", clear_city, false, true))
 	if pages > 1:
 		var pr := _row()
 		var bp := _btn("< PREV", func() -> void:

@@ -7,7 +7,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const JS = path.resolve(PROJECT, '../progalpha-20261016T082732Z-1-001/progalpha');
+const JS = (await import('../js_root.mjs')).JS_ROOT;
 const require = createRequire(path.join(JS, 'tests/render-fx-tex.cjs'));
 const fsrt = 'C:/Users/12147/AppData/Local/OpenAI/Codex/runtimes';
 const tries = [process.env.PROG_PLAYWRIGHT, 'C:/Users/12147/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright', 'playwright'];

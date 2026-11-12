@@ -110,6 +110,7 @@ class Seat:
 	var sw := NAN                        # getting in / out the controller spreads the size change over the whole walk and sit
 	var duck := 0.0
 	var hands := 1.0                     # the hands leave the wheel to get out, find it once in
+	var recline := 0.0                   # a low sports seat (rad): the body tips back about the hips (knees come up, shins go forward), the head comes forward to look ahead
 
 
 var B: Builds.Build
@@ -1867,6 +1868,11 @@ func _seat_pose(S: Seat, w: float) -> void:
 	_seat_set(HAND_L, 0.0, 0.0, 0.0, w)
 	_seat_set(HAND_R, 0.0, 0.0, 0.0, w)
 	py -= py * w
+	if S.recline != 0.0:              # reclined: the neck and head take the tip back out, so he still looks down the road, and the knees open a little
+		_add(NECK, 0.45 * S.recline, 0.0, 0.0, w)
+		_add(HEAD, 0.55 * S.recline, 0.0, 0.0, w)
+		_add(SHIN_L, -0.5 * S.recline, 0.0, 0.0, w)
+		_add(SHIN_R, -0.5 * S.recline, 0.0, 0.0, w)
 	if S.duck != 0.0:                 # ducking under the roof line
 		_add(SPINE1, 0.32, 0.0, 0.0, S.duck * w)
 		_add(SPINE2, 0.18, 0.0, 0.0, S.duck * w)
@@ -1875,10 +1881,11 @@ func _seat_pose(S: Seat, w: float) -> void:
 
 func _seat_place(S: Seat, w: float, rx: float, ry: float, rz: float) -> void:
 	var sc := B.scale * S.scale
-	var off := S.quat * (pelvis_local * sc)
+	var q := S.quat * Quaternion(Vector3.RIGHT, -S.recline) if S.recline != 0.0 else S.quat      # (tipped back about the hips: the pelvis stays on the seat point)
+	var off := q * (pelvis_local * sc)
 	var a := actor
 	a.position = Vector3(lerpf(a.position.x, S.x - off.x, w), lerpf(a.position.y, S.y - off.y, w), lerpf(a.position.z, S.z - off.z, w))
-	a.quaternion = q_yxz(rx, ry, rz).slerp(S.quat, w)
+	a.quaternion = q_yxz(rx, ry, rz).slerp(q, w)
 	a.scale = Vector3.ONE * lerpf(B.scale, sc, S.sw if not is_nan(S.sw) else w)     # (getting in / out the controller spreads the size change over the whole walk and sit: S.sw)
 	_seat_scaled = true
 

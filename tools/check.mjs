@@ -23,7 +23,7 @@ function walk(dir, out = []) {
 }
 // ---- coverage (--coverage): what the three.js game has that the port does not yet. A report, not a pass or fail: names can move, so a miss is a thing to look at, and a hit does not prove it works. ----
 if (process.argv.includes('--coverage')) {
-  const JS = path.resolve(ROOT, '../progalpha-20261016T082732Z-1-001/progalpha');
+  const JS = (await import('./js_root.mjs')).JS_ROOT;
   const SKIP_JS = /^(tests|devtools|blender|assets|node_modules|release|levels\/bloodgulch)(\/|$)/;      // tools, or left out by the user's decision (PORT_STATUS.md)
   const NOISE = new Set(['constructor', 'if', 'for', 'while', 'switch', 'catch', 'function', 'return', 'main', 'init', 'update', 'dispose']);
   const snake = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/([A-Z])([A-Z][a-z])/g, '$1_$2').toLowerCase().replace(/^_+|_+$/g, '');
@@ -113,6 +113,44 @@ for (const f of files) {
 const game = fs.readFileSync(path.join(ROOT, 'core/game.gd'), 'utf8');
 for (const m of game.matchAll(/"res:\/\/(levels\/[^"]+\.gd)"/g)) if (!fs.existsSync(path.join(ROOT, m[1]))) fail(`Game.LEVELS points at missing ${m[1]}`);
 
+// ---- FORGE: every level's edits.json (made in the in-game editor, forge/) reads, everything it places is still in the palette, and every level piece it edits is still in the export ----
+{
+  const props = fs.readFileSync(path.join(ROOT, 'levels/dev/dev_props.gd'), 'utf8');
+  const known = (type, id) => {
+    if (type === 'shape' || type === 'prop') return props.includes(`"id": "${id}"`);
+    if (type === 'model') return fs.existsSync(path.join(ROOT, `assets/third-party/polyfork/${id}.glb`));
+    return false;
+  };
+  const lvDir = path.join(ROOT, 'assets/levels');
+  for (const d of fs.existsSync(lvDir) ? fs.readdirSync(lvDir) : []) {
+    const f = path.join(lvDir, d, 'edits.json');
+    if (!fs.existsSync(f)) continue;
+    let data;
+    try { data = JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { fail(`assets/levels/${d}/edits.json: not JSON (${e.message})`); continue; }
+    if (data.v !== 1 || !Array.isArray(data.objects)) { fail(`assets/levels/${d}/edits.json: not a version 1 edits file`); continue; }
+    const seen = new Set();
+    // an edit of the original level names a piece of pieces.json (an instance: its template in level.json); a copy is made from one
+    let pieceIds = null, tpls = null;
+    const pieceKnown = (id) => {
+      if (!pieceIds) {
+        const pf = path.join(lvDir, d, 'pieces.json'), lf = path.join(lvDir, d, 'level.json');
+        pieceIds = new Set(fs.existsSync(pf) ? JSON.parse(fs.readFileSync(pf, 'utf8')).objects.map((o) => o.id) : []);
+        tpls = new Set(fs.existsSync(lf) ? (JSON.parse(fs.readFileSync(lf, 'utf8')).instances || []).map((e) => e.tpl) : []);
+      }
+      if (pieceIds.has(id)) return true;
+      const m = /^inst:(.+)#\d+#\d+$/.exec(id);
+      return !!m && tpls.has(m[1]);
+    };
+    for (const o of data.objects) {
+      if (!o.uid || seen.has(o.uid)) fail(`assets/levels/${d}/edits.json: missing or repeated uid ${o.uid}`);
+      seen.add(o.uid);
+      if (['piece', 'inst', 'copy'].includes(o.type)) { if (!pieceKnown(o.id)) fail(`assets/levels/${d}/edits.json: ${o.uid} edits level piece ${o.id}, which the level's export (pieces.json) no longer has: re-export, or remove the edit`); }
+      else if (!known(o.type, o.id)) fail(`assets/levels/${d}/edits.json: ${o.uid} places ${o.type}/${o.id}, which is not in the FORGE palette`);
+      for (const k of ['pos', 'rot', 'size']) if (!Array.isArray(o[k]) || o[k].length !== 3 || o[k].some((v) => typeof v !== 'number')) fail(`assets/levels/${d}/edits.json: ${o.uid}.${k} is not [x, y, z]`);
+    }
+  }
+}
+
 // ---- every sound in audio/sfx_bank.gd has its rendered takes on disk ----
 {
   const bankFile = path.join(ROOT, 'audio/sfx_bank.gd');
@@ -170,7 +208,12 @@ for (const m of game.matchAll(/"res:\/\/(levels\/[^"]+\.gd)"/g)) if (!fs.existsS
 if (!quick) {
   const r = spawnSync(GODOT, ['--headless', '--path', ROOT, '--quit-after', '120'], { encoding: 'utf8', maxBuffer: 1 << 28, timeout: 300000 });
   const out = clean((r.stdout || '') + (r.stderr || ''));
-  const errs = out.split('\n').filter((l) => /SCRIPT ERROR|^ERROR:|Parse Error|Compile Error/i.test(l) && !/headless/i.test(l));
+  const all = out.split('\n').filter((l) => /SCRIPT ERROR|^ERROR:|Parse Error|Compile Error/i.test(l) && !/headless/i.test(l));
+  // KNOWN, TEMPORARY EXCEPTION (user, 2026-11-08): the headless quit leaves engine objects allocated and Godot reports them at shutdown ("RID allocations ... were leaked at exit", "resources still in use at exit", "Pages in use exist at exit"). Present before the BUG-103..110 fixes, shows only at exit, not a gameplay problem. Still printed as a note so it is not forgotten; remove this filter once the cause is found and freed.
+  const EXIT_LEAK = /RID allocations of type .* were leaked at exit|resources still in use at exit|Pages in use exist at exit/;
+  const errs = all.filter((l) => !EXIT_LEAK.test(l));
+  const leaks = all.length - errs.length;
+  if (leaks > 0) console.log(`note: ${leaks} known exit-time resource leak line(s) ignored at boot (see the exception in tools/check.mjs)`);
   for (const l of errs.slice(0, 40)) fail('boot: ' + l.trim());
 }
 

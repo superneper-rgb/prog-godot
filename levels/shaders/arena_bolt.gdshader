@@ -1,4 +1,4 @@
-// FOINT ARENA's edge lightning (JS levels/maktar/lightning.js + the morph targets in arena.js): one of four jagged shapes picked per flash, from the same noise; the JS draw range that grows the bolt becomes a reveal along the arc.
+// FOINT DOME's edge lightning (JS lightning.js + the morph targets in arena.js): one of four jagged shapes picked per flash, from the same noise; the JS draw range that grows the bolt becomes a reveal along the arc.
 shader_type spatial;
 render_mode blend_mix, unshaded, depth_draw_never, cull_disabled, shadows_disabled;
 

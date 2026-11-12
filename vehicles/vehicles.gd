@@ -90,7 +90,7 @@ class VModel:
 	var axle_r := -1.4
 	var track := 0.85
 	var height := 1.4
-	var seat: Variant = null      # {x, y, z, scale, roof, wheel: {x, y, z, tilt, r}}
+	var seat: Variant = null      # {x, y, z, scale, roof, recline, wheel: {x, y, z, tilt, r}} (roof: the inside of the roof / canopy over the head; recline: a low sports seat, rad)
 	var cb: Variant = null        # {hw, hl, ox}: the footprint of everything you can see
 	var door := Callable()
 	var door_info: Variant = null
@@ -1764,7 +1764,7 @@ func _seat_scale(v: Veh, s: Dictionary) -> float:
 	if sit_h == 0.0:
 		return s.scale
 	var room: float = float(s.get("roof", v.model.height)) - 0.05 - float(s.y)
-	return clampf(room / sit_h, s.scale, 1.0)
+	return clampf(room / (sit_h * cos(float(s.get("recline", 0.0)))), s.scale, 1.0)      # (a reclined seat sits him lower: the head comes down by the tip back)
 
 
 func _pose_seat(v: Veh) -> void:
@@ -1783,6 +1783,7 @@ func _pose_seat(v: Veh) -> void:
 	seat_.z = w.z
 	seat_.quat = cw.basis.get_rotation_quaternion()
 	seat_.scale = _seat_scale(v, s)
+	seat_.recline = float(s.get("recline", 0.0))
 	seat_.steer = 0.0 if T != null else v.steer
 	if T != null:
 		seat_.quat = seat_.quat * Quaternion(Vector3.UP, T.yaw_off)

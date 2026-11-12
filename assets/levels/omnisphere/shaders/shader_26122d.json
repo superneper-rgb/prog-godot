@@ -6,7 +6,7 @@
  "uniforms": {
   "uMap": {
    "type": "t",
-   "file": "levels/_tex/757741b4aa7e8577_64x64.webp",
+   "file": "levels/_tex/95b404f7cd78aa07_64x64.webp",
    "name": "",
    "srgb": true
   },
@@ -39,7 +39,7 @@
   {
    "uMap": {
     "type": "t",
-    "file": "levels/_tex/757741b4aa7e8577_64x64.webp",
+    "file": "levels/_tex/95b404f7cd78aa07_64x64.webp",
     "name": "",
     "srgb": true
    },
@@ -103,7 +103,7 @@
   {
    "uMap": {
     "type": "t",
-    "file": "levels/_tex/e7d52dfbd650b089_64x64.webp",
+    "file": "levels/_tex/6c85812b471983be_64x64.webp",
     "name": "",
     "srgb": true
    },
@@ -134,9 +134,9 @@
   }
  ],
  "variant_keys": [
-  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/757741b4aa7e8577_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}",
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/95b404f7cd78aa07_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}",
   "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/5184e9a87a4e5dd6_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}",
-  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/e7d52dfbd650b089_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}"
+  "{\"uMap\":{\"type\":\"t\",\"file\":\"levels/_tex/6c85812b471983be_64x64.webp\",\"name\":\"\",\"srgb\":true},\"uScale\":{\"type\":\"f\",\"value\":449.35546}}"
  ],
  "defines": {},
  "transparent": true,

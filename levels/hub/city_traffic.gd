@@ -2,7 +2,7 @@ class_name CityTraffic
 extends RefCounted
 ## FOINT CITY traffic (JS levels/hub/city-traffic.js createTraffic): the cars drive the lane graph of city_plan.gd. Drivers keep to the right, obey the signals (stop on red, stop on yellow when they can), slow into turns, yield to oncoming traffic before
 ## turning left, keep their distance, stop for the player and for pedestrians in front of them (and lean on the horn when you stand there), the bus runs a loop around the dome and pulls in at its four stops, delivery trucks back down Dock Road and unload.
-## The models, per-car colours and parked cars come from the export (one MultiMesh per part and type, node_named "Cars-sedan" and so on), the state of each car as it was built from life.json. A car's lamps are a draw per type sharing the car's own transform (shaders/car_lamps): JS: one Points cloud rewritten per lamp in script.
+## The per-car colours, the places and the parked cars come from the export (one MultiMesh per part and type, node_named "Cars-sedan" and so on), the state of each car as it was built from life.json. What a car looks like does not any more (2026-11-10): city_cars.gd puts FOINT CITY's own fleet into those MultiMeshes and says where its lamps sit. A car's lamps are a draw per type sharing the car's own transform (shaders/car_lamps): JS: one Points cloud rewritten per lamp in script.
 ## Not here: taking a car over (vehicles, city-driving.js): car.ctl keeps the JS's branches so that plugs in. Honks go nowhere yet (city-sound.js).
 
 const SAFE := 2.4
@@ -104,10 +104,12 @@ var _px := PackedFloat32Array()        # where every car is, for the one loop th
 var _pz := PackedFloat32Array()
 var _what: Car = null
 var _material_keep: Array = []
+var kit: CityCars                      # what the cars look like (city_cars.gd)
 
 
-func _init(level: ExportedLevel, p: CityPlan, J: Dictionary) -> void:
+func _init(level: ExportedLevel, p: CityPlan, J: Dictionary, p_kit: CityCars) -> void:
 	plan = p
+	kit = p_kit
 	GY = J["GY"]
 	RY = J["RY"]
 	world = level.world
@@ -121,12 +123,14 @@ func _init(level: ExportedLevel, p: CityPlan, J: Dictionary) -> void:
 		t.cb_hx = d["cb"]["hx"]
 		t.cb_ox = d["cb"]["ox"]
 		t.cb_hz = d["cb"]["hz"]
-		t.seat = d["seat"]
+		t.seat = CityCars.seat(t.kind, d["seat"])
 		for nm: String in ["Cars-", "CarsTrim-", "CarsGlass-", "CarsNeon-", "CarsUnderglow-"]:
 			for o: Node in level.node_named(nm + k):
 				if o is MultiMeshInstance3D:
 					var mi := o as MultiMeshInstance3D
 					mi.visible = true
+					if not kit.dress(mi, nm, t.kind):      # (the old neon strip: the new car's lights are a surface of its trim)
+						continue
 					mi.multimesh.custom_aabb = AABB(Vector3(-4000, -100, -4000), Vector3(8000, 300, 8000))      # (JS: frustumCulled off. One box: nothing to recompute when a car moves)
 					t.rids.append(mi.multimesh.get_rid())
 		types[t.kind] = t
@@ -237,7 +241,7 @@ func _build_lamps(level: ExportedLevel, J: Dictionary) -> void:
 				t.lamp_cars.append(c)
 		if t.lamp_cars.is_empty():
 			continue
-		var d: Dictionary = J["types"][String(k)]["lamps"]
+		var d: Dictionary = CityCars.lamps(k, J["types"][String(k)]["lamps"])
 		var lamps: Array = []      # [position, colour, channel]
 		for p: Array in d["head"]:
 			lamps.append([p, Color(1, 0.92, 0.75), 0.0])

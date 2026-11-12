@@ -6,11 +6,11 @@
  "uniforms": {
   "uTime": {
    "type": "f",
-   "value": 17.6028
+   "value": 18.5776
   },
   "uBeat": {
    "type": "f",
-   "value": 0.298858
+   "value": 0.033404
   },
   "uSky": {
    "type": "c",
@@ -37,11 +37,11 @@
   {
    "uTime": {
     "type": "f",
-    "value": 17.6028
+    "value": 18.5776
    },
    "uBeat": {
     "type": "f",
-    "value": 0.298858
+    "value": 0.033404
    },
    "uSky": {
     "type": "c",
@@ -66,7 +66,7 @@
   }
  ],
  "variant_keys": [
-  "{\"uBeat\":{\"type\":\"f\",\"value\":0.298858},\"uSky\":{\"type\":\"c\",\"value\":[0.7454,0.35153,0.39157]},\"uBg\":{\"type\":\"c\",\"value\":[0.00605,0.00121,0.00304]},\"uStrength\":{\"type\":\"f\",\"value\":0.5}}"
+  "{\"uBeat\":{\"type\":\"f\",\"value\":0.033404},\"uSky\":{\"type\":\"c\",\"value\":[0.7454,0.35153,0.39157]},\"uBg\":{\"type\":\"c\",\"value\":[0.00605,0.00121,0.00304]},\"uStrength\":{\"type\":\"f\",\"value\":0.5}}"
  ],
  "defines": {},
  "transparent": false,

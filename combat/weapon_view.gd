@@ -3,7 +3,7 @@ extends RefCounted
 ## The gun held in the hand (JS class WeaponView): one model per weapon loaded from res://assets/weapons/<id>.glb (tools/export/export.mjs), moving parts found by node name;
 ## muzzle flash, firing kick springs, recoil cycle, the reload's hand path and part motion, each gun's own little animations. The animator reads k / tk / bp / br / reach / open / hand_out
 ## and writes info.pouch; FX calls flash / fire / dry. Local axes of a model: +Z = muzzle direction, +Y up, +X = character's left.
-## A gun without a GLB draws placeholder boxes and warns once. Parts every model needs are listed in PORT_STATUS.md.
+## A gun without a GLB draws placeholder boxes and warns once. Parts every model needs are listed in docs/measurements.md.
 
 const M_NONE := 0
 const M_HOLD := 1   # a contact: grab, seat, grip. The hand comes to rest.

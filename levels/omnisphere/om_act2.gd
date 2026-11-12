@@ -234,6 +234,7 @@ func _init(p_lv: ExportedLevel, p_bo: Blockout, p_sec: OmSecurity, p_sets: OmSet
 	# ---- containment
 	door_s = sec.blast_door(J.x, float(J.z) + 46.4, F, 3.6, 4.0, "x")
 	doors_w = [sec.blast_door(float(J.x) + 46.4, J.z, F, 3.6, 4.0, "z", {"auto": false}), sec.blast_door(float(J.x) - 46.4, J.z, F, 3.6, 4.0, "z", {"auto": false}), sec.blast_door(J.x, float(J.z) - 46.4, F, 3.6, 4.0, "x", {"auto": false})]
+	_seal_frames([door_s] + doors_w)
 	for i: int in [17, 18, 19]:
 		wall_s[i] = sol.get("wall-%d" % i, [])
 	west_in = VhKit.one(lv, "om-west-in")
@@ -273,6 +274,28 @@ func _init(p_lv: ExportedLevel, p_bo: Blockout, p_sec: OmSecurity, p_sets: OmSet
 			s.beacon.set_on(false)
 			s.T = OmProp.make(9600 + seals.size(), 0.0, 0.0, 0.0, .75, 1.5, 70.0)
 			seals.append(s)
+
+
+## New (user, 2026-11-10): the drum's door holes are 6 m wide and their frames 5 m, set back 2-3 m into the wall. The drum's jambs end before the frame does, so a
+## 0.3 m slot ran up each side of every frame and you saw into (or out of) the drum through it at an angle. One post per side fills it, in the drum wall's own
+## material, parented to the door so it goes with the door (the breach destroys the west one).
+func _seal_frames(drum_doors: Array) -> void:
+	var mat: Material = null
+	for n: Node3D in lv.node_named("omnisphere landmarks"):
+		for mi in VhKit.meshes(n):
+			mat = mi.get_active_material(0)
+	var post := BoxMesh.new()
+	post.size = Vector3(0.42, 4.7, 1.6)      # across the slot, the frame's height, the frame's depth plus a little
+	for d: OmSecurity.Door in drum_doors:
+		var out := Vector3(d.x - float(J.x), 0.0, d.z - float(J.z)).normalized()      # from the drum's centre out through this door
+		var side := Vector3(out.z, 0.0, -out.x)
+		var centre := Vector3(J.x, d.y, J.z) + out * 45.5      # the frame sits 0.9 m inside the door line (46.4)
+		for s: float in [-1.0, 1.0]:
+			var m := MeshInstance3D.new()
+			m.mesh = post
+			m.material_override = mat
+			d.g.add_child(m)
+			m.global_transform = Transform3D(Basis.looking_at(out), centre + side * s * 2.65 + Vector3.UP * 2.35)
 
 
 ## Juniper says one of juniper-lines.js (voice + the shared subtitle strip)

@@ -12,7 +12,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 const PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const JS = path.resolve(PROJECT, '../progalpha-20261016T082732Z-1-001/progalpha');
+const JS = (await import('../js_root.mjs')).JS_ROOT;
 const OUT = path.join(PROJECT, 'assets/sfx/synth');
 const BANK = path.join(PROJECT, 'audio/sfx_bank.gd');
 const LOG = path.join(process.env.RENDER_LOG_DIR || 'F:/prog-godot-cache/tmp/fx', 'render-sfx.json');

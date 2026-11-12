@@ -6,7 +6,7 @@
  "uniforms": {
   "uTime": {
    "type": "f",
-   "value": 87.7041
+   "value": 92.2884
   },
   "uFlash": {
    "type": "f",
@@ -15,8 +15,8 @@
   "uFlashDir": {
    "type": "v",
    "value": [
-    0.68878,
-    0.72497
+    -0.36439,
+    -0.93125
    ]
   },
   "uFog": {
@@ -32,7 +32,7 @@
   {
    "uTime": {
     "type": "f",
-    "value": 87.7041
+    "value": 92.2884
    },
    "uFlash": {
     "type": "f",
@@ -41,8 +41,8 @@
    "uFlashDir": {
     "type": "v",
     "value": [
-     0.68878,
-     0.72497
+     -0.36439,
+     -0.93125
     ]
    },
    "uFog": {
@@ -56,7 +56,7 @@
   }
  ],
  "variant_keys": [
-  "{\"uFlash\":{\"type\":\"f\",\"value\":0},\"uFlashDir\":{\"type\":\"v\",\"value\":[0.68878,0.72497]},\"uFog\":{\"type\":\"c\",\"value\":[0.01764,0.00605,0.00439]}}"
+  "{\"uFlash\":{\"type\":\"f\",\"value\":0},\"uFlashDir\":{\"type\":\"v\",\"value\":[-0.36439,-0.93125]},\"uFog\":{\"type\":\"c\",\"value\":[0.01764,0.00605,0.00439]}}"
  ],
  "defines": {},
  "transparent": false,

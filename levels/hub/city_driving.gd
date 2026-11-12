@@ -50,7 +50,7 @@ func _init(p_traffic: CityTraffic, p_drivers: CityDrivers, p_plan: CityPlan, p_w
 	for k: StringName in HANDLING:
 		var cm: Dictionary = J["car_models"][String(k)]
 		_specs[String(k)] = Vehicles.register_type(String(k), {"label": cm.name, "handling": HANDLING[k], "cam": CAM[k], "engine": ENGINE[k], "nitro": false, "tail_pluck": false,
-			"build": func(o: Dictionary = {}) -> Vehicles.VModel: return make_model(k, int(o.get("color", cm.palette0)), int(o.get("glow", 0)))})
+			"build": func(o: Dictionary = {}) -> Vehicles.VModel: return make_model(k, int(o.get("color", cm.palette0)), int(o.get("glow", 0)), int(o.get("seed", 0)))})
 	var V: Vehicles = Game.vehicles
 	_source = {"owner": OWNER, "nearest": nearest, "tick": tick, "knockable": knockable}
 	V.sources.append(_source)
@@ -81,33 +81,17 @@ func release_all() -> void:
 	detach()      # (now, not at the deferred free: a hub entered from the hub (RETURN TO MENU) has registered its own types by then, and the old erase took them away: no car could be driven again)
 
 
-## a drivable model of a car type for the vehicle controller (+Z forward): shared geometry and trim / glass materials, its own paint material and lamps (JS traffic.kit.makeModel; the parts are exported per type, tools/export/city_car.expr.js)
-func make_model(kind: StringName, colour: int, glow: int = 0) -> Vehicles.VModel:
-	var cm: Dictionary = J["car_models"][String(kind)]
-	var ps: PackedScene = load("res://assets/objects/car_%s.glb" % String(kind))
-	var scene: Node3D = ps.instantiate()
-	var parts := {}
-	var stack: Array[Node] = [scene]
-	while not stack.is_empty():
-		var c: Node = stack.pop_back()
-		stack.append_array(c.get_children())
-		var nm := String(c.name)      # (the exporter names a node n<idx>_<js name>)
-		if nm.begins_with("n") and nm.find("_") > 1 and nm.substr(1, nm.find("_") - 1).is_valid_int():
-			nm = nm.substr(nm.find("_") + 1)
-		if not parts.has(nm):
-			parts[nm] = c
+## a drivable model of a car type for the vehicle controller (+Z forward): FOINT CITY's own fleet (city_cars.gd; the JS's exported car_<kind>.glb models and their grime are no longer used), in the colour it had in the street, with its lamps, its driver's door (the bus and the alien craft have none: the controller plays getting in without it) and its steering wheel.
+func make_model(kind: StringName, colour: int, glow: int = 0, seed: int = 0) -> Vehicles.VModel:
+	return build_model(traffic.kit, J["car_models"][String(kind)], kind, colour, glow, seed)
+
+
+## the same from a kit and the kind's entry of life.json's car_models alone: the city's cars outside the city (levels/hub/city_car_lot.gd)
+static func build_model(kit: CityCars, cm: Dictionary, kind: StringName, colour: int, glow: int = 0, seed: int = 0) -> Vehicles.VModel:
+	var built := kit.model(kind, Color.hex((colour << 8) | 0xff), seed)      # (sRGB bytes, as the street's MultiMesh colour: the car does not change colour the moment it is taken)
 	var m := Vehicles.VModel.new()
-	m.root = scene
-	m.chassis = parts.get("C_chassis")
-	# JS paintOf: the shared paint with its own colour. The export's material is that paint (vertex colours, shine, grime), so the car does not change colour when it stops being a street car
-	var paint: StandardMaterial3D = null
-	for nm: String in ["C_paint", "C_door_paint"]:
-		if parts.has(nm):
-			for mi: MeshInstance3D in _meshes(parts[nm]):
-				if paint == null:
-					paint = (mi.get_active_material(0) as Material).duplicate() as StandardMaterial3D
-					paint.albedo_color = Color.hex((colour << 8) | 0xff).linear_to_srgb()      # (the street's MultiMesh takes the bytes as its linear colour: the same number here, or the car changes colour the moment it is taken)
-				mi.material_override = paint
+	m.root = built.root
+	m.chassis = built.chassis
 	m.wheel_r = cm.wheel_r
 	m.hl = cm.hl
 	m.hw = cm.hw
@@ -117,30 +101,32 @@ func make_model(kind: StringName, colour: int, glow: int = 0) -> Vehicles.VModel
 	m.axle_r = cm.axle_r
 	m.track = cm.track
 	m.height = cm.height
-	m.seat = cm.seat
-	var wl: Array = cm.wheels
-	for i in wl.size():
+	m.seat = CityCars.seat(kind, cm.seat)
+	for bw in built.wheels:
 		var w := Vehicles.VWheel.new()
-		w.pivot = parts.get("C_pivot%d" % i)
-		w.spin = parts.get("C_spin%d" % i)
-		w.front = wl[i].front
+		w.pivot = bw.pivot
+		w.spin = bw.spin
+		w.front = bw.front
 		m.wheels.append(w)
 	# the driver's door: hinged at its front edge, opens outward (door(0..1))
-	var door_p: Node3D = parts.get("C_door")
-	if door_p != null and cm.door_info != null:
-		m.door_info = cm.door_info
-		var open_a: float = cm.door_info.open
+	var door_p := built.door
+	var di: Variant = CityCars.door(kind)
+	if door_p != null and di != null:
+		m.door_info = di
+		var open_a: float = di.open
 		m.door = func(k: float) -> void: door_p.rotation.y = -k * open_a
-	var steer_p: Node3D = parts.get("C_steer")
+	var steer_p := built.steer
 	if steer_p != null:
-		var sw: Dictionary = cm.seat.wheel
-		var n := Vector3(-cos(float(sw.tilt)), sin(float(sw.tilt)), 0.0).normalized()
+		var tilt: float = cm.seat.wheel.tilt
+		var n := Vector3(0.0, sin(tilt), -cos(tilt)).normalized()      # the column: back and up
 		m.steer_wheel = func(steer: float) -> void: steer_p.quaternion = Quaternion(n, steer * 1.9)
-	# lamps (head, tail) and the headlight pool on the road ahead
-	var fix: Node3D = parts.get("C_fix")
+	var fix := Node3D.new()      # the street's car frame (x forward) on the chassis: the lamps and the underglow are placed in it
+	fix.name = "Fix"
+	fix.rotation.y = -PI / 2.0
+	m.chassis.add_child(fix)
 	var heads: Array[MeshInstance3D] = []
 	var tails: Array[MeshInstance3D] = []
-	var lamps: Dictionary = cm.lamps
+	var lamps: Dictionary = CityCars.lamps(kind, cm.lamps)
 	if glow != 0 and not String(kind).begins_with("saucer"):      # (JS: !HOVER[kind]) the underglow it had in the street
 		_street_part(fix, "CarsUnderglow-" + String(kind), func(b: StandardMaterial3D) -> void:
 			b.vertex_color_use_as_albedo = false
@@ -162,15 +148,17 @@ ALPHA = 1.0;"}))      # (the copy needs the additive look shader_ports gives the
 	return m
 
 
-func _lamp(parent_: Node3D, q: Array, hex: int) -> MeshInstance3D:
+static func _lamp(parent_: Node3D, q: Array, hex: int) -> MeshInstance3D:
 	var s := MsKit.sprite8(parent_, hex, 1.0, LAMP_SIZE)
 	s.position = Vector3(q[0], q[1], q[2])
 	return s
 
 
 ## one piece of the street's car drawing as a mesh of its own (the quad and material of its MultiMesh); tune gets a copy of the material
-func _street_part(under: Node3D, nm: String, tune: Callable) -> MeshInstance3D:
-	for o: Node in Game.level.node_named(nm):
+static func _street_part(under: Node3D, nm: String, tune: Callable) -> MeshInstance3D:
+	if not (Game.level is ExportedLevel):
+		return null
+	for o: Node in (Game.level as ExportedLevel).node_named(nm):
 		if o is MultiMeshInstance3D and (o as MultiMeshInstance3D).multimesh.mesh != null:
 			var mi := MeshInstance3D.new()
 			mi.mesh = (o as MultiMeshInstance3D).multimesh.mesh
@@ -185,15 +173,8 @@ func _street_part(under: Node3D, nm: String, tune: Callable) -> MeshInstance3D:
 	return null
 
 
-static func _meshes(n: Node) -> Array[MeshInstance3D]:
-	var out: Array[MeshInstance3D] = []
-	var stack: Array[Node] = [n]
-	while not stack.is_empty():
-		var c: Node = stack.pop_back()
-		stack.append_array(c.get_children())
-		if c is MeshInstance3D:
-			out.append(c)
-	return out
+static func _meshes(n: Node) -> Array[MeshInstance3D]:      # (hub_office.gd uses this too)
+	return CityCars._meshes(n)
 
 
 func _on_deck(x: float, z: float) -> bool:
@@ -279,7 +260,7 @@ func make_vehicle(e: CityTraffic.Car) -> Vehicles.Veh:
 	# Resolve the height HERE, with a ceiling just above the car as it stands: a car handed over under a Deck viaduct would otherwise be placed on the deck 15 m up instead of the street.
 	var gy := world.ground_height(e.x, e.z, 0.05, e.y + 1.2)
 	var y0 := gy if is_finite(gy) else e.y
-	var v: Vehicles.Veh = Game.vehicles.spawn(String(e.kind), e.x, e.z, yaw, y0, {"owner": OWNER, "parent": parent, "world": world, "surface": surface, "build": {"color": e.color, "glow": e.glow}, "solid": true, "data": {"entry": e, "kind": e.kind},
+	var v: Vehicles.Veh = Game.vehicles.spawn(String(e.kind), e.x, e.z, yaw, y0, {"owner": OWNER, "parent": parent, "world": world, "surface": surface, "build": {"color": e.color, "glow": e.glow, "seed": e.slot}, "solid": true, "data": {"entry": e, "kind": e.kind},
 		"on_enter": func(veh: Vehicles.Veh) -> void:
 			driven = veh
 			traffic.player_driving = true

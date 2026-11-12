@@ -16,6 +16,8 @@ var timing: Dictionary = {}              # ms per build step
 var dev_shot: View.Shot = null           # tools/export/level_probe.gd: the view of a reference picture of the three.js build
 var shader_ports: ShaderPorts = null     # the hand-ported shaders on this level (levels/shader_ports.gd)
 var _nodes: Dictionary = {}              # node name in the GLB -> node
+var solid_at: Array = []                 # colliders.json solids index -> World.Solid (null where _keep_solid left it out); FORGE (forge/forge_pieces.gd) finds a piece's colliders by it
+var inst_nodes: Array = []               # [tpl, MultiMeshInstance3D] per level.json instances entry, in order (FORGE: an instance is tpl + its entry's place among that tpl's + index)
 
 
 ## Something built after the export answers to its JS name too.
@@ -101,8 +103,10 @@ func _build_colliders(dir: String) -> void:
 		fields = FileAccess.get_file_as_bytes(dir + String(c["fields_file"])).to_float32_array()
 	for d: Dictionary in c.get("solids", []):
 		if not _keep_solid(d):
+			solid_at.append(null)
 			continue
 		var s := world.add(_solid_dict(d, fields))
+		solid_at.append(s)
 		if d.has("moves"):
 			moving_solids.append(s)
 	for d: Dictionary in c.get("cam_solids", []):
@@ -193,6 +197,7 @@ func _build_instances(dir: String) -> void:
 	for e: Dictionary in list:
 		var tpl := tpl_root.get_node_or_null(String(e["tpl"])) as MeshInstance3D
 		if tpl == null:
+			inst_nodes.append([String(e["tpl"]), null])
 			continue
 		var count := int(e["count"])
 		var stride := 16 if e["colors"] else 12
@@ -213,6 +218,7 @@ func _build_instances(dir: String) -> void:
 		if pn != "":
 			parent = _nodes.get(StringName(pn), group)
 		parent.add_child(mi)
+		inst_nodes.append([String(e["tpl"]), mi])
 		if String(e.get("name", "")) != "":
 			_name_node(String(e["name"]), mi)
 		i += 1

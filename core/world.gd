@@ -4,12 +4,13 @@ extends RefCounted
 ## pointSolid, rayClear), so the player, camera, AI and level logic port as written; the queries run natively on Jolt instead
 ## of looping over solids in script. A solid is still what it was: an oriented footprint with a vertical span [bottom, top].
 ## Kinds: box, ramp (sloped top rising along local +z from top_low to top), disc (round), field (top is a height function),
-## mesh (trimesh from triangles, for real geometry; new in the Godot port).
+## mesh (trimesh from triangles or convex pieces, for real geometry; new in the Godot port), pipe (a ramp whose cross-section is the crown of a round pipe of radius r; new in the Godot port).
 
 const LAYER_SOLID := 1   # bodies, bullets, AI, ground
 const LAYER_CAM := 2     # the camera boom
 
 const INF_NEG := -INF
+const PIPE_ARC := 12     # chords across a pipe solid's crown
 
 
 class Solid:
@@ -34,6 +35,7 @@ class Solid:
 	var world: World
 	var body: RID
 	var shape: RID
+	var extra_shapes: Array[RID] = []   # the other convex pieces of an add_convex solid
 	var data: Dictionary = {}   # anything else a level attached
 	# last frame's pose (levels/spire/spire_mechs.gd: the carry and the push-out compare)
 	var p_cx := 0.0
@@ -77,6 +79,13 @@ class Solid:
 		else:
 			world._rebuild_shape(self)
 
+	## swap what the solid is made of, keeping its place and span (a ramp that is really the crown of a round pipe: kind "pipe", r its radius)
+	func reshape(nkind: String, nr: float = NAN) -> void:
+		kind = nkind
+		if not is_nan(nr):
+			r = nr
+		world._rebuild_shape(self)
+
 	func set_no_cam(v: bool) -> void:
 		if v == no_cam:
 			return
@@ -91,7 +100,7 @@ class Solid:
 
 	## analytic top under a point, null if outside; for code that needs a specific solid's height (JS Solid.topAt).
 	func top_at(x: float, z: float) -> Variant:
-		if off:
+		if off or kind == "mesh":
 			return null
 		var dx := x - cx
 		var dz := z - cz
@@ -117,6 +126,8 @@ class Solid:
 			return null
 		if kind == "ramp":
 			return top_low + (top - top_low) * ((lz + hz) / (2.0 * hz))
+		if kind == "pipe":
+			return top_low + (top - top_low) * ((lz + hz) / (2.0 * hz)) - (r - sqrt(maxf(0.0, r * r - lx * lx)))
 		return top
 
 
@@ -198,6 +209,9 @@ func _free_solid(s: Solid) -> void:
 		PhysicsServer3D.free_rid(s.body)
 	if s.shape.is_valid():
 		PhysicsServer3D.free_rid(s.shape)
+	for sh: RID in s.extra_shapes:
+		PhysicsServer3D.free_rid(sh)
+	s.extra_shapes.clear()
 	s.body = RID()
 	s.shape = RID()
 
@@ -245,6 +259,28 @@ func add_mesh(tris: PackedVector3Array, tag: String = "mesh", no_cam: bool = fal
 	PhysicsServer3D.shape_set_data(s.shape, {"faces": tris, "backface_collision": false})
 	_make_body(s)
 	PhysicsServer3D.body_add_shape(s.body, s.shape)
+	PhysicsServer3D.body_set_state(s.body, PhysicsServer3D.BODY_STATE_TRANSFORM, Transform3D.IDENTITY)
+	_sync_layers(s)
+	solids.append(s)
+	return s
+
+
+## A solid made of convex pieces in world space (each a point cloud whose hull is the piece): a rock, where a box or disc would end short of the drawn edge or past it. Like add_mesh it answers every query natively; unlike a trimesh it has an inside (point_solid).
+func add_convex(pieces: Array[PackedVector3Array], tag: String = "mesh", no_cam: bool = false) -> Solid:
+	var s := Solid.new()
+	s.world = self
+	s.kind = "mesh"
+	s.tag = tag
+	s.no_cam = no_cam
+	_make_body(s)
+	for pts: PackedVector3Array in pieces:
+		var sh := PhysicsServer3D.convex_polygon_shape_create()
+		PhysicsServer3D.shape_set_data(sh, pts)
+		PhysicsServer3D.body_add_shape(s.body, sh)
+		if not s.shape.is_valid():
+			s.shape = sh
+		else:
+			s.extra_shapes.append(sh)
 	PhysicsServer3D.body_set_state(s.body, PhysicsServer3D.BODY_STATE_TRANSFORM, Transform3D.IDENTITY)
 	_sync_layers(s)
 	solids.append(s)
@@ -310,6 +346,17 @@ func _rebuild_shape(s: Solid) -> void:
 				pts.append(Vector3(-s.hx, lo, -s.hz))
 				pts.append(Vector3(s.hx, lo, -s.hz))
 			PhysicsServer3D.shape_set_data(s.shape, pts)
+		"pipe":
+			# the crown of a round pipe: the ramp's centre line and ends, but the top falls away across the width like the drawn tube (r = its radius)
+			s.shape = PhysicsServer3D.convex_polygon_shape_create()
+			var pp := PackedVector3Array([
+				Vector3(-s.hx, s.bottom, -s.hz), Vector3(s.hx, s.bottom, -s.hz), Vector3(-s.hx, s.bottom, s.hz), Vector3(s.hx, s.bottom, s.hz)])
+			for k in PIPE_ARC + 1:
+				var px := -s.hx + 2.0 * s.hx * k / PIPE_ARC
+				var drop := s.r - sqrt(maxf(0.0, s.r * s.r - px * px))
+				pp.append(Vector3(px, s.top_low - drop, -s.hz))
+				pp.append(Vector3(px, s.top - drop, s.hz))
+			PhysicsServer3D.shape_set_data(s.shape, pp)
 		"disc":
 			if s.holes.is_empty():
 				s.shape = PhysicsServer3D.cylinder_shape_create()
@@ -440,6 +487,19 @@ func ground_pt(x: float, z: float, max_y: float) -> float:
 	return y
 
 
+## the first solid a ray meets: {position, normal, rid} (rid: the solid's body), empty if none within max_d. dir is a unit vector. New in the Godot port: FORGE (forge/) places things against what you point at.
+## exclude: solid bodies to look through.
+func ray_hit(origin: Vector3, dir: Vector3, max_d: float, exclude: Array[RID] = []) -> Dictionary:
+	_ray.from = origin
+	_ray.to = origin + dir * max_d
+	_ray.collision_mask = LAYER_SOLID
+	_ray.exclude = exclude
+	var r := _state.intersect_ray(_ray)
+	if not exclude.is_empty():
+		_ray.exclude = []
+	return r
+
+
 ## support height under a circle (centre + 4 inner points, forgiving at edges)
 func ground_height(x: float, z: float, r: float, max_y: float) -> float:
 	var q := r * 0.55
@@ -511,6 +571,18 @@ func point_solid(x: float, y: float, z: float, cam: bool = false) -> bool:
 	return false
 
 
+## ray_clear's last resort for a camera probe with no room to start as a sphere: a plain ray on the camera's layer
+func _cam_ray(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, max_d: float) -> float:
+	_ray.from = Vector3(ox, oy, oz)
+	_ray.to = Vector3(ox + dx * max_d, oy + dy * max_d, oz + dz * max_d)
+	_ray.collision_mask = LAYER_CAM
+	var r := _state.intersect_ray(_ray)
+	_ray.collision_mask = LAYER_SOLID
+	if r.is_empty():
+		return max_d
+	return Vector3(ox, oy, oz).distance_to(r.position)
+
+
 ## furthest free distance along dir (a unit vector) from origin. rad >= 0.1: a camera probe (fat, sees camera-only blockers,
 ## skips no_cam solids); smaller: bullets and sight lines. `fine` kept for call-compatibility: the answer is always exact here.
 func ray_clear(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float, max_d: float, rad: float, _fine: bool = false) -> float:
@@ -524,18 +596,31 @@ func ray_clear(ox: float, oy: float, oz: float, dx: float, dy: float, dz: float,
 		if r.is_empty():
 			return max_d
 		return Vector3(ox, oy, oz).distance_to(r.position)
-	_shape_q.shape_rid = _sph_shape(rad)
 	_shape_q.collision_mask = mask
 	_shape_q.margin = 0.0
 	_shape_q.transform = Transform3D(Basis.IDENTITY, Vector3(ox, oy, oz))
+	_shape_q.motion = Vector3.ZERO
+	# A sphere cast does not see what the sphere already overlaps where it starts: a probe that began against a wall or under a ceiling went
+	# straight through it, and the camera with it. So the probe is slimmed until it starts clear (it then meets that wall if it is heading into it,
+	# and slides by if it runs along it), down to a plain ray.
+	var r := rad
+	_shape_q.shape_rid = _sph_shape(r)
+	while not _state.intersect_shape(_shape_q, 1).is_empty():
+		r *= 0.5
+		if r < 0.05:
+			return ray_clear(ox, oy, oz, dx, dy, dz, max_d, 0.0) if not cam else _cam_ray(ox, oy, oz, dx, dy, dz, max_d)
+		_shape_q.shape_rid = _sph_shape(r)
 	_shape_q.motion = Vector3(dx, dy, dz) * max_d
 	var f := _state.cast_motion(_shape_q)
 	var safe: float = f[0]
 	if safe > 0.0 or max_d <= 0.13:
 		return safe * max_d
-	# started touching something (the JS probes only tested from 12 cm out): try again from there
+	# started touching something (the JS probes only tested from 12 cm out): try again from there, unless that is inside what it touched
 	var o2 := Vector3(ox + dx * 0.12, oy + dy * 0.12, oz + dz * 0.12)
 	_shape_q.transform = Transform3D(Basis.IDENTITY, o2)
+	_shape_q.motion = Vector3.ZERO
+	if not _state.intersect_shape(_shape_q, 1).is_empty():
+		return 0.0
 	_shape_q.motion = Vector3(dx, dy, dz) * (max_d - 0.12)
 	var f2 := _state.cast_motion(_shape_q)
 	var safe2: float = f2[0]

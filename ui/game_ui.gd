@@ -4,7 +4,7 @@ extends Control
 ## (index.html main.js: start, setPaused, backToMenu, launchLevel, continueGame, playSlot, the part of frame() that reads the menus). Pointer capture: on at play and resume, free on menus.
 
 const VERSION_TEXT := "PROG ALPHA 0.0.5"
-const SANDBOX_LEVELS: Array[String] = ["dev"]    # never CONTINUEd into
+const SANDBOX_LEVELS: Array[String] = ["dev", "jungle-test"]    # never CONTINUEd into
 const PREFS := "user://prefs.cfg"
 
 var hud: Hud
@@ -88,6 +88,9 @@ func _ready() -> void:
 	ConsoleCommands.register_basic(console)
 	Game.menu_cam = _menu_cam
 	Game.freecam = Freecam.new()
+	Game.forge = Forge.new()      # FORGE, the level editor: F8 in a level
+	add_child(Game.forge)
+	Game.menus.append(Game.forge)
 
 
 # ---- preferences (the browser's localStorage: prog.character, prog.costume) ----
@@ -140,9 +143,11 @@ func warm_up() -> void:
 	hud.warm(true)
 	pause.visible = true
 	pause._view.refresh()
+	pause.warm_inventory(true)
 	menu.visible = true
 	await wheel.prerender(4)
 	hud.warm(false)
+	pause.warm_inventory(false)
 	pause.visible = false
 	menu.visible = false
 

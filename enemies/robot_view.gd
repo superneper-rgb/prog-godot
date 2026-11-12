@@ -56,6 +56,7 @@ class Debris:
 	var v := Vector3.ZERO
 	var w := Vector3.ZERO
 	var rest := false
+	var recheck := 0.0      # a piece at rest looks at the ground under it now and then (BUG-109)
 
 
 var T: Robot
@@ -721,7 +722,17 @@ func update(dt: float, now: float, fx: Variant) -> void:
 		deb_batch.data[deb_row * deb_batch.stride] = R.flash
 		for b in deb:
 			if b.rest:
-				continue
+				# BUG-109 (tracker): a piece that came to rest on a moving solid (the OMNISPHERE tram, a lift) stayed there for good and hung in the air once it drove away. The JS clones had the same flaw. Every 0.25 s a resting piece looks at the ground under it and drops again when it is gone. Godot only.
+				b.recheck -= dt
+				if b.recheck > 0.0:
+					continue
+				b.recheck = 0.25
+				var gy0 := maxf(0.0, R.world.ground_height(b.pos.x, b.pos.z, 0.1, b.pos.y + 0.5))
+				if b.pos.y > gy0 + 0.3:
+					b.rest = false
+					b.v = Vector3.ZERO
+				else:
+					continue
 			b.v.y -= 15.0 * dt
 			b.pos += b.v * dt
 			b.rot += b.w * dt

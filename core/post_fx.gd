@@ -13,7 +13,7 @@ extends CompositorEffect
 ##    resolve is in HDR radiance (a line of value 5 on black has no anti-aliased edge left at all), so the first pass resolves the samples itself, tone mapped. Where all samples are
 ##    the same (nearly every pixel) it pays one tone map.
 ##  - Everything is RenderingDevice compute inside one CompositorEffect, so no scene objects, no shader variants and nothing to compile when a look changes: looks are numbers.
-##  - Costs are measured in PORT_STATUS.md. A look with ao 0 / bloom 0 / streak 0 skips those passes, like the JS.
+##  - Costs are measured in docs/measurements.md. A look with ao 0 / bloom 0 / streak 0 skips those passes, like the JS.
 
 const CONTEXT := &"prog_post"
 const LEVELS := 6                # bloom mips: 1/2 .. 1/64 of the screen

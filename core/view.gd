@@ -8,7 +8,7 @@ extends Node3D
 ##    lights are plain nodes under the level; up to 512 in view, and switching one costs nothing.
 ##  - singlePassGlow: Godot draws a double-sided transparent in one pass already.
 ##  - sun-shadow-cache.js: Godot has no static directional shadow cache, and the cascades are redrawn every frame. The JS cache saved ~0.1 ms because its shadow draws were cheap; here the
-##    culling and the depth-only draws are native and threaded, and cascades cost GPU, not script time. Numbers in PORT_STATUS.md.
+##    culling and the depth-only draws are native and threaded, and cascades cost GPU, not script time. Numbers in docs/measurements.md.
 ##  - The sun following the player in texel steps: cascades follow the camera and Godot snaps them to texels itself, so the sun is only a direction. It is the JS's constant one, (30, 50, 20).
 ##  - Materials patched by material-look.js: soft shadows are light_angular_distance on the sun (contact-hardening PCSS); the sky / ground reflection is core/material_look.gd.
 
@@ -124,7 +124,7 @@ func setup(cam: Camera3D) -> void:
 	sun = DirectionalLight3D.new()
 	sun.name = "Sun"
 	sun.shadow_enabled = true
-	# the JS keeps one 72 m box at 3.3 cm a texel round the player. Four cascades over the same 72 m in front of the camera: finer near, no coarser far, and measured no dearer than two (PORT_STATUS.md).
+	# the JS keeps one 72 m box at 3.3 cm a texel round the player. Four cascades over the same 72 m in front of the camera: finer near, no coarser far, and measured no dearer than two (docs/measurements.md).
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.directional_shadow_max_distance = 72.0
 	sun.light_angular_distance = 2.0     # material-look.js's penumbra: grows with the gap to the caster (closest to the JS numbers of 0, 1, 2, 3 degrees)
@@ -435,7 +435,7 @@ func look_command(a: PackedStringArray) -> String:
 ## The end of the JS frame (index.html ~14425): cutscene cameras, level.cine.camera, a level's camera override and the dialogue's, in that game's order. Called last every frame.
 ##  - level.cine: an object with `on`, `camera` (Shot), `play`
 ##  - level.camera_override(rig, player, real_dt) -> Shot or null: a level's own view while it is played normally (VISITING HOURS' tunnel camera). The rig keeps running underneath.
-##  - Game.dialogue: `on`, `camera()` -> Shot. Game.cutscenes[name]: `on`, `camera`. Game.freecam: `on`, `update(dt)`, `camera`. Game.arena_tv: `camera`, `render()`.
+##  - Game.dialogue: `on`, `camera()` -> Shot. Game.cutscenes[name]: `on`, `camera`. Game.freecam: `on`, `update(dt)`, `camera`. Game.forge: `is_open`, `monitor.camera` (it updates as one of Game.menus). Game.arena_tv: `camera`, `render()`.
 ##  - Game.menu_cam: Callable(now_ms) -> Shot while the game has not started. Game.night_vision: `amplify(view, dt)` -> bool, `restore(view)`.
 func apply_camera(real_dt: float) -> void:
 	if _hemi_dirty:
@@ -476,6 +476,8 @@ func apply_camera(real_dt: float) -> void:
 	if G.freecam != null and G.freecam.on and started:     # dev console "freecam": the fly camera owns the view, the game is held still
 		G.freecam.update(real_dt)
 		cam_v = G.freecam.camera
+	if G.forge != null and G.forge.is_open and started:     # FORGE (the level editor): the Monitor camera owns the view while it edits
+		cam_v = G.forge.monitor.camera
 	var nv_amp: bool = G.night_vision != null and started and G.night_vision.amplify(self, real_dt)   # light amplification for this frame's render, undone right after
 	var quiet: bool = dlg_on or cine_on or (level_cine and not lv_cine.play)
 	var fx: Variant = G.fx

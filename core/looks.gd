@@ -56,8 +56,8 @@ const LOOKS := {
 	# Club 9: the fog machine is on. Low purple haze on the floor, everything neon flares a little.
 	"club": {"ao": 0.8, "mist": 0.03, "mist_falloff": 0.55, "mist_color": [0.2, 0.08, 0.28], "bloom": 0.45, "bloom_threshold": 0.74, "bloom_knee": 0.2, "bloom_hot": 0.7, "streak": 0.18, "streak_cut": 0.3, "streak_tint": [0.75, 0.4, 1.0],
 		"saturation": 1.06, "vibrance": 0.2, "shadow_tint": [0.98, 0.95, 1.08], "vignette": 0.36, "vignette_tint": [0.02, 0.0, 0.05], "grain": 0.02},
-	# FOINT ARENA: televised, so it is crisp and punchy; the red screens glow without flooding the floor.
-	"maktar": {"ao": 0.85, "ao_radius": 1.4, "mist": 0.002, "mist_falloff": 0.05, "mist_color": [0.22, 0.05, 0.05], "bloom": 0.5, "bloom_threshold": 0.7, "bloom_knee": 0.22, "bloom_luma": 0.35, "streak": 0.1, "streak_tint": [1.0, 0.25, 0.2],
+	# FOINT DOME: televised, so it is crisp and punchy; the red screens glow without flooding the floor.
+	"foint-dome": {"ao": 0.85, "ao_radius": 1.4, "mist": 0.002, "mist_falloff": 0.05, "mist_color": [0.22, 0.05, 0.05], "bloom": 0.5, "bloom_threshold": 0.7, "bloom_knee": 0.22, "bloom_luma": 0.35, "streak": 0.1, "streak_tint": [1.0, 0.25, 0.2],
 		"scurve": 0.14, "saturation": 1.02, "shadow_tint": [1.0, 0.96, 0.98], "high_tint": [1.03, 1.0, 0.97], "vignette": 0.4, "vignette_tint": [0.03, 0.0, 0.01], "grain": 0.016, "sharpen": 0.3},
 	# The Godmother's mansion: decadent gold hour against violet shadow.
 	"mothership": {"ao": 0.8, "ao_radius": 1.3, "mist": 0.0015, "mist_falloff": 0.04, "mist_color": [0.42, 0.26, 0.4], "mist_glow": [0.14, 0.08, 0.04], "mist_light": [0.5, 0.35, -0.8], "bloom": 0.45, "bloom_threshold": 0.74,

@@ -14,6 +14,9 @@ var barrel: Light3D = null
 var door_light: Light3D = null
 var rain: MeshInstance3D = null
 var rain_mat: ShaderMaterial = null
+var splash: MeshInstance3D = null
+var splash_mat: ShaderMaterial = null
+var cover: RainCover = null    # what the rain lands on
 var has_shop := false       # the hub's street: the rain stops under its roofs
 var S: Dictionary = {}      # JS city.storm: { rain_n, rain_speed, slant, opacity, len }. Storm gusts change slant and opacity through set_rain().
 var flick: Array = []       # { "m": material, "base", "rate", "ph", "gate" }: neon, slow breathing with the odd stutter
@@ -188,29 +191,45 @@ func _build_sprites(sets: Array) -> void:
 		sprite_rids.append(mat.get_rid())
 
 
-## JS CityView._rain: drops wrap in a 40 x 28 x 40 box around the camera. All of it happens in the shader, so nothing runs per frame in script. Between the JS's 0 and 28 m: it never reaches the city's roofs from above, as in the JS.
+## JS CityView._rain: drops wrap in a 40 x 28 x 40 box around the camera. All of it happens in the shader, so nothing runs per frame in script but RainCover's few rays.
+## ENGINE DIFFERENCE (asked for by the user, 2026-11-09): the JS's box was fixed between world heights 0 and 28 m, so the rain ended above the lower city and the bridge down to it, and fell through every roof.
+## Here the box follows the camera, drops stop at the topmost solid (RainCover), streaks have a width (rain.gdshader), there are a few more of the hub's drops than the JS had, and splashes ring on whatever the rain lands on.
 func _build_rain() -> void:
-	var n: int = S.get("rain_n", 1300)
+	var n: int = S.get("rain_n", 1500)      # (JS 1300 one-pixel lines; 2600 until 2026-11-11, the user found it too much with the wider streaks)
 	var v := PackedVector3Array()
 	var uv := PackedVector2Array()
-	v.resize(n * 2)
-	uv.resize(n * 2)
+	var idx := PackedInt32Array()
+	v.resize(n * 4)
+	uv.resize(n * 4)
+	idx.resize(n * 6)
 	var r := RandomNumberGenerator.new()
 	r.seed = 7677
 	for i in n:
 		var b := Vector3(r.randf() * 40.0, r.randf() * 28.0, r.randf() * 40.0)
-		v[i * 2] = b
-		v[i * 2 + 1] = b
-		uv[i * 2] = Vector2(0.0, 0.0)
-		uv[i * 2 + 1] = Vector2(1.0, 0.0)
+		for c in 4:
+			v[i * 4 + c] = b
+		uv[i * 4] = Vector2(0.0, 0.0)
+		uv[i * 4 + 1] = Vector2(1.0, 0.0)
+		uv[i * 4 + 2] = Vector2(1.0, 1.0)
+		uv[i * 4 + 3] = Vector2(0.0, 1.0)
+		var o := i * 6
+		idx[o] = i * 4
+		idx[o + 1] = i * 4 + 1
+		idx[o + 2] = i * 4 + 2
+		idx[o + 3] = i * 4
+		idx[o + 4] = i * 4 + 2
+		idx[o + 5] = i * 4 + 3
 	var arr: Array = []
 	arr.resize(Mesh.ARRAY_MAX)
 	arr[Mesh.ARRAY_VERTEX] = v
 	arr[Mesh.ARRAY_TEX_UV] = uv
+	arr[Mesh.ARRAY_INDEX] = idx
 	var m := ArrayMesh.new()
-	m.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arr)
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	cover = RainCover.new(level.world)
 	rain_mat = ShaderMaterial.new()
 	rain_mat.shader = load("res://levels/shaders/rain.gdshader")
+	rain_mat.set_shader_parameter(&"cover", cover.tex)
 	m.surface_set_material(0, rain_mat)
 	rain = MeshInstance3D.new()
 	rain.name = "Rain"
@@ -218,6 +237,7 @@ func _build_rain() -> void:
 	rain.extra_cull_margin = 16384.0
 	rain.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	level.add_child(rain)
+	_build_splashes(maxi(n / 10, 150))      # (n / 5 until 2026-11-11: too busy)
 	for o: Node3D in level.node_named("CityRain"):      # the frame of it the export caught
 		o.visible = false
 	if not S.is_empty():
@@ -226,11 +246,41 @@ func _build_rain() -> void:
 		set_rain(S.slant, S.opacity)
 
 
+## Rings where the drops land (levels/shaders/rain_splash.gdshader): one flat quad each, their lives run in the shader.
+func _build_splashes(n: int) -> void:
+	var v := PackedVector3Array()
+	var uv := PackedVector2Array()
+	v.resize(n * 6)
+	uv.resize(n * 6)
+	var corners: Array[Vector2] = [Vector2(0, 0), Vector2(1, 0), Vector2(0, 1), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	for i in n:
+		for c in 6:
+			v[i * 6 + c] = Vector3(float(i) * 0.173 + 3.0, 0.0, 0.0)
+			uv[i * 6 + c] = corners[c]
+	var arr: Array = []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = v
+	arr[Mesh.ARRAY_TEX_UV] = uv
+	var m := ArrayMesh.new()
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	splash_mat = ShaderMaterial.new()
+	splash_mat.shader = load("res://levels/shaders/rain_splash.gdshader")
+	splash_mat.set_shader_parameter(&"cover", cover.tex)
+	m.surface_set_material(0, splash_mat)
+	splash = MeshInstance3D.new()
+	splash.name = "RainSplashes"
+	splash.mesh = m
+	splash.extra_cull_margin = 16384.0
+	splash.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	level.add_child(splash)
+
+
 ## The gusts (levels/worldbackalley/storm.gd). JS: sl = -S.slant * len and the drops drift with fall * S.slant, so a gust sweeps the rain across as well as leaning it.
 func set_rain(slant: float, opacity: float) -> void:
 	rain_mat.set_shader_parameter(&"slant", -slant * float(S.get("len", 0.95)))
 	rain_mat.set_shader_parameter(&"drift", slant)
 	rain_mat.set_shader_parameter(&"opacity", opacity)
+	splash_mat.set_shader_parameter(&"opacity", opacity * 0.8)
 
 
 ## After the camera has its place for this frame (JS CityView.update(camPos, player)).
@@ -240,6 +290,9 @@ func update(dt: float, cam: Vector3) -> void:
 	var in_apt := has_shop and cam.x < -7.6 and cam.x > -18.2 and cam.z > 6.0 and cam.z < 23.9 and cam.y > 3.4 and cam.y < 6.6
 	var in_office := has_shop and cam.x > 116.0 and cam.x < 130.0 and cam.z > 326.2 and cam.z < 333.8 and cam.y < -5.4
 	rain.visible = not in_shop and not in_apt and not in_office
+	splash.visible = rain.visible
+	if rain.visible:
+		cover.update(cam)
 	# the club's spill (JS: prefers-reduced-motion holds the pulse at 0.45; Godot has no such setting to ask, so it pulses)
 	if not spills.is_empty():
 		var near := U.hyp(cam.x + sw, cam.z - club9_z) < 32.0

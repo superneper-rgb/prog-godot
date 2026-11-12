@@ -1,12 +1,14 @@
 // Writes levels/warehouse/wh_data.gd from the JS warehouse's pure data modules (layout, tuning, mission): the same numbers, no copy to keep in step by hand. Solids are referred to by their index in layout.solids, which is also their index in the exported world.
 import { writeFileSync } from 'node:fs';
-import { warehouseLayout, CHECKPOINTS, CONTROLS, WAVES } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/layout.js';
-import { WAREHOUSE } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/tuning.js';
-import { DEPARTMENTS, CONTROL_NAMES, LEVEL_TOTAL } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/mission.js';
-import { LINES, BEATS } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/comms-lines.js';
-import { PROPS } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/setpieces.js';
-import { FACTORY_ENTRANCES } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/entrance-layout.js';
-import { DEPTH_X } from '../../../progalpha-20261016T082732Z-1-001/progalpha/levels/warehouse/depth-layout.js';
+import { pathToFileURL } from 'node:url';
+import { JS_ROOT } from '../js_root.mjs';
+const { warehouseLayout, CHECKPOINTS, CONTROLS, WAVES } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/layout.js').href);
+const { WAREHOUSE } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/tuning.js').href);
+const { DEPARTMENTS, CONTROL_NAMES, LEVEL_TOTAL } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/mission.js').href);
+const { LINES, BEATS } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/comms-lines.js').href);
+const { PROPS } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/setpieces.js').href);
+const { FACTORY_ENTRANCES } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/entrance-layout.js').href);
+const { DEPTH_X } = await import(pathToFileURL(JS_ROOT + '/levels/warehouse/depth-layout.js').href);
 
 const d = warehouseLayout();
 const ix = (s) => (s ? d.solids.indexOf(s) : -1);

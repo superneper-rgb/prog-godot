@@ -278,6 +278,12 @@ func _dead_step(dt: float, P: Player) -> void:
 			y = maxf(gy, -8.0)
 			crashed = true
 			vy = 0.0
+	else:
+		# BUG-109 (tracker): a wreck that crashed onto a moving solid (the OMNISPHERE tram) stayed where it landed and hung in the air once the tram drove off. A crashed wreck now looks at the ground under it and falls on when it is gone. Godot only.
+		var g2 := world.ground_height(x, z, r, y + 0.6)
+		if y > -7.5 and (g2 if g2 > -INF else -9.0) < y - 0.3:      # (the -8 floor of a drone over nothing stays crashed)
+			crashed = false
+			vy = 0.0
 	if respawn_t <= 0.0 and not no_respawn and U.hyp(P.x - hx, P.z - hz) > 8.0:
 		_respawn()
 

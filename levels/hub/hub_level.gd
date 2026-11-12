@@ -34,6 +34,8 @@ var _dyo_halo: ShaderMaterial = null
 var _dyo_aura: ShaderMaterial = null
 const GY := -10.0                  # the district's ground level
 var _district: Node3D = null
+var deck: DeckLook = null      # the Deck's wet surface and lamp light (levels/hub/deck_look.gd)
+var facades: CityFacades = null      # the towers' and podiums' walls (levels/hub/city_facades.gd)
 var _hub_sky: Array = []
 var _street_was: Array[bool] = []
 var _street: Array[Node] = []
@@ -68,6 +70,13 @@ func build() -> void:
 		push_error("hub: no FointDistrict node in the export")
 		return
 	_district = d[0]
+	var ds: Array = node_named("DeckSurface")
+	if not ds.is_empty():
+		deck = DeckLook.new()
+		deck.build(ds[0], _district)
+		DeckUnderside.new().build(deck, _deck_piers(), _district)
+	facades = CityFacades.new()
+	facades.build(self, deck)
 	_hub_sky = node_named("HubSky")
 	for c in _district.get_parent().get_children():
 		if c != _district:
@@ -110,6 +119,27 @@ func build() -> void:
 		_place_vending()
 		_place_shop_tv()
 		life.release_bin()      # (100 MB of geometry, in the meshes by now)
+
+
+## The Deck's piers, from their colliders (JS city-deck.js: a box from GY to the deck, `h + 0.1` square): [x, z, half size, the way to the road it carries]
+func _deck_piers() -> Array:
+	var out: Array = []
+	for s: World.Solid in solids_tagged("bound"):
+		if s.kind != "box" or absf(s.bottom - DeckLook.GY) > 0.05 or absf(s.top - DeckLook.Y) > 0.05 or absf(s.hx - s.hz) > 0.01 or s.hx < 1.0 or s.hx > 1.6:
+			continue
+		var c := 0.0
+		for av: float in DeckLook.AVENUES:
+			if absf(s.cx - av) < 12.0:
+				c = av
+		var dir := Vector2.ZERO
+		if absf(s.cz - DeckLook.HARBOR_Z) < 10.0:
+			dir = Vector2(0.0, signf(DeckLook.HARBOR_Z - s.cz))
+		elif c != 0.0 and s.cz > DeckLook.HARBOR_Z and s.cz < DeckLook.DESCENT_Z0 + 2.0:
+			dir = Vector2(signf(c - s.cx), 0.0)
+		else:
+			continue
+		out.append([s.cx, s.cz, s.hx - 0.1, dir])
+	return out
 
 
 ## JS shopTV: the gunshop's hanging CRT. The set comes with the export; stand under it and X plays the video.
@@ -158,7 +188,7 @@ func apply_spawn(at: String) -> void:
 	match at:
 		"club9":      # out of CLUB 9: on the pavement at the club doorway, facing the street
 			world.spawn = {"x": -7.5 + 1.5, "y": 0.15, "z": -36.6, "yaw": PI / 2.0}
-		"foint":      # out of FOINT ARENA: in the gate hall, facing the city
+		"foint":      # out of FOINT DOME: in the gate hall, facing the city
 			world.spawn = {"x": 0.0, "y": GY + 0.1, "z": 220.5 - 4.0, "yaw": PI}
 
 
@@ -241,7 +271,7 @@ func _beatdown_end(finished: bool) -> void:
 ## JS index.html ~13498-13584: the hub's doors and the people you can talk to: everything they say is here, their bodies are levels/hub/hub_npcs.gd.
 func _doors_and_talkers() -> void:
 	portals.append({"id": "club9", "label": "ENTER CLUB 9", "x": -7.0, "z": -36.6, "radius": 1.6, "to": "club"})      # the CLUB 9 doorway on the street
-	portals.append({"id": "foint-arena", "label": "ENTER FOINT ARENA", "x": 0.0, "z": 220.5, "y": GY, "radius": 4.2, "to": "maktar"})      # the gate hall of the FOINT ARENA (the `maktar` level), at the end of the bridge plaza
+	portals.append({"id": "foint-dome", "label": "ENTER FOINT DOME", "x": 0.0, "z": 220.5, "y": GY, "radius": 4.2, "to": "foint-dome"})      # the gate hall of the FOINT DOME (the `foint-dome` level), at the end of the bridge plaza
 	actions.append({"x": 108.0, "z": 327.26, "label": "PRISE OPEN THE INTAKE GRATE", "active": func(p: Player) -> bool: return Game.story_get("ventJob") and absf(p.y - GY) < 1.5 and U.hyp(p.x - 108.0, p.z - 327.26) < 1.3,      # (1.3 m: the JS portal's radius) the alley's return-air grate, open once the Boss has given the ventilation job. Only the opening is made: nothing is behind it yet (DEAD AIR is being redesigned), so the cards end on black and the alley comes back
 		"run": func() -> void:
 			if Game.doors.travelling:
@@ -260,7 +290,7 @@ func _doors_and_talkers() -> void:
 		"shot": {"cam_dist": 3.0, "cam_y": 1.3, "look_y": 0.9, "spot_fwd": 1.3, "spot_side": 1.0},
 		"lines": ["Do you remember? I remember...."]})
 	D.add_talker({"id": "green_alien", "name": "GREEN ALIEN", "x": -7.2, "y": 0.15, "z": -39.0, "yaw": PI / 2.0, "radius": 2.6, "color": "#7be34a",
-		"lines": ["You should try your luck at the Foint arena for some extra cash if you're strapped. Fuck these gray aliens man shiet."],
+		"lines": ["You should try your luck at the Foint dome for some extra cash if you're strapped. Fuck these gray aliens man shiet."],
 		"on_end": func(_t: Dictionary) -> void: Game.story_set("talkedGreen")})      # the gray alien only has his line for someone who has been seen talking to the green one
 	D.add_talker({"id": "puppy", "name": "PUPPY", "x": -7.15, "y": 0.15, "z": 29.0, "yaw": PI / 2.0, "radius": 2.6, "color": "#e9b36a", "voice": "dogSyl", "voice_pitch": 1.0, "type_rate": 30.0,
 		"shot": {"cam_dist": 2.7, "cam_y": 1.15, "look_y": 0.95, "spot_fwd": 0.85},
@@ -481,6 +511,10 @@ func tick(_dt: float) -> void:
 		_sky_mat.set_shader_parameter(&"uHor", (VIOLET.horizon as Vector3).lerp(EMBER.horizon, k))
 		_sky_mat.set_shader_parameter(&"uBand", (VIOLET.band as Vector3).lerp(EMBER.band, k))
 		_sky_mat.set_shader_parameter(&"uZen", (VIOLET.zenith as Vector3).lerp(EMBER.zenith, k))
+		if life != null and life.cars != null:      # the cars' paint carries this sky
+			life.cars.set_sky((VIOLET.horizon as Vector3).lerp(EMBER.horizon, k), (VIOLET.band as Vector3).lerp(EMBER.band, k), (VIOLET.zenith as Vector3).lerp(EMBER.zenith, k))
+		if facades != null:      # and so do the towers' glass and wet walls
+			facades.set_sky((VIOLET.horizon as Vector3).lerp(EMBER.horizon, k), (VIOLET.band as Vector3).lerp(EMBER.band, k), (VIOLET.zenith as Vector3).lerp(EMBER.zenith, k))
 		_sky_mat.set_shader_parameter(&"uMoonCol", (VIOLET.moon as Vector3).lerp(EMBER.moon, k))
 		_sky_mat.set_shader_parameter(&"uHalo", (VIOLET.halo as Vector3).lerp(EMBER.halo, k))
 		_sky_mat.set_shader_parameter(&"uMoonR", lerpf(VIOLET.moon_r, EMBER.moon_r, k))

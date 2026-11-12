@@ -492,7 +492,24 @@ func _black(on_: bool, slow: bool = false) -> void:
 
 
 # ---- the clocks: laid out from the voice lines' real lengths, so a cut never lands mid-sentence
+## the score's two long cues (the hum, the low strings: ~20 s of synth each) rendered at load, with the timings start() will plan (see VhAudio.warm)
+func warm() -> void:
+	_times()
+	MsSound.warm(func() -> void:
+		audio.tone(46.0, float(A.fire) - 0.05, 0.07, &"sawtooth")
+		audio.pad(float(A.end) - float(A.win) + float(B.end), 0.075, 4.0, 7.0))
+
+
 func _plan() -> void:
+	_times()
+	A.arrive = A.walk0 + _path_len(K.in_path) / 3.0
+	A.at_win = A.win + 0.9
+	var M: Vector3 = K.M
+	_events(M)
+
+
+## the cut's clock: everything here hangs on the lines' lengths only (no geometry), so warm() can run it at load. (Split out of the JS plan for that; same statements.)
+func _times() -> void:
 	var Lf := audio.len_of("f-came")
 	var Lw := audio.len_of("w-notme")
 	var Lb := audio.len_of("b-what")
@@ -516,8 +533,6 @@ func _plan() -> void:
 	A.sniper = A.zoom + 0.3
 	A.exit = A.sniper + Lp + 0.45
 	A.end = A.exit + 1.6
-	A.arrive = A.walk0 + _path_len(K.in_path) / 3.0
-	A.at_win = A.win + 0.9
 	B = {"drop": 1.3, "flash": 2.75, "black": 4.3, "up": 5.7}
 	B.stop = B.up + 6.0
 	B.look = B.stop + 0.25
@@ -526,7 +541,9 @@ func _plan() -> void:
 	B.drip = B.warm + Lm + 0.55
 	B.fade = B.drip + 2.5
 	B.end = B.fade + 1.8
-	var M: Vector3 = K.M
+
+
+func _events(M: Vector3) -> void:
 	EA = [
 		[0.0, func() -> void: audio.tone(46.0, float(A.fire) - 0.05, 0.07, &"sawtooth")],      # (the score: a low industrial hum under the rain, until the round)
 		[A.halt, func() -> void: people.halt(_face_at(), K.ward_to, 2.0)],      # (he hurries: Fenn between them before the close-up)

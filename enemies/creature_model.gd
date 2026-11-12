@@ -103,9 +103,13 @@ func add_joint(nm: String, parent_joint: int) -> int:
 
 ## Build from res://assets/objects/<name>.glb. `glow_fill(soup, model)` adds the sprites. `glow_joints` (joint name -> channel): the additive JS parts, drawn in the glow layer instead of the body. `row_kinds` (JS material name -> rigid_batch kind): a material that follows the copy's colour A / B. `extra(model, parts)`: geometry the JS rebuilds by hand each frame, added here with joints of its own (add_joint). Materials are read from the export.
 static func build(path: String, glow_fill: Callable = Callable(), glow_joints: Dictionary = {}, row_kinds: Dictionary = {}, extra: Callable = Callable()) -> CreatureModel:
-	var cm := CreatureModel.new()
 	var ps: PackedScene = load(path)
-	var root: Node3D = ps.instantiate()
+	return build_from(ps.instantiate(), path, glow_fill, glow_joints, row_kinds, extra)
+
+
+## The same from a model made in code (no glb, e.g. the Briar Dervish): Node3Ds whose meta "extras" holds js_name = "J_<joint>", MeshInstance3Ds under them. `path` only names it in errors. Frees `root`.
+static func build_from(root: Node3D, path: String, glow_fill: Callable = Callable(), glow_joints: Dictionary = {}, row_kinds: Dictionary = {}, extra: Callable = Callable()) -> CreatureModel:
+	var cm := CreatureModel.new()
 	# ---- joints: everything named J_*, parents first ----
 	var order: Array[Node3D] = []
 	var stack: Array[Node] = [root]

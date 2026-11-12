@@ -117,6 +117,30 @@ func _walk() -> void:
 		mi.visible = false
 
 
+## A model loaded after the level was walked (a drivable car's glb): the onBeforeCompile hooks on its materials, as _walk gives the level's own. A material_override stands in for the mesh's own surface material, so only the one that draws is hooked.
+func adopt(root: Node) -> void:
+	var stack: Array[Node] = [root]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back()
+		stack.append_array(n.get_children())
+		var mi := n as MeshInstance3D
+		if mi == null or mi.mesh == null:
+			continue
+		if mi.material_override != null:
+			_adopt_material(mi.material_override)
+			continue
+		for s in mi.mesh.get_surface_count():
+			_adopt_material(mi.mesh.surface_get_material(s))
+
+
+func _adopt_material(m: Material) -> void:
+	if m == null or not m.has_meta("extras"):
+		return
+	var x: Dictionary = m.get_meta("extras")
+	if x.has("obc"):
+		_hook(m as StandardMaterial3D, String(x["obc"]), int(x.get("obc_var", 0)))
+
+
 ## A still additive sprite: one material per colour, opacity and texture. (material_look.gd does not write billboards, so _additive cannot reach them.)
 func _glow_billboard(b: StandardMaterial3D) -> ShaderMaterial:
 	var c := b.albedo_color
@@ -147,7 +171,7 @@ func _display_vc(b: StandardMaterial3D, x: Dictionary) -> void:
 	if b == null or not x.has("not_tone_mapped") or x.has("shader") or x.has("obc") or not b.vertex_color_use_as_albedo or b.blend_mode != BaseMaterial3D.BLEND_MODE_MIX or b.shading_mode != BaseMaterial3D.SHADING_MODE_UNSHADED or hooked.has(b.get_instance_id()):
 		return
 	hooked[b.get_instance_id()] = true
-	Game.view.material_look.patch(b, {"decl": '#include "res://levels/shaders/common.gdshaderinc"', "frag": "ALBEDO = display_to_radiance(srgb_encode(COLOR.rgb));"})      # (COLOR alone: the exporter has already moved albedo for the tone map)
+	Game.view.material_look.patch(b, {"decl": '#include "res://levels/shaders/common.gdshaderinc"', "frag": "ALBEDO = display_to_radiance(srgb_encode(srgb_decode(radiance_to_display(albedo.rgb)) * albedo_tex.rgb));"})      # (JS: material colour x map x vertex colour, straight to the screen. The exporter moved the material colour to where the tone map brings it back (page.js untonemap), so radiance_to_display / srgb_decode recovers it; albedo_tex is Godot's own local, the map already multiplied by COLOR. This used to be COLOR alone, which dropped both the map and the colour: THE MOTHERSHIP's conservatory skylight, stained glass, painted walls and the dome's wine-red floor drew flat white. GODOT ONLY: the recovered colour is clamped at 0.995 by the exporter, so a pure white is 0.995.)
 
 
 ## The first number after `pattern` in a hook's resolved text (the closures the JS source does not show: a fill strength, a sway).

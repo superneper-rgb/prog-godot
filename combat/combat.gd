@@ -21,7 +21,7 @@ const DEFAULT_CLERK_SPOT := [18.9, 10.5]
 const DEFAULT_PICKUP_SPOTS: Array = [[4.0, 3.0], [-4.0, 5.0], [0.0, -7.0]]
 
 # Levels whose own sandbox kit must never reach the save (the dev level's give-all), and are never CONTINUEd into
-const SANDBOX_LEVELS: Array[String] = ["dev"]
+const SANDBOX_LEVELS: Array[String] = ["dev", "jungle-test"]
 
 # The kit of the movement test ground: it has no gunshop, and the wheel holds five.
 const ARENA_KIT := {"ids": ["deagle", "shotgun", "rifle", "smg", "rocket"], "equip": "deagle"}
@@ -396,7 +396,7 @@ func apply_loadout(id: String, lv: Level) -> void:
 		return
 	var g: Dictionary = Game.save_data.gear
 	load_gear(g)
-	var arena: bool = lv != null and lv.id == "maktar"
+	var arena: bool = lv != null and lv.id == "foint-dome"
 	if arena and owned.is_empty():      # the arena has no gunshop: an empty wheel gets one gun
 		kit_ids = [Weapons.WEAPONS[0].id]
 	var granted: Dictionary = Game.save_data.granted
