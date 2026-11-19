@@ -34,9 +34,11 @@ void fragment() {
 	} else if (mode == 2) {
 		float v = UV.y;
 		a = v < 0.35 ? mix(1.0, 0.416, v / 0.35) : mix(0.416, 0.0, clamp((v - 0.35) / 0.65, 0.0, 1.0));
+		a = srgb_decode(vec3(a)).r;      // the JS gradient is an sRGB canvas (#fff, #6a6a6a, #000) that three.js decodes: used as it was, the beam stayed near full strength down to the floor and a ring of them read as blinding walls (fixed 2026-11-15)
 	} else if (mode == 3) {
 		float d = length(UV * 2.0 - vec2(1.0));
 		a = d < 0.45 ? mix(1.0, 0.353, d / 0.45) : mix(0.353, 0.0, clamp((d - 0.45) / 0.55, 0.0, 1.0));
+		a = srgb_decode(vec3(a)).r;      // (the same sRGB canvas: #fff, #5a5a5a, #000)
 	} else if (mode == 4 || mode == 7 || mode == 8) {
 		float d = length(UV * 2.0 - vec2(1.0));
 		a = (mode == 8 ? (d < 0.22 ? mix(1.0, 0.5, d / 0.22) : mix(0.5, 0.0, clamp((d - 0.22) / 0.78, 0.0, 1.0))) : (d < 0.3 ? mix(1.0, 0.6, d / 0.3) : mix(0.6, 0.0, clamp((d - 0.3) / 0.7, 0.0, 1.0)))) * v_a;      // 8: OMNISPHERE's glow map (textures.js glowTexture)

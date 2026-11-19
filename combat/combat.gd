@@ -220,6 +220,8 @@ var aim_on_target := false
 var pull_aim := false
 var muzzle := Vector3.ZERO
 var aim_dir := Vector3(0, 0, 1)
+var auto_aim := AutoAim.new()       # hip-fire lock (combat/auto_aim.gd)
+var aim_lock: Target = null         # the enemy hip fire goes to this frame (null = free aim); the HUD puts the reticle on it
 var ads_on := false
 var power_aim := false
 var scope_w := 0.0                  # set by the frame: how far through the scope the view is (JS combat.scopeW)
@@ -969,6 +971,9 @@ func update(dt: float, P: Player, cam: CameraRig, dead_input: bool = false) -> v
 		P.rl_on = false
 		rl = null
 		aim_on_target = false
+		auto_aim.clear()
+		aim_lock = null
+		P.lock_on = false
 		yoke.holding = false
 		yoke.charge = 0.0
 		saw_guide = null
@@ -1024,6 +1029,20 @@ func update(dt: float, P: Player, cam: CameraRig, dead_input: bool = false) -> v
 	aim_dist = rr.d if rr_any else 0.0                                   # metres to whatever is under the crosshair (scope readout)
 	aim_point = Vector3(sx + dx * dd, sy + dy * dd, sz + dz * dd)
 	aim_on_target = rr.target != null
+	# hip-fire auto-aim: the player's own plain guns only; ADS, the scope, set pieces, cutscene aim and powers stay free
+	var aa_on := input_view == null and w != null and w.special == "" and not P.ads and not P.scoped and not pull_aim and aim_over == null and not P.power_aim and P.mode == &"normal"
+	if aa_on:
+		var chest := Vector3(P.x, P.y + (0.8 if P.crouching else 1.3), P.z)
+		auto_aim.step(dt, W, targets, chest, dx, dy, dz, minf(Config.aim_cone_range, w.range), rr.target)
+	else:
+		auto_aim.clear()
+	aim_lock = auto_aim.lock
+	P.lock_on = aim_lock != null
+	if aim_lock != null:
+		aim_point = auto_aim.aim
+		aim_dist = auto_aim.dist
+		aim_on_target = true
+		P.lock_yaw = atan2(aim_point.x - P.x, aim_point.z - P.z)
 
 	var fy := sin(P.yaw)
 	var fz := cos(P.yaw)
@@ -1034,7 +1053,7 @@ func update(dt: float, P: Player, cam: CameraRig, dead_input: bool = false) -> v
 	var ay := aim_point.y - muz.y
 	var az := aim_point.z - muz.z
 	var al := _hyp3(ax, ay, az)
-	if al < 2.5:
+	if al < (0.3 if aim_lock != null else 2.5):     # a locked enemy right in front still gets the shot
 		ax = dx
 		ay = dy
 		az = dz

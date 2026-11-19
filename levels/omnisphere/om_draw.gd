@@ -15,7 +15,7 @@ class Lamp:
 	var base := 0.0
 
 
-var live_decks: Array = []      # {x0, x1, z0, z1, top, plate, big, disc}
+var live_decks: Array = []      # {x0, x1, z0, z1, top, plate, big, disc}; the containment fight adds (user, 2026-11-15): r0 (a round deck is a ring from r0 out), band (someone standing up to this far above the top is on it too: ramps, the plinth, a cabinet), dmg (PROG's hit, 22 without), cook (false = robots are spared), n (bolts drawn)
 var lamps: Array[Lamp] = []
 var fields: Array[ShaderMaterial] = []
 var on_phase := Callable()
@@ -81,7 +81,8 @@ static func _spot(L: Dictionary, y: float) -> Vector3:
 		return Vector3(float(L.x0) + randf() * (float(L.x1) - float(L.x0)), y, float(L.z0) + randf() * (float(L.z1) - float(L.z0)))
 	var q := randf() * TAU
 	var d: Array = L.disc
-	var r := sqrt(randf()) * float(d[2])
+	var r0 := float(L.get("r0", 0.0))
+	var r := sqrt(lerpf(r0 * r0, float(d[2]) * float(d[2]), randf()))
 	return Vector3(float(d[0]) + cos(q) * r, y, float(d[1]) + sin(q) * r)
 
 
@@ -97,14 +98,16 @@ func stop(v: bool = true) -> void:
 
 
 ## is (x, y, z) standing on a deck the surge is live on right now
-func live_at(x: float, y: float, z: float) -> Variant:
+func live_at(x: float, y: float, z: float, standing: bool = false) -> Variant:
 	if phase != "surge":
 		return null
 	for L: Dictionary in live_decks:
-		if absf(y - float(L.top)) >= 0.35:
+		var dy := y - float(L.top)
+		if absf(dy) >= 0.35 and not (standing and dy > 0.0 and dy < float(L.get("band", 0.0))):
 			continue
 		if L.has("disc"):
-			if U.hyp(x - float(L.disc[0]), z - float(L.disc[1])) < float(L.disc[2]):
+			var d := U.hyp(x - float(L.disc[0]), z - float(L.disc[1]))
+			if d < float(L.disc[2]) and d >= float(L.get("r0", 0.0)):
 				return L
 		elif x > float(L.x0) and x < float(L.x1) and z > float(L.z0) and z < float(L.z1):
 			return L
@@ -178,7 +181,7 @@ func update(dt: float, P: Player, C: Combat, cam: Vector3) -> void:
 				if U.hyp((float(L.x0) + float(L.x1)) / 2.0 - cam.x, (float(L.z0) + float(L.z1)) / 2.0 - cam.z) > 160.0:
 					continue
 				var big: bool = L.get("big", false)
-				var n := (3 if L.get("plate", false) else (34 if big else 5)) if amt else (8 if big else 1)
+				var n := int(L.get("n", 3 if L.get("plate", false) else (34 if big else 5))) if amt else (8 if big else 1)
 				var top: float = L.top
 				for _k in n:
 					var a := _spot(L, top + 0.1)
@@ -199,10 +202,10 @@ func update(dt: float, P: Player, C: Combat, cam: Vector3) -> void:
 	# the shock: PROG on a live deck gets thrown; a robot on a live plate gets cooked; drones (flying) do not care
 	if phase == "surge" and C != null:
 		if P != null and not P.dead and hit_cd <= 0.0:
-			var L: Variant = live_at(P.x, P.y, P.z)
+			var L: Variant = live_at(P.x, P.y, P.z, P.grounded)
 			if L != null:
 				hit_cd = 0.7
-				C.hurt_player(P, 22.0, (float(L.x0) + float(L.x1)) / 2.0, (float(L.z0) + float(L.z1)) / 2.0, "bolt")
+				C.hurt_player(P, float(L.get("dmg", 22.0)), (float(L.x0) + float(L.x1)) / 2.0, (float(L.z0) + float(L.z1)) / 2.0, "bolt")
 				P.vy = 9.0
 				P.grounded = false
 				if Game.fx != null:
@@ -210,7 +213,8 @@ func update(dt: float, P: Player, C: Combat, cam: Vector3) -> void:
 		for r: Robot in C.enemies.robots:
 			if r.dead or r.drone or r is FointGoon or float(shock_t.get(r.id, 0.0)) > t:      # goons: rubber boots
 				continue
-			if live_at(r.x, r.y, r.z) != null:
+			var rl: Variant = live_at(r.x, r.y, r.z)
+			if rl != null and (rl as Dictionary).get("cook", true):
 				shock_t[r.id] = t + 0.8
 				C.damage(r, 75.0, {"x": r.x + 0.1, "z": r.z}, 0.0)
 				if Game.fx != null:

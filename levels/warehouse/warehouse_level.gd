@@ -9,6 +9,7 @@ const NIGHT_FOG := Color8(0x14, 0x20, 0x2f)
 const NIGHT_AMBIENT := Color8(0x78, 0x94, 0xbc)
 const NIGHT_GROUND := Color8(0x18, 0x20, 0x2d)
 const NIGHT_MOON := Color8(0x72, 0x94, 0xc9)
+const MOON_K := 1.75      # the moon (and the warm key indoors) 1.75x the JS strength (user, 2026-11-12): the roof, the Reserve hall and the Export Apron read as moonlit; indoors the shadow keeps it out
 const ALARM_FOG := Color8(0x6a, 0x1c, 0x10)
 const ALARM_SKY := Color8(0x3a, 0x14, 0x10)
 
@@ -491,7 +492,7 @@ func _exposure(P: Player, stage: String, chase: Dictionary) -> void:
 		_look_key = key
 		var mood := 0xc7b9e1 if stage == "vault" else (0xb3c3d2 if stage == "security" else (0xe2b98b if stage == "reclamation" else 0xe2d5b4))
 		view.set_hemi(Color.hex((mood << 8) | 0xff).lerp(NIGHT_AMBIENT, exposure), Color.hex(0x354952ff).lerp(NIGHT_GROUND, exposure), 0.74 + exposure * 0.24)
-		view.set_sun(Color.hex(0xffddb0ff).lerp(NIGHT_MOON, exposure), 0.46 + exposure * 0.16)
+		view.set_sun(Color.hex(0xffddb0ff).lerp(NIGHT_MOON, exposure), (0.46 + exposure * 0.16) * MOON_K)
 		views.exterior_visible(exposure > 0.0)
 	var sky := INTERIOR_SKY.lerp(NIGHT_SKY, exposure)
 	var fog := INTERIOR_FOG.lerp(NIGHT_FOG, exposure)

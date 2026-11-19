@@ -9,6 +9,9 @@ const THEMES := {
 		"pzr": [255, 176, 40], "sat": 4.4, "hue": -4.0, "bright": 1.04, "contrast": 1.12, "bg1": "#2a1a04", "bg2": "#0b0701"},
 	"plasmid": {"edge": "#ff9a2e", "edge2": "#e0680f", "steel": "#a85a1a", "steel_hi": "#ffb866", "steel_lo": "#4a2406", "ink": "#ffe2b8", "ink2": "#f3b56e", "dim": "#c27a36", "glass": Color8(26, 11, 2, 199), "glass2": Color8(14, 6, 1, 230), "well": Color8(16, 7, 1, 179), "sel": "#ffe6a8", "sel2": "#ffb43a", "bad": "#ff5a36", "good": "#ffd070", "hl": Color8(255, 150, 40, 51), "dimbg": Color8(8, 3, 0, 184),
 		"pzr": [255, 140, 30], "sat": 4.2, "hue": -16.0, "bright": 1.02, "contrast": 1.12, "bg1": "#2a1204", "bg2": "#0b0401"},
+	# CLUB 9's bar terminal (levels/club/club_bar.gd): the house green phosphor, amber for what you cannot have
+	"bar": {"edge": "#5fd88a", "edge2": "#2f9c5a", "steel": "#3f7a55", "steel_hi": "#a8ffc8", "steel_lo": "#16301f", "ink": "#c2ffd8", "ink2": "#8dffb4", "dim": "#4fbf78", "glass": Color8(6, 26, 14, 214), "glass2": Color8(3, 14, 8, 238), "well": Color8(4, 18, 10, 200), "sel": "#f0fff5", "sel2": "#8dffb4", "bad": "#ffb02e", "good": "#8dffb4", "hl": Color8(80, 255, 140, 40), "dimbg": Color8(2, 10, 5, 175),
+		"pzr": [70, 255, 130], "sat": 3.6, "hue": 95.0, "bright": 1.03, "contrast": 1.12, "bg1": "#062a14", "bg2": "#020b05"},
 }
 const NAV := {KEY_LEFT: -1, KEY_A: -1, KEY_UP: -1, KEY_W: -1, KEY_RIGHT: 1, KEY_D: 1, KEY_DOWN: 1, KEY_S: 1}
 # the pzSign keyframes: time (%), value
@@ -44,6 +47,7 @@ var art_cfg := {}
 var hole := {"x1": 0.14, "y1": 0.26, "x2": 0.88, "y2": 0.82}
 var art_ratio := 1.6
 var design_h := 540.0
+var portrait := false     # a tall picture (CLUB 9's handheld pad): MenuPage stacks the page for a narrow screen
 # nodes
 var dim: ColorRect = null
 var art: ColorRect = null
@@ -195,14 +199,22 @@ func wrap_art(cfg: Dictionary) -> void:
 	hole = cfg.hole
 	art_ratio = cfg.ratio
 	design_h = cfg.get("design_h", 540.0)
+	portrait = art_ratio < 1.0
+
+
+## where the picture of the machine sits on a screen of this size: as big as fits, centred (CLUB 9's order cutscene frames the 3D pad to land on it)
+func stage_rect(sz: Vector2) -> Rect2:
+	var sw := minf(sz.x * 0.99, sz.y * 0.99 * art_ratio)
+	var sh := sw / art_ratio
+	return Rect2((sz - Vector2(sw, sh)) / 2.0, Vector2(sw, sh))
 
 
 func _layout_stage() -> void:
 	var sz := get_viewport().get_visible_rect().size
-	var r := art_ratio
-	var sw := minf(sz.x * 0.99, sz.y * 0.99 * r)
-	var sh := sw / r
-	var stage_pos := (sz - Vector2(sw, sh)) / 2.0
+	var sr := stage_rect(sz)
+	var sw := sr.size.x
+	var sh := sr.size.y
+	var stage_pos := sr.position
 	var gx: float = hole.x1 * sw
 	var gy: float = hole.y1 * sh
 	var gw: float = (hole.x2 - hole.x1) * sw
@@ -233,6 +245,10 @@ func _layout_stage() -> void:
 		u = 0.9
 	page.small = sz.y <= 620.0
 	page.tiny = sz.y <= 540.0
+	if portrait:      # (a portrait page is drawn at its own measures and scaled to the glass whole: the screen-size steps are for the wide terminals' CSS)
+		u = 1.0
+		page.small = false
+		page.tiny = false
 	_glow_box = g
 	_car_snap = true
 	page.layout()

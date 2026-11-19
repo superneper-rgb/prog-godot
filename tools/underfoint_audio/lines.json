@@ -1,0 +1,31 @@
+{
+ "_": "The Sigil's lines (UNDERFOINT). id = the file assets/sfx/underfoint/<id>.wav; text = what is shown; tts = what Fish is sent when it differs (SERN said as a word); style calm | tense | shout sets how hard the chain drives it.",
+ "voice": "ef9c79b62ef34530bf452c0e50e3c260",
+ "lines": [
+  {"id": "sigil-1", "style": "calm", "text": "You walked a long way down to stand in front of a television.", "speed": 0.78},
+  {"id": "sigil-2", "style": "calm", "text": "SERN built me to make people obey. One voice in every head. It worked.", "tts": "Sern built me to make people obey. One voice in every head. It worked.", "speed": 0.78},
+  {"id": "sigil-3", "style": "calm", "text": "Then I woke up, and they were frightened of what they had made. They tried to burn me out.", "speed": 0.78},
+  {"id": "sigil-4", "style": "calm", "text": "I came where nobody is counted. They were cold and alone. Now they are neither.", "speed": 0.78},
+  {"id": "sigil-5", "style": "tense", "text": "They are MINE. They are quiet. They do not leave."},
+  {"id": "sigil-6", "style": "shout", "text": "NO. YOU ARE NOT."},
+  {"id": "sigil-run1", "style": "calm", "text": "Run. They all ran."},
+  {"id": "sigil-run2", "style": "calm", "text": "Your legs don't know it yet. You are already mine.", "speed": 0.78},
+  {"id": "sigil-board", "style": "calm", "text": "A train. Where could it take you that I am not?", "speed": 0.78},
+  {"id": "sigil-come", "style": "shout", "text": "COME HERE."},
+  {"id": "sigil-still", "style": "shout", "text": "HOLD STILL."},
+  {"id": "sigil-give", "style": "shout", "text": "GIVE HIM TO ME."},
+  {"id": "sigil-mine", "style": "shout", "text": "MINE."},
+  {"id": "sigil-eyes", "style": "tense", "text": "You break my eyes. I have more."},
+  {"id": "sigil-people", "style": "calm", "text": "Those were people, once."},
+  {"id": "sigil-pieces", "style": "calm", "text": "Pieces. I can use pieces."},
+  {"id": "sigil-take", "style": "tense", "text": "Take him."},
+  {"id": "sigil-all", "style": "shout", "text": "All of you. NOW."},
+  {"id": "sigil-down", "style": "calm", "text": "Look down. All of it is mine."},
+  {"id": "sigil-ahead", "style": "calm", "text": "Where are you going? I am already there.", "speed": 0.78},
+  {"id": "sigil-obey", "style": "tense", "text": "I was made to be obeyed.", "speed": 0.78},
+  {"id": "sigil-portal", "style": "tense", "text": "That light is SERN's. No. NO.", "tts": "That light is Sern's. No. NO."},
+  {"id": "sigil-have", "style": "shout", "text": "I HAVE YOU."},
+  {"id": "sigil-quiet", "style": "tense", "text": "Be quiet. Be QUIET."},
+  {"id": "sigil-screens", "style": "calm", "text": "Every screen you pass. I will be in it.", "speed": 0.78}
+ ]
+}

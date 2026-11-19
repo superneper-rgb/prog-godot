@@ -1,12 +1,15 @@
 class_name AnimViewer
 extends Node3D
 ## Animation viewer (dev tool, never part of the game): one playable character on a lit stage, posed by the game's own animators from a stand-in player state, holding any weapon.
-## Pick a character, a move and a gun; orbit the camera or jump to a set view; pause, step, slow down; fire and reload over any move. Prog V3's authored clips can also be played and scrubbed one by one.
+## Pick a character, a move and a gun; orbit the camera or jump to a set view; pause, step, slow down, scrub a move on the timeline; fire and reload over any move.
 ## Start it with anim_viewer.bat (or `-- --anim-viewer`; `node tools/peek.mjs start anim-viewer` for the peek, then `AnimViewer.current` in an eval). Game stays idle while it runs.
+## Besides Prog and Tommy it shows every enemy (the game's own Robot class and AI, run against a stand-in target) and the NPCs (tools/anim_viewer/anim_cast.gd): `subject` is &"player", &"enemy" or &"npc".
+## For those two the viewer lends Game what the views reach for (root3d, level, world, player) and gives them back on exit.
 
 static var current: AnimViewer = null
 
-const CHARS: Array = [["prog_v3", "Prog V3"], ["prog_v2", "Prog V2"], ["prog_v1", "Prog V1 (original)"], ["tommy", "Tommy"]]
+# the playable characters, by Builds.BUILDS id. One Prog (user, 2026-11-15): V2 and V3 went, and V3's authored-clip player with them, so every move here is the game's own Animator.
+const CHARS: Array = [["prog", "Prog"], ["tommy", "Tommy"]]
 const SUITS: Array = [["standard", "Standard outfit"], ["phantom_suit", "Phantom Suit"], ["goint_gear_xl", "GOINT GEAR XL"], ["schleedtech_combat", "SchleedTech Combat"], ["omen", "O.M.E.N."]]
 # id, label, loop period in seconds (0: the move holds). An empty id is a heading.
 const ACTIONS: Array = [
@@ -66,17 +69,19 @@ const LEDGE_T := 2.4         # the lip of the ledge prop
 const POLE_Y := 2.75         # the pole prop's bar
 const RUNG := 0.3            # ladder rung spacing (Player._ladder_step)
 
+var subject := &"player"      # who is on the stage: the player's own animator (an), an enemy (foe) or an NPC (npc)
+var foe: AnimFoe = null
+var npc: AnimNpc = null
+var foe_id := "robot"
+var npc_id := "shit-chan"
 var world: World
 var P: Player
 var combat: Combat           # only its reload clock runs (start_reload / _reload_step), so a reload is timed exactly as in play
 var an: Animator
-var char_id := "prog_v3"
+var char_id := "prog"
 var suit_id := "standard"
 var weapon := -1
 var action := "idle"
-var clip_mode := false
-var clip := "idle"
-var clip_t := 0.0
 var act_t := 0.0
 var rate := 1.0
 var paused := false
@@ -105,6 +110,7 @@ var turntable := false
 var follow := true
 var _goal: Array = []        # [yaw, pitch, dist, h] being eased to
 var _look_y := 0.9
+var _clock := 0.0            # the enemies' and NPCs' time: runs with the playback (pause, step and the speed rate)
 var _drag := 0               # 1 orbit, 2 raise / lower the look point
 
 # stage
@@ -113,6 +119,11 @@ var _prop_solids: Array[World.Solid] = []
 var _prop_kind := ""
 var _bones_mesh := ImmediateMesh.new()
 var _bones_mi: MeshInstance3D
+var _floor_mi: MeshInstance3D
+var _material_look: RefCounted = null      # (declares the global shader values the enemies' materials read: the game's View does that, and it is not running here)
+var _lent: Level = null          # the bare Level node Game.level points at while the viewer runs (the views add their effects under it)
+var _cam_scale := 1.0            # the camera presets are for a 1.7 m body: bigger ones pull back
+var _focus := Vector3.ZERO       # what the camera looks at, on the floor
 
 # interface
 var _ui: Control
@@ -120,13 +131,7 @@ var _panel: PanelContainer
 var _opt_char: OptionButton
 var _opt_suit: OptionButton
 var _opt_weapon: OptionButton
-var _btn_moves: Button
-var _btn_clips: Button
 var _lst_actions: ItemList
-var _lst_clips: ItemList
-var _clip_filter: LineEdit
-var _box_moves: Control
-var _box_clips: Control
 var _timeline: HSlider
 var _lbl_time: Label
 var _lbl_info: Label
@@ -135,15 +140,26 @@ var _chk: Dictionary = {}    # name -> CheckBox
 var _sliders: Dictionary = {}     # name -> HSlider
 var _tl_drag := false
 var _tl_panel: PanelContainer
+var _player_only: Array[Control] = []      # suit, weapon, the modifiers over a move: nothing for an enemy or an NPC
+var _foe_box: Control
 
 
 func _ready() -> void:
 	current = self
 	world = World.new(get_world_3d().space)
 	world.target_spots = []      # (Combat would put its practice robots on the spots)
-	world.box(0.0, 0.0, 60.0, 60.0, 0.0, {"bottom": -1.0})
+	world.box(0.0, 0.0, 600.0, 600.0, 0.0, {"bottom": -1.0})      # (big: an enemy that chases walks on, and the floor and the camera follow it)
 	P = Player.new(world)
 	combat = Combat.new(world)
+	# what the enemy and NPC views reach for in Game, which is idle here: their batches' nodes go under Game.root3d, their effects under Game.level
+	Game.root3d = self
+	Game.world = world
+	Game.player = P
+	_material_look = preload("res://core/material_look.gd").new()
+	_lent = Level.new()
+	_lent.name = "ViewerLevel"
+	add_child(_lent)
+	Game.level = _lent
 	_stage()
 	_build_ui()
 	await get_tree().physics_frame      # the floor joins the broadphase before the feet look for it
@@ -156,6 +172,12 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if current == self:
 		current = null
+	_clear_other()
+	if Game.root3d == self:
+		Game.root3d = null
+		Game.world = null
+		Game.player = null
+		Game.level = null
 	if combat != null:
 		combat.enemies.shutdown()
 		combat.enemies = null
@@ -195,6 +217,7 @@ func _stage() -> void:
 	fm.shader = load("res://tools/anim_viewer/anim_floor.gdshader")
 	floor_mi.material_override = fm
 	add_child(floor_mi)
+	_floor_mi = floor_mi
 	cam = Camera3D.new()
 	cam.fov = 32.0
 	cam.near = 0.05
@@ -274,30 +297,31 @@ func _set_props(kind: String) -> void:
 		"wall_r", "wall_l":
 			var sx := -1.0 if kind == "wall_r" else 1.0      # (yaw 0: +X is his left)
 			_prop_box(Vector3(0.3, 3.5, 12.0), Vector3(sx * (Config.radius + 0.2), 1.75, 0.0), stone, false)
+		"backwall":
+			_prop_box(Vector3(12.0, 5.0, 0.5), Vector3(0.0, 2.5, -1.4), stone, true)
 		"water":
 			_prop_box(Vector3(8.0, 0.02, 8.0), Vector3(0.0, Config.swim_float, 0.0), Color(0.2, 0.45, 0.6, 0.45), false)
 
 
 # ================= what is shown =================
 static func build_of(id: String) -> Builds.Build:
-	match id:
-		"prog_v3":
-			return Builds.PROG_V3_BUILD
-		"prog_v1":
-			return Builds.PROG_ORIGINAL_BUILD
-		"tommy":
-			return Builds.BUILDS["tommy"]
-	return Builds.BUILDS["prog"]
+	return Builds.BUILDS.get(id, Builds.BUILDS["prog"])
 
 
 ## Swap the character: always a fresh model and a fresh animator, as Game.spawn_character does.
 func set_character(id: String) -> void:
+	_clear_other()
+	if subject != &"player":
+		action = "idle"      # (the list of moves was somebody else's)
+		subject = &"player"
+		_fill_actions()
+	_cam_scale = 1.0
 	if an != null:
 		an.actor.queue_free()
 		an = null
 	char_id = id
 	var B := build_of(id)
-	an = Prog3Animator.create(B)
+	an = Animator.create(B)
 	add_child(an.actor)
 	# his height, from an idle frame, frames the camera views
 	var keep := action
@@ -307,15 +331,78 @@ func set_character(id: String) -> void:
 	action = keep
 	var head: Animator.BoneRec = an.by_key.get(&"head")
 	body_h = (an.bone_world_pos(head.bone).y + 0.14 * B.scale) if head != null else B.cam_height + 0.25
-	if not (an is Prog3Animator):
-		PhantomSuit.wear_suit_by_id(an, suit_id)
-	clip_mode = clip_mode and an is Prog3Animator
+	PhantomSuit.wear_suit_by_id(an, suit_id)
+	_sync_ui()
+
+
+## Anyone on the stage: kind is &"player" (Prog or Tommy), &"enemy" (a Game.spawn_enemy kind) or &"npc" (an AnimCast.NPC_IDS id)
+func set_subject(kind: StringName, id: String) -> void:
+	match kind:
+		&"enemy":
+			set_enemy(id)
+		&"npc":
+			set_npc(id)
+		_:
+			set_character(id)
+
+
+func set_enemy(id: String) -> void:
+	_leave_player()
+	foe_id = id
+	subject = &"enemy"
+	if id == "tongue":      # (the Wallwretch is part of a wall: it looks for the one behind it when it is made, so the wall is there, and in the broadphase, first)
+		_set_props("backwall")
+		await get_tree().physics_frame
+		await get_tree().physics_frame
+		if subject != &"enemy" or foe_id != id or foe != null:
+			return
+	foe = AnimFoe.new(self, id)
+	_arrive(foe.body_h)
+
+
+func set_npc(id: String) -> void:
+	_leave_player()
+	npc_id = id
+	subject = &"npc"
+	npc = AnimNpc.new(self, id)
+	_arrive(npc.body_h)
+
+
+## the player's own model goes (a fresh one is made when Prog or Tommy is picked again) and what the moves list shows changes
+func _leave_player() -> void:
+	_clear_other()
+	if an != null:
+		an.actor.queue_free()
+		an = null
+	_set_props("")
+	_act_period = 0.0
+	if _bones_mi != null:
+		_bones_mi.visible = false
+
+
+func _clear_other() -> void:
+	if foe != null:
+		foe.dispose()
+		foe = null
+	if npc != null:
+		npc.dispose()
+		npc = null
+	if P != null:
+		P.god = false
+
+
+func _arrive(h: float) -> void:
+	body_h = h
+	_cam_scale = maxf(1.0, h / 1.7)
+	_look_y = h * cam_h
+	paused = false
+	_fill_actions()
 	_sync_ui()
 
 
 func set_suit(id: String) -> void:
 	suit_id = id
-	if an != null and not (an is Prog3Animator):
+	if an != null:
 		PhantomSuit.wear_suit_by_id(an, id)
 
 
@@ -333,37 +420,53 @@ func weapon_by_id(id: String) -> int:
 	return -1
 
 
+## What the moves list holds for who is on the stage: [id, label, ...]; an empty id is a heading
+func _actions() -> Array:
+	match subject:
+		&"enemy":
+			return AnimCast.FOE_ACTIONS
+		&"npc":
+			return npc.actions() if npc != null else []
+	return ACTIONS
+
+
+func _cur_action() -> String:
+	match subject:
+		&"enemy":
+			return foe.action if foe != null else ""
+		&"npc":
+			return npc.action if npc != null else ""
+	return action
+
+
+func _fill_actions() -> void:
+	if _lst_actions == null:
+		return
+	_lst_actions.clear()
+	for a: Array in _actions():
+		var i := _lst_actions.add_item(("— " + a[1] + " —") if a[0] == "" else "   " + a[1])
+		_lst_actions.set_item_metadata(i, a[0])
+		if a[0] == "":
+			_lst_actions.set_item_selectable(i, false)
+			_lst_actions.set_item_disabled(i, true)
+
+
 func set_action(id: String) -> void:
+	if subject == &"enemy" and foe != null:
+		foe.set_action(id)
+		_sync_ui()
+		return
+	if subject == &"npc" and npc != null:
+		npc.set_action(id)
+		_sync_ui()
+		return
 	for a: Array in ACTIONS:
 		if a[0] == id:
 			action = id
 			_act_period = float(a[2])
 			act_t = 0.0
-			clip_mode = false
 			_sync_ui()
 			return
-
-
-func set_clip(name: String) -> void:
-	if not (an is Prog3Animator) or not Prog3Animator._clips.has(name):
-		return
-	clip = name
-	clip_t = 0.0
-	clip_mode = true
-	# a clip made for a gun shows that gun
-	var best := ""
-	for w: Weapons.Def in Weapons.WEAPONS:
-		if name.begins_with(w.id + "_") and w.id.length() > best.length():
-			best = w.id
-	if best != "":
-		weapon = weapon_by_id(best)
-	_sync_ui()
-
-
-func clip_len() -> float:
-	if clip_mode and Prog3Animator._clips.has(clip):
-		return maxf((Prog3Animator._clips[clip] as Animation).length, 0.001)
-	return 0.0
 
 
 func cam_preset(id: String, snap: bool = false) -> void:
@@ -392,7 +495,7 @@ func fire() -> void:
 
 
 func reload() -> void:
-	if weapon < 0 or combat.rl != null:
+	if subject != &"player" or weapon < 0 or combat.rl != null:
 		return
 	var w := Weapons.WEAPONS[weapon]
 	if w.reload_kind != "shell" and w.reload_time <= 0.0:
@@ -408,14 +511,23 @@ func reload() -> void:
 
 # ================= the frame =================
 func _process(delta: float) -> void:
-	if an == null:
+	if an == null and foe == null and npc == null:
 		return
 	var real := minf(0.05, maxf(0.0001, delta))
 	var go := not paused or _step
 	var dt := (1.0 / 60.0 if paused else real) * rate
 	_step = false
-	if go:
-		_advance(dt)
+	if subject == &"player":
+		if go:
+			_advance(dt)
+	else:
+		if go:
+			_clock += dt
+			if foe != null:
+				foe.tick(dt, _clock)
+			elif npc != null:
+				npc.tick(dt)
+		Game.enemy_views.flush()      # (the enemies' and the alien NPCs' batches: one upload, once all are posed)
 	_camera(real)
 	_draw_bones()
 	_show_info()
@@ -423,23 +535,17 @@ func _process(delta: float) -> void:
 
 
 func _advance(dt: float) -> void:
-	if clip_mode:
-		clip_t = fmod(clip_t + dt, clip_len())
-	else:
-		act_t += dt
-		if _act_period > 0.0:
-			act_t = fmod(act_t, _act_period)
+	act_t += dt
+	if _act_period > 0.0:
+		act_t = fmod(act_t, _act_period)
 	_fire_cd -= dt
 	if auto_fire and _fire_cd <= 0.0 and weapon >= 0:
 		fire()
 		_fire_cd = 1.0 / maxf(0.2, Weapons.WEAPONS[weapon].rate)
 	_drive(dt)
 	_reload_tick(dt)
-	if clip_mode and an is Prog3Animator:
-		(an as Prog3Animator).preview_clip(dt, P, clip, clip_t)
-	else:
-		an.update(dt, P)
-		an.death_pose(P)
+	an.update(dt, P)
+	an.death_pose(P)
 	if show_bones:
 		an.actor.visible = true
 
@@ -524,9 +630,6 @@ func _drive(dt: float) -> void:
 	P.recoil = maxf(0.0, P.recoil - dt * 7.0)
 	FlailSim.FLAIL.on = false
 	var kind := ""
-	if clip_mode:
-		_set_props("")
-		return
 	match action:
 		"tired_idle":
 			P.hp = 20.0
@@ -764,22 +867,36 @@ func _camera(dt: float) -> void:
 	if turntable:
 		cam_yaw += dt * 0.45
 	var base := 0.0
-	if follow and an != null:
-		base = an.actor.position.y - build_of(char_id).pivot * build_of(char_id).scale
-		if P.dead:
-			base = 0.0
+	var at := Vector3.ZERO      # what the camera follows, on the floor
+	if follow:
+		match subject:
+			&"player":
+				if an != null:
+					base = an.actor.position.y - build_of(char_id).pivot * build_of(char_id).scale
+					if P.dead:
+						base = 0.0
+				at = Vector3(P.x, 0.0, P.z)
+			&"enemy":
+				if foe != null:
+					at = foe.focus()
+					base = at.y
+			&"npc":
+				if npc != null:
+					at = npc.focus()
+					base = at.y
 	_look_y = lerpf(_look_y, base + body_h * cam_h, 1.0 - exp(-8.0 * dt))
-	var look := Vector3(P.x if follow else 0.0, _look_y, P.z if follow else 0.0)
+	var look := Vector3(at.x, _look_y, at.z)
+	_focus = at
 	var cp := cos(cam_pitch)
-	cam.position = look + Vector3(sin(cam_yaw) * cp, sin(cam_pitch), cos(cam_yaw) * cp) * cam_dist
+	cam.position = look + Vector3(sin(cam_yaw) * cp, sin(cam_pitch), cos(cam_yaw) * cp) * (cam_dist * _cam_scale)
 	cam.look_at(look)
+	_floor_mi.position = Vector3(roundf(at.x), 0.0, roundf(at.z))      # (the plate goes where the camera is: an enemy that chases walks on)
+	(_floor_mi.material_override as ShaderMaterial).set_shader_parameter(&"centre", Vector2(at.x, at.z))
 
 
 func _unhandled_input(ev: InputEvent) -> void:
 	if ev is InputEventMouseButton:
 		var mb := ev as InputEventMouseButton
-		if mb.pressed:
-			get_viewport().gui_release_focus()      # (a click on the stage takes the keys back from the clip filter)
 		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed:
 			cam_dist = maxf(0.4, cam_dist * 0.9)
 			_goal = []
@@ -816,13 +933,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 			handled = true
 			match k.keycode:
 				KEY_TAB:
-					var i := 0
-					for j in CHARS.size():
-						if CHARS[j][0] == char_id:
-							i = j
-					set_character(CHARS[(i + 1) % CHARS.size()][0])
-				KEY_C:
-					_toggle_mode()
+					_cycle_subject(-1 if k.shift_pressed else 1)
 				KEY_SPACE:
 					paused = not paused
 					_sync_ui()
@@ -831,8 +942,7 @@ func _unhandled_input(ev: InputEvent) -> void:
 					_step = true
 					_sync_ui()
 				KEY_BACKSPACE, KEY_HOME:
-					act_t = 0.0
-					clip_t = 0.0
+					_restart()
 				KEY_F:
 					fire()
 				KEY_G:
@@ -872,7 +982,7 @@ func _set_rate(r: float) -> void:
 
 
 func _list_step(d: int) -> void:
-	var lst := _lst_clips if clip_mode else _lst_actions
+	var lst := _lst_actions
 	if lst.item_count == 0:
 		return
 	var sel := lst.get_selected_items()
@@ -883,20 +993,44 @@ func _list_step(d: int) -> void:
 			break
 	lst.select(i)
 	lst.ensure_current_is_visible()
-	_on_list_pick(i, lst)
+	_on_list_pick(i)
 
 
-func _toggle_mode() -> void:
-	if clip_mode:
-		set_action(action)
-	elif an is Prog3Animator:
-		set_clip(clip)
+func _restart() -> void:
+	act_t = 0.0
+	if foe != null:
+		foe.restart()
+
+
+## Tab / Shift+Tab: the next one in the character menu, enemies and NPCs after the playable ones
+func _cycle_subject(d: int) -> void:
+	var items: Array = []
+	var at := 0
+	for i in _opt_char.item_count:
+		var m: Variant = _opt_char.get_item_metadata(i)
+		if m is Array:
+			if m[0] == subject and m[1] == _cur_id():
+				at = items.size()
+			items.append(m)
+	if items.is_empty():
+		return
+	var n: Array = items[posmod(at + d, items.size())]
+	set_subject(n[0], n[1])
+
+
+func _cur_id() -> String:
+	match subject:
+		&"enemy":
+			return foe_id
+		&"npc":
+			return npc_id
+	return char_id
 
 
 # ================= bones and the readout =================
 func _draw_bones() -> void:
-	_bones_mi.visible = show_bones
-	if not show_bones:
+	_bones_mi.visible = show_bones and an != null
+	if not show_bones or an == null:
 		return
 	_bones_mesh.clear_surfaces()
 	var sk := an.skel
@@ -921,9 +1055,22 @@ func _draw_bones() -> void:
 
 func _show_info() -> void:
 	var lines: PackedStringArray = []
+	if subject != &"player":
+		if foe == null and npc == null:
+			return
+		lines.append("%s  |  %s" % [_char_label(), _cur_label()])
+		lines.append(foe.readout() if foe != null else npc.readout())
+		if paused:
+			lines.append("PAUSED")
+		if rate != 1.0:
+			lines.append("x%s speed" % str(snappedf(rate, 0.001)))
+		_lbl_info.text = "\n".join(lines)
+		_timeline.set_value_no_signal(0.0)
+		_timeline.editable = false
+		_lbl_time.text = "%.1f s   (no timeline: it runs on its own AI)" % (foe.t if foe != null else _clock)
+		return
 	var wname := "unarmed" if weapon < 0 else "%s (%s)" % [Weapons.WEAPONS[weapon].name, Weapons.WEAPONS[weapon].id]
-	var what := ("CLIP " + clip) if clip_mode else action
-	lines.append("%s  |  %s  |  %s%s" % [_char_label(), what, wname, "  |  AIM" if P.aiming else ""])
+	lines.append("%s  |  %s  |  %s%s" % [_char_label(), action, wname, "  |  AIM" if P.aiming else ""])
 	var st := ""
 	if paused:
 		st = "PAUSED"
@@ -933,31 +1080,33 @@ func _show_info() -> void:
 		st += ("  " if st != "" else "") + "reload %s %.2f" % [P.rl_ph, P.rl_u]
 	if st != "":
 		lines.append(st)
-	if an is Prog3Animator:
-		var a3 := an as Prog3Animator
-		var parts: PackedStringArray = []
-		for l: Prog3Animator.Layer in a3._layers:
-			parts.append("%s %.2f @%.2fs" % [l.name, l.w, l.t])
-		lines.append("clips: " + " | ".join(parts))
-		if a3._upper_held != null and a3._w_upper > 0.01:
-			lines.append("upper body: %s %.2f%s" % [a3._upper_held.name, a3._w_upper, " (arms)" if a3._upper_arms_held else ""])
-	else:
-		var parts: PackedStringArray = []
-		for n: String in ["w_air", "w_cr", "w_strafe", "w_sp", "w_aim", "w_arm", "w_rl", "w_flip", "w_hang", "w_wr", "w_swim", "w_lad", "w_slam", "w_pu", "w_fat"]:
-			var v: Variant = an.get(StringName(n))
-			if v != null and float(v) > 0.01:
-				parts.append("%s %.2f" % [n.substr(2), float(v)])
-		lines.append("layers: " + (" | ".join(parts) if not parts.is_empty() else "ground"))
+	var parts: PackedStringArray = []
+	for n: String in ["w_air", "w_cr", "w_strafe", "w_sp", "w_aim", "w_arm", "w_rl", "w_flip", "w_hang", "w_wr", "w_swim", "w_lad", "w_slam", "w_pu", "w_fat"]:
+		var v: Variant = an.get(StringName(n))
+		if v != null and float(v) > 0.01:
+			parts.append("%s %.2f" % [n.substr(2), float(v)])
+	lines.append("layers: " + (" | ".join(parts) if not parts.is_empty() else "ground"))
 	_lbl_info.text = "\n".join(lines)
-	var L := clip_len() if clip_mode else _act_period
-	var tt := clip_t if clip_mode else act_t
+	var L := _act_period
 	if not _tl_drag:
-		_timeline.set_value_no_signal(tt / L if L > 0.0 else 0.0)
-	_timeline.editable = clip_mode or L > 0.0
-	_lbl_time.text = ("%.2f / %.2f s   frame %d" % [tt, L, int(tt * Prog3Animator.FPS)]) if clip_mode else (("%.2f / %.2f s" % [tt, L]) if L > 0.0 else "%.1f s (held move)" % tt)
+		_timeline.set_value_no_signal(act_t / L if L > 0.0 else 0.0)
+	_timeline.editable = L > 0.0
+	_lbl_time.text = ("%.2f / %.2f s" % [act_t, L]) if L > 0.0 else "%.1f s (held move)" % act_t
+
+
+func _cur_label() -> String:
+	var id := _cur_action()
+	for a: Array in _actions():
+		if a[0] == id:
+			return a[1]
+	return id
 
 
 func _char_label() -> String:
+	if subject == &"enemy":
+		return AnimCast.foe_label(foe_id)
+	if subject == &"npc":
+		return AnimCast.npc_label(npc_id)
 	for c: Array in CHARS:
 		if c[0] == char_id:
 			return c[1]
@@ -989,9 +1138,6 @@ static func _theme() -> Theme:
 	t.set_stylebox(&"hover", &"PopupMenu", CrtTheme.panel(Color(60.0 / 255.0, 160.0 / 255.0, 90.0 / 255.0, 0.55), 3))
 	t.set_color(&"font_color", &"PopupMenu", Color("9df5b0"))
 	t.set_color(&"font_hover_color", &"PopupMenu", Color("f0fff5"))
-	t.set_stylebox(&"normal", &"LineEdit", CrtTheme.panel(Color(0, 0, 0, 0.4), 4, line, 8, 4))
-	t.set_stylebox(&"focus", &"LineEdit", CrtTheme.panel(Color(0, 0, 0, 0.4), 4, Color("5dff8f"), 8, 4))
-	t.set_color(&"font_color", &"LineEdit", Color("c8ffd4"))
 	return t
 
 
@@ -1020,46 +1166,47 @@ func _build_ui() -> void:
 	sc.add_child(v)
 	var title := CrtTheme.label("ANIM VIEWER", &"mono", 18, CrtTheme.PH_HI, 2)
 	v.add_child(title)
-	_opt_char = _option(v, "Character", CHARS.map(func(c: Array) -> String: return c[1]), func(i: int) -> void: set_character(CHARS[i][0]))
+	_opt_char = _option(v, "Character, enemy or NPC   [Tab]", [], func(i: int) -> void:
+		var m: Array = _opt_char.get_item_metadata(i)
+		set_subject(m[0], m[1]))
+	_opt_char.add_separator("PLAYABLE")
+	for c: Array in CHARS:
+		_add_subject(&"player", c[0], c[1])
+	_opt_char.add_separator("ENEMIES")
+	for e: Array in AnimCast.ENEMIES:
+		if e[0] == "":
+			_opt_char.add_separator(e[1])
+		else:
+			_add_subject(&"enemy", e[0], e[1])
+	_opt_char.add_separator("NPCS")
+	for e: Array in AnimCast.NPC_IDS:
+		if e[0] == "":
+			_opt_char.add_separator(e[1])
+		else:
+			_add_subject(&"npc", e[0], AnimCast.npc_label(e[0]))
+	var po0 := v.get_child_count()
 	_opt_suit = _option(v, "Suit", SUITS.map(func(c: Array) -> String: return c[1]), func(i: int) -> void: set_suit(SUITS[i][0]))
 	var wl: Array = ["Unarmed (fists)"]
 	for w: Weapons.Def in Weapons.WEAPONS:
 		wl.append("%s  (%s)" % [w.name, w.id])
 	_opt_weapon = _option(v, "Weapon   [ < > ]", wl, func(i: int) -> void: set_weapon(i - 1))
-	var hb := HBoxContainer.new()
-	v.add_child(hb)
-	_btn_moves = _button(hb, "Game moves", func() -> void: set_action(action))
-	_btn_clips = _button(hb, "V3 clips  [C]", func() -> void: set_clip(clip))
-	for b: Button in [_btn_moves, _btn_clips]:
-		b.toggle_mode = true
-		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	# the moves
-	_box_moves = VBoxContainer.new()
-	v.add_child(_box_moves)
+	_player_only.append_array(_children_since(v, po0))
+	# the moves (the game's own, for Prog and Tommy; the AI's, for an enemy or an NPC)
 	_lst_actions = ItemList.new()
 	_lst_actions.custom_minimum_size = Vector2(0, 330)
 	_lst_actions.focus_mode = Control.FOCUS_NONE
-	for a: Array in ACTIONS:
-		var i := _lst_actions.add_item(("— " + a[1] + " —") if a[0] == "" else "   " + a[1])
-		_lst_actions.set_item_metadata(i, a[0])
-		if a[0] == "":
-			_lst_actions.set_item_selectable(i, false)
-			_lst_actions.set_item_disabled(i, true)
-	_lst_actions.item_selected.connect(func(i: int) -> void: _on_list_pick(i, _lst_actions))
-	_box_moves.add_child(_lst_actions)
-	# the clips
-	_box_clips = VBoxContainer.new()
-	v.add_child(_box_clips)
-	_clip_filter = LineEdit.new()
-	_clip_filter.placeholder_text = "filter clips (e.g. rifle, walk)"
-	_clip_filter.text_changed.connect(func(_s: String) -> void: _fill_clips())
-	_box_clips.add_child(_clip_filter)
-	_lst_clips = ItemList.new()
-	_lst_clips.custom_minimum_size = Vector2(0, 300)
-	_lst_clips.focus_mode = Control.FOCUS_NONE
-	_lst_clips.item_selected.connect(func(i: int) -> void: _on_list_pick(i, _lst_clips))
-	_box_clips.add_child(_lst_clips)
+	_lst_actions.item_selected.connect(_on_list_pick)
+	v.add_child(_lst_actions)
+	_fill_actions()
+	# an enemy's target: the stand-in player it hunts
+	_foe_box = VBoxContainer.new()
+	v.add_child(_foe_box)
+	_foe_box.add_child(CrtTheme.label("ENEMY'S TARGET", &"mono", 12, CrtTheme.PH_DIM, 1))
+	_slider(_foe_box, "dist", "Target distance (m)", 1.0, 30.0, 0.5, 6.0, func(x: float) -> void:
+		if foe != null:
+			foe.set_dist(x))
 	# modifiers
+	var po1 := v.get_child_count()
 	v.add_child(CrtTheme.label("OVER THE MOVE", &"mono", 12, CrtTheme.PH_DIM, 1))
 	var g := GridContainer.new()
 	g.columns = 2
@@ -1081,6 +1228,7 @@ func _build_ui() -> void:
 	_slider(v, "pitch", "Aim up / down", -1.2, 1.2, 0.01, 0.0, func(x: float) -> void: aim_pitch = x)
 	_slider(v, "yaw", "Aim left / right", -0.8, 0.8, 0.01, 0.0, func(x: float) -> void: aim_yaw = x)
 	_slider(v, "hp", "Health", 0.0, 100.0, 1.0, 100.0, func(x: float) -> void: hp_ovr = x)
+	_player_only.append_array(_children_since(v, po1))
 	# playback
 	v.add_child(CrtTheme.label("PLAYBACK", &"mono", 12, CrtTheme.PH_DIM, 1))
 	var hb3 := HBoxContainer.new()
@@ -1092,9 +1240,7 @@ func _build_ui() -> void:
 		paused = true
 		_step = true
 		_sync_ui())
-	_button(hb3, "Restart", func() -> void:
-		act_t = 0.0
-		clip_t = 0.0)
+	_button(hb3, "Restart [Bksp]", _restart)
 	_slider(v, "rate", "Speed  [ - = ]", 0.05, 2.0, 0.05, 1.0, func(x: float) -> void: rate = x)
 	# camera
 	var cl := CrtTheme.label("CAMERA  (drag: orbit, right-drag: up / down, wheel: zoom)", &"mono", 12, CrtTheme.PH_DIM, 1)
@@ -1116,7 +1262,7 @@ func _build_ui() -> void:
 		_goal = [])
 	_check(g2, "follow", "Follow body", func(on: bool) -> void: follow = on)
 	_check(g2, "bones", "Bones  [B]", func(on: bool) -> void: show_bones = on)
-	_lbl_help = CrtTheme.label("Up / Down: move or clip   Left / Right: weapon   Tab: character   H: hide this panel", &"mono", 11, CrtTheme.PH_LOW)
+	_lbl_help = CrtTheme.label("Up / Down: move   Left / Right: weapon   Tab: character   H: hide this panel", &"mono", 11, CrtTheme.PH_LOW)
 	_lbl_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_lbl_help.custom_minimum_size = Vector2(300, 0)
 	v.add_child(_lbl_help)
@@ -1164,21 +1310,16 @@ func _build_ui() -> void:
 	_lbl_time = CrtTheme.label("", &"mono", 12, CrtTheme.PH, 0)
 	_lbl_time.custom_minimum_size = Vector2(230, 0)
 	th.add_child(_lbl_time)
-	_fill_clips()
 	_chk["follow"].set_pressed_no_signal(true)
 	_chk["props"].set_pressed_no_signal(true)
 
 
-## Dragging the timeline: a clip goes exactly there; a game move is replayed for a few frames at that moment so its blends settle (gait phases keep their own clock)
+## Dragging the timeline: the move is replayed for a few frames at that moment so its blends settle (gait phases keep their own clock)
 func _scrub(u: float) -> void:
 	if an == null:
 		return
 	paused = true
-	if clip_mode:
-		clip_t = u * clip_len()
-		_advance(0.0001)
-		clip_t = u * clip_len()
-	elif _act_period > 0.0:
+	if _act_period > 0.0:
 		var t := u * _act_period
 		for _n in 12:
 			act_t = t
@@ -1189,29 +1330,25 @@ func _scrub(u: float) -> void:
 	_sync_ui()
 
 
-func _fill_clips() -> void:
-	if _lst_clips == null:
+func _on_list_pick(i: int) -> void:
+	if i < 0 or i >= _lst_actions.item_count:
 		return
-	_lst_clips.clear()
-	Prog3Animator._load_shared()
-	var names: Array = Prog3Animator._clips.keys()
-	names.sort()
-	var f := _clip_filter.text.strip_edges().to_lower()
-	for n: String in names:
-		if f == "" or n.to_lower().contains(f):
-			var i := _lst_clips.add_item("%s   %.2fs" % [n, (Prog3Animator._clips[n] as Animation).length])
-			_lst_clips.set_item_metadata(i, n)
-	_sync_ui()
-
-
-func _on_list_pick(i: int, lst: ItemList) -> void:
-	if i < 0 or i >= lst.item_count:
-		return
-	var id: String = lst.get_item_metadata(i)
-	if lst == _lst_clips:
-		set_clip(id)
-	elif id != "":
+	var id: String = _lst_actions.get_item_metadata(i)
+	if id != "":
 		set_action(id)
+
+
+func _add_subject(kind: StringName, id: String, label: String) -> void:
+	_opt_char.add_item(label)
+	_opt_char.set_item_metadata(_opt_char.item_count - 1, [kind, id])
+
+
+## the controls added to `parent` since it had `from` children
+static func _children_since(parent: Control, from: int) -> Array[Control]:
+	var out: Array[Control] = []
+	for i in range(from, parent.get_child_count()):
+		out.append(parent.get_child(i) as Control)
+	return out
 
 
 func _option(parent: Control, label: String, items: Array, cb: Callable) -> OptionButton:
@@ -1264,32 +1401,29 @@ func _slider(parent: Control, key: String, text: String, lo: float, hi: float, s
 	return s
 
 
-## The panel shows the state: what is picked, which list is open, what is on
+## The panel shows the state: what is picked, what is on
 func _sync_ui() -> void:
 	if _opt_char == null:
 		return
-	var v3 := an is Prog3Animator
-	for j in CHARS.size():
-		if CHARS[j][0] == char_id:
+	for j in _opt_char.item_count:
+		var m: Variant = _opt_char.get_item_metadata(j)
+		if m is Array and m[0] == subject and m[1] == _cur_id():
 			_opt_char.select(j)
-	_opt_suit.disabled = v3
-	_opt_suit.tooltip_text = "Prog V3 wears no suits yet" if v3 else ""
+	for c in _player_only:
+		c.visible = subject == &"player"
+	_foe_box.visible = subject == &"enemy"
+	if foe != null and _sliders.has("dist") and not is_equal_approx(_sliders["dist"].value, foe.dist):
+		_sliders["dist"].value = foe.dist
 	for j in SUITS.size():
 		if SUITS[j][0] == suit_id:
 			_opt_suit.select(j)
 	_opt_weapon.select(weapon + 1)
-	_btn_clips.disabled = not v3
-	_btn_moves.set_pressed_no_signal(not clip_mode)
-	_btn_clips.set_pressed_no_signal(clip_mode)
-	_box_moves.visible = not clip_mode
-	_box_clips.visible = clip_mode
-	var want: String = clip if clip_mode else action
-	var lst := _lst_clips if clip_mode else _lst_actions
-	for i in lst.item_count:
-		if lst.get_item_metadata(i) == want:
-			if not lst.is_selected(i):
-				lst.select(i)
-				lst.ensure_current_is_visible()
+	var want := _cur_action()
+	for i in _lst_actions.item_count:
+		if _lst_actions.get_item_metadata(i) == want:
+			if not _lst_actions.is_selected(i):
+				_lst_actions.select(i)
+				_lst_actions.ensure_current_is_visible()
 	for k: String in _chk:
 		var on := false
 		match k:

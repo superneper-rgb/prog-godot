@@ -200,7 +200,7 @@ func _materials() -> void:
 ## the light: a low warm sun that only gets in through the gap, cool green shade under the leaves, golden-teal haze
 func _render_state() -> void:
 	Game.view.apply_render_state({"background": Color("7d9670"), "tone_mapping": View.TONE_ACES, "exposure": 1.05, "fog": [Color("7d9670"), 0.011],
-		"hemi": [Color("6a9a88"), Color("3d3524"), 1.75], "sun": [Color("ffe1a0"), 5.0], "sun_cast": true, "clip": [0.1, 500.0]})
+		"hemi": [Color("6a9a88"), Color("3d3524"), 1.75], "sun": [Color("ffe1a0"), 5.0], "sun_cast": true, "sun_lean": View.SUN_LEAN_LEVELS.has("jungle-test"), "clip": [0.1, 500.0]})
 	var env := Game.view.env
 	var set_ := {"volumetric_fog_enabled": true, "volumetric_fog_density": 0.011, "volumetric_fog_albedo": Color(0.92, 0.88, 0.7), "volumetric_fog_emission": Color(0.015, 0.035, 0.03),
 		"volumetric_fog_emission_energy": 1.0, "volumetric_fog_anisotropy": 0.6, "volumetric_fog_length": 90.0, "volumetric_fog_detail_spread": 2.0, "volumetric_fog_ambient_inject": 0.15,

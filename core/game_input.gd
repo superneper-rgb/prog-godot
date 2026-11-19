@@ -24,20 +24,20 @@ class InputView:
 		return btns[n]
 
 const BUTTONS: Array[StringName] = [&"jump", &"b", &"attack", &"quick", &"strafe", &"sprint", &"crouch", &"recenter",
-	&"fire", &"reload", &"ads", &"debug", &"pause", &"d_up", &"d_down", &"d_left", &"d_right", &"l3", &"r3", &"power", &"nvg"]
+	&"fire", &"reload", &"ads", &"debug", &"pause", &"d_up", &"d_down", &"d_left", &"d_right", &"l3", &"r3", &"power", &"nvg", &"map"]
 
 # Xbox "standard" mapping, by Godot's SDL button indices (JoyButton).
 const PAD_BTN := {
 	&"jump": JOY_BUTTON_A, &"b": JOY_BUTTON_B, &"attack": JOY_BUTTON_X, &"quick": JOY_BUTTON_Y,
 	&"strafe": JOY_BUTTON_LEFT_SHOULDER, &"crouch": JOY_BUTTON_RIGHT_SHOULDER, &"recenter": JOY_BUTTON_RIGHT_STICK,
-	&"debug": JOY_BUTTON_BACK, &"pause": JOY_BUTTON_START, &"l3": JOY_BUTTON_LEFT_STICK, &"r3": JOY_BUTTON_RIGHT_STICK,
+	&"map": JOY_BUTTON_BACK, &"pause": JOY_BUTTON_START, &"l3": JOY_BUTTON_LEFT_STICK, &"r3": JOY_BUTTON_RIGHT_STICK,
 	&"d_up": JOY_BUTTON_DPAD_UP, &"d_down": JOY_BUTTON_DPAD_DOWN, &"d_left": JOY_BUTTON_DPAD_LEFT, &"d_right": JOY_BUTTON_DPAD_RIGHT,
 	&"power": JOY_BUTTON_DPAD_UP, &"nvg": JOY_BUTTON_DPAD_DOWN,
 }
 
 const KEY_MAP := {
 	&"jump": [KEY_SPACE], &"crouch": [KEY_C], &"strafe": [KEY_F], &"sprint": [KEY_SHIFT], &"recenter": [KEY_G], &"reload": [KEY_R],
-	&"debug": [KEY_F3], &"pause": [KEY_ESCAPE, KEY_P], &"quick": [KEY_Q], &"b": [KEY_E], &"attack": [KEY_V], &"power": [KEY_Z], &"nvg": [KEY_N],
+	&"debug": [KEY_F3], &"pause": [KEY_ESCAPE, KEY_P], &"quick": [KEY_Q], &"b": [KEY_E], &"attack": [KEY_V], &"power": [KEY_Z], &"nvg": [KEY_N], &"map": [KEY_M],
 }
 const MOUSE_MAP := {&"ads": MOUSE_BUTTON_RIGHT, &"fire": MOUSE_BUTTON_LEFT}
 

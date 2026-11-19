@@ -1,6 +1,6 @@
 # FOINT CITY's fleet, built procedurally: this script, more_cars.py and sky_cars.py are the source of assets/vehicles/city/*.glb.
 # One car:  blender -b --factory-startup --python tools/cars/build_cars.py -- <kind> <outdir> [lod] [render]     (Blender 5.2; node tools/cars/build_all.mjs does all of them)
-#   kind: sedan hatch taxi van truck bus saucerG saucerN, and the flying cars skyLimo skyDart (sky_cars.py).  lod: the lighter mesh the street's MultiMesh draws (<kind>_street.glb).  render: preview pictures, no game surfaces.
+#   kind: sedan hatch taxi van truck bus saucerG saucerN saucerB, and the flying cars skyLimo skyDart (sky_cars.py).  lod: the lighter mesh the street's MultiMesh draws (<kind>_street.glb).  render: preview pictures, no game surfaces.
 # What the game gets: Body, Glass and one Wheel_<n> per wheel (origin at its centre), every mesh in at most four surfaces: CarPaint (takes the car's colour), CarParts (vertex colour = albedo,
 # UV = metallic, roughness), CarGlass (or CarDome: the alien craft's clear bubbles), CarLights (vertex colour = the light's colour, UV.x = strength / 16). levels/shaders/car_*.gdshader draw them.
 # The wheeled cars also get Door (the driver's door, cut out of the body with its glass and trim; origin at its hinge) and Steer (the steering wheel; origin at its centre), over a cabin
@@ -594,7 +594,7 @@ for o in list(bpy.data.objects):
     bpy.data.objects.remove(o)
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'more_cars.py')).read())
 exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sky_cars.py')).read())
-objs = {'sedan': cruiser, 'hatch': pod, 'taxi': taxi, 'van': van, 'truck': truck, 'bus': bus, 'saucerG': saucer_g, 'saucerN': saucer_n, 'skyLimo': sky_limo, 'skyDart': sky_dart}[CAR]()
+objs = {'sedan': cruiser, 'hatch': pod, 'taxi': taxi, 'van': van, 'truck': truck, 'bus': bus, 'saucerG': saucer_g, 'saucerN': saucer_n, 'saucerB': saucer_b, 'skyLimo': sky_limo, 'skyDart': sky_dart}[CAR]()
 root = bpy.data.objects.new('Car_' + CAR, None)
 bpy.context.scene.collection.objects.link(root)
 tris = 0

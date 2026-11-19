@@ -2,6 +2,7 @@
 // The city's street lighting lives in lightMap: there are no scene lights for it.
 shader_type spatial;
 render_mode unshaded, shadows_disabled;
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform sampler2D map : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D puddle : repeat_enable, filter_linear_mipmap;     // JS: srgb false
@@ -39,5 +40,5 @@ void fragment() {
 	vec2 cell = floor(p * 3.0);
 	float sp = h21(cell + floor(TIME * 7.0));
 	col += wet * step(0.992, sp) * (0.05 + L * 0.6);
-	ALBEDO = col;
+	ALBEDO = col + flash_light(vW, vec3(0.0, 1.0, 0.0), vec3(0.18));      // (2026-11-11: a muzzle flash or a blast lights the street)
 }

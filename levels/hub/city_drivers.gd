@@ -60,6 +60,8 @@ func _init(level: ExportedLevel, tr: CityTraffic, J: Dictionary, f: CityFolk, gr
 	var dn: Array = level.node_named("FointDistrict")
 	(dn[0] if not dn.is_empty() else level.scene_root).add_child(group)      # (hidden with the district from the hub street)
 	for nm: String in J["driver_species"]:
+		if nm == "disguised":      # (SAMBO FENRIR's suit: he is one of a kind, user 2026-11-19, so nobody else drives in it)
+			continue
 		var d: Dictionary = J["drivers"][nm]
 		var s := Seat.new()
 		s.nm = nm

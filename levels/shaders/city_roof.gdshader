@@ -5,6 +5,7 @@ shader_type spatial;
 render_mode unshaded, shadows_disabled;
 
 #include "res://levels/shaders/city_env.gdshaderinc"
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform sampler2D map : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform float ground_y = -10.0;
@@ -58,5 +59,5 @@ void fragment() {
 	vec3 city = city_env(normalize(R), mix(0.5, 0.03, wet_pool), above, v_far_mass, v_far_street, lamp_k);
 	float F = mix(0.02 + 0.35 * fres, 0.02 + 0.98 * fres, wet_pool);
 	float grime = 0.8 + 0.4 * vnoise(p * 0.5 + 3.0);
-	ALBEDO = base * grime * (1.0 - 0.6 * wet_pool) + city * F;
+	ALBEDO = base * grime * (1.0 - 0.6 * wet_pool) + city * F + flash_light(w_pos, vec3(0.0, 1.0, 0.0), vec3(0.25));
 }

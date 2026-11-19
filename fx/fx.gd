@@ -334,6 +334,7 @@ func _ready() -> void:
 	light.omni_attenuation = 2.0
 	light.light_energy = 0.0
 	light.visible = false
+	light.add_to_group(FlashLights.GROUP)
 	add_child(light)
 	# damage numbers (the JS #dmg host): a Label pool under the UI layer, made once
 	_num_plain = LabelSettings.new()
@@ -1228,9 +1229,11 @@ func handle(events: Array, pev: Array, clone: Variant = null) -> void:
 			"bolt_hit":
 				var bk := str(e.get("bk", ""))
 				sparks(Vector3(e.x, e.y, e.z), 5 if str(e.get("kind", "")) == "player" else 8, 3.5, Vector3(e.nx, e.ny, e.nz), _bolt_col(bk))
-				sfx.play_at("boltHit", e.x, e.y, e.z, {"kind": e.get("kind", ""), "bk": "sauce" if bk == "bile" or bk == "ink" else bk})
+				sfx.play_at("boltHit", e.x, e.y, e.z, {"kind": e.get("kind", ""), "bk": "sauce" if bk == "bile" or bk == "ink" else ("" if bk == "brick" else bk)})
 				if bk == "sauce":
 					sauce_splat(e)
+				elif bk == "brick":      # (the Pervert Palace crew's thrown bricks break into dust)
+					dust(Vector3(e.x, e.y, e.z), 12, 2.2)
 			"mind_hit":
 				mind_hit_fx(e, sfx, hud)
 			"player_stun":
@@ -1347,6 +1350,8 @@ func _bolt_col(bk: String) -> int:
 			return 0xe0301c
 		"bile":
 			return 0xc8f030
+		"brick":
+			return 0xb0644a
 		"ink":
 			return 0x3050ff
 		"ring":

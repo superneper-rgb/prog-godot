@@ -1,14 +1,10 @@
 class_name OmSummit
 extends RefCounted
-## OMNISPHERE: THE SUMMIT (JS summit.js), the top of the collapse. THE LIFT: the feed riser's service lift, under fire, until a pulse out of the core kills the hoist and the safety dogs catch the cage; jetpack up the ledges. THE RING: a walkway 8 m wide, 170 m up, turning (it carries you). THE EMITTERS: each one's shutters open to vent; shoot the capacitor bank behind them. When one dies its beam cuts out and the current it held goes home: a bolt from the core down to Juniper. Three and he is whole again and the sphere starts coming apart. THE JUMP: the heavy lifter swings round under you with its ramp down; go over the railing and the dive takes it from there. Everything is laid out relative to the Omnisphere's axis.
+## OMNISPHERE: THE SUMMIT (JS summit.js), the top of the collapse. THE LIFT: the feed riser's service lift, under fire, until a pulse out of the core kills the hoist and the safety dogs catch the cage; jetpack up the ledges. THE RING: a walkway 8 m wide, 170 m up, turning (it carries you). THE EMITTERS: each one has a garrison that feeds its armour (om_ringfight.gd: new, user 2026-11-15; the JS opened the shutters on a timer and the ring was empty); kill the guards and its shutters blow open for good; shoot the capacitor bank behind them. When one dies its beam cuts out and the current it held goes home: a bolt from the core down to Juniper. Three and he is whole again and the sphere starts coming apart. THE JUMP: the heavy lifter swings round under you with its ramp down; go over the railing and the dive takes it from there. Everything is laid out relative to the Omnisphere's axis.
 
 const TOWER := {"low_y": 67.4, "jam_y": 155.0, "top_y": 173.5}
 const SHAFT := {"u0": -95.0, "u1": -89.0, "w0": 6.5, "w1": 11.5}
-const EM_FIRST := .6
-const EM_STAGGER := .8
 const EM_WARN := .5
-const EM_OPEN := 8.0
-const EM_SHUT := [1.6, 2.4]
 const R0 := 73.0      # the ring's walkway radii (landmark.js RING: orad + 7, orad + 15.5)
 const R1 := 81.5
 const LIFT_R := 128.0
@@ -87,6 +83,8 @@ var cw := 0.0
 var spots := {}
 var font: Font
 var ring_g: Node3D
+var fight: OmRingFight
+var last_rot := 0.0
 
 
 static func X(u: float) -> float:
@@ -152,7 +150,6 @@ func _init(p_lv: ExportedLevel, p_sec: OmSecurity, p_sets: OmSets, p_craft: OmCr
 		e.k = k
 		e.a = k / 3.0 * TAU + .45
 		e.g = VhKit.one(lv, "om-em-%d" % k)
-		e.t = EM_FIRST + k * EM_STAGGER
 		for i in 2:
 			e.leaves.append([VhKit.one(lv, "om-em-%d-leaf-%d" % [k, i]), 1.0 if i == 0 else -1.0])
 		var lens := MsKit.disc(1.15, 24)
@@ -185,6 +182,8 @@ func _init(p_lv: ExportedLevel, p_sec: OmSecurity, p_sets: OmSets, p_craft: OmCr
 		e.body = [W.add({"kind": "box", "cx": 0.0, "cz": 0.0, "hx": 2.4, "hz": 3.35, "top": OY + 5.72, "bottom": OY - .3, "tag": "plat"}), W.add({"kind": "box", "cx": 0.0, "cz": 0.0, "hx": .7, "hz": 4.5, "top": OY + 2.8, "bottom": OY - 3.2, "tag": "plat"})]
 		ems.append(e)
 		_place_em(e)
+	fight = OmRingFight.new(lv, sec, sets, audio, marks, craft, act2, ems)
+	last_rot = ring_g.rotation.y
 	bolt_r = OmRibbon.new(root, 0xd8fff2)
 	aura_r = OmRibbon.new(root, 0xd8fff2)
 	bolt_light = OmniLight3D.new()
@@ -460,7 +459,7 @@ func _marks(P: Player) -> void:
 	if on_r and P != null:
 		var p := lifter.group.position + Vector3(0, 5, 0)
 		var d := roundi(p.distance_to(Vector3(P.x, P.y, P.z)))
-		var jump: bool = ride.ph == "hold"
+		var jump: bool = ride.ph == "hold" and fight.in_zone(P)
 		_screen_mark(ride_mark, p, ("JUMP  -  " if jump else "") + pilot_name + "\n%d M" % d, Color("#ffb43c") if jump else Color("#8dffb4"))
 		ride_mark.modulate.a = .45 if jump and fmod(float(st.t), .5) > .25 else 1.0
 	else:
@@ -472,9 +471,13 @@ func _marks(P: Player) -> void:
 			continue
 		var w := e.cap_glow.global_position
 		var d := roundi(w.distance_to(Vector3(P.x, P.y + 1.4, P.z)))
+		if e.k != ems_dead():      # one at a time: the others stay armoured until their turn
+			e.lbl.visible = false
+			continue
 		var open := e.ph == "open" or e.ph == "warn"
 		var nm := "ABC"[e.k]
-		_screen_mark(e.lbl, w + Vector3(0, 4.6, 0), ("SHOOT  -  EMITTER " + nm if open else "EMITTER " + nm + "  SHUT %d" % maxi(1, ceili(e.t))) + "\n%d M" % d, Color("#8dffb4") if open else Color("#ffb43c"))
+		var left := fight.guards_left()
+		_screen_mark(e.lbl, w + Vector3(0, 4.6, 0), ("SHOOT  -  EMITTER " + nm if open else "EMITTER " + nm + ("  -  %d GUARDS" % left if left > 0 else "  ARMOURED")) + "\n%d M" % d, Color("#8dffb4") if open else Color("#ffb43c"))
 
 
 func _after(t: float, fn: Callable) -> void:
@@ -511,6 +514,7 @@ func _kill_em(e: Em) -> void:
 		(L[0] as Node3D).visible = false
 	var n := ems_dead()
 	# BUG-110 (tracker): the last emitter only said the containment was gone, so nothing told the player the objective was done. Godot only; the three.js toast had no such line.
+	fight.on_kill(n)
 	Game.hud.toast("EMITTER %s DOWN  -  %d TO GO" % ["ABC"[e.k], 3 - n] if n < 3 else "OBJECTIVE COMPLETE  -  CONTAINMENT IS GONE", 2.4 if n < 3 else 3.2)
 	_after(.45, func() -> void:
 		power = n
@@ -537,9 +541,12 @@ func finale() -> void:
 	_insert("final", 3.8)
 	jun.hold(1.0, 3.0)
 	power = 3
+	fight.start_exit()      # (new, user 2026-11-15: the ring goes from behind you and the lifter waits off the far end of the stretch ahead; the JS brought it under you wherever you stood)
 	_after(3.6, func() -> void:
 		call_lifter(Game.player)
-		Game.hud.toast("%s IS COMING UNDER YOU  -  JUMP!" % pilot_name, 3.4))
+		ride.lock_ang = true
+		ride.ang = fight.pickup_angle()
+		Game.hud.toast("THE RING IS GOING  -  RUN FOR %s" % pilot_name, 3.4))
 
 
 func update(dt: float, P: Player, C: Combat) -> void:
@@ -598,8 +605,13 @@ func update(dt: float, P: Player, C: Combat) -> void:
 			var f: Callable = later[i].fn
 			later.remove_at(i)
 			f.call()
+	fight.park(dt, lift.ph != "down" and not st.ring_on)      # (on the way up: the ring brings the first emitter round to the drop)
 	# the ring turns under you (carry) ...
-	var dq := marks.ring_w * dt
+	var dq := ring_g.rotation.y - last_rot      # (what it really turned: the seizing ring lurches, om_ringfight.gd)
+	last_rot = ring_g.rotation.y
+	if absf(dq) > .05:      # a checkpoint load put the ring somewhere else
+		dq = 0.0
+	fight.update(dt, P, C, dq, st.ring_on and float(st.final) < 0.0)
 	if _on_ring_frame(P):
 		var dx := P.x - OX
 		var dz := P.z - OZ
@@ -613,7 +625,9 @@ func update(dt: float, P: Player, C: Combat) -> void:
 	if float(st.spark_t) <= 0.0:
 		st.spark_t = .08 + randf() * .1
 		fx.sparks(Vector3(X(-81.75), OY + .4, Z(_R(-1, 1))), 4, 6.0, null, 0x9dffd8)
-	# the emitters: shut -> warn -> open (vent) -> shut; shoot the bank while it is open
+	# the emitters: shut while a guard of its garrison lives -> warn -> open for good; shoot the bank
+	var act := ems_dead()      # they are fought in order: 0, 1, 2
+	var down := fight.guards_down(ems_dead())
 	var T: float = st.t
 	for e in ems:
 		_place_em(e)
@@ -634,16 +648,13 @@ func update(dt: float, P: Player, C: Combat) -> void:
 			e.beacon.set_on(false)
 			continue
 		e.t -= dt
-		if e.ph == "shut" and e.t <= 0.0:
+		if e.ph == "shut" and e.k == act and down:
 			e.ph = "warn"
 			e.t = EM_WARN
 			audio.play_at("emVent", e.cap_glow.global_position)
+			Game.hud.toast("ARMOUR DOWN  -  SHOOT THE CAPACITORS", 2.6)
 		elif e.ph == "warn" and e.t <= 0.0:
 			e.ph = "open"
-			e.t = EM_OPEN
-		elif e.ph == "open" and e.t <= 0.0:
-			e.ph = "shut"
-			e.t = _R(EM_SHUT[0], EM_SHUT[1])
 		var want := 1.0 if e.ph == "open" else 0.0
 		e.open += (want - e.open) * minf(1.0, dt * (14.0 if want != 0.0 else 6.0))
 		for L: Array in e.leaves:
@@ -717,31 +728,7 @@ func update(dt: float, P: Player, C: Combat) -> void:
 	# after the last emitter: the ring starts to go (explosions closing in from both sides along it), the lifter comes round
 	if float(st.final) >= 0.0:
 		st.final = float(st.final) + dt
-		if float(st.final) > 4.0:
-			st.fail_t = float(st.fail_t) + dt
-		var me := atan2(P.z - OZ, P.x - OX)
-		var gap := PI * maxf(.06, 1.0 - float(st.fail_t) / 13.0)
-		if float(st.fail_t) > 0.0 and randf() < dt * 9.0:
-			var q := me + PI + (-1.0 if randf() < .5 else 1.0) * (PI - gap) * pow(randf(), .4)
-			var r := _R(R0, R1)
-			marks.far_boom(Vector3(OX + cos(q) * r, DECK + 1.0, OZ + sin(q) * r), _R(6, 11), .4)
-		if float(st.fail_t) > 0.0:
-			st.drop_t = float(st.drop_t) - dt
-			if float(st.drop_t) <= 0.0:
-				st.drop_t = .7 + randf() * .6
-				var q := me + (1.0 if randf() < .5 else -1.0) * gap * .95
-				var at := Vector3(OX + cos(q) * _R(R0, R1), DECK + 1.0, OZ + sin(q) * _R(R0, R1))
-				marks.far_boom(at, 9.0, .9)
-				audio.play_at("boomBig", at)
-		if float(st.fail_t) > 13.0 and on_ring(P):      # thrown off: the dive takes him
-			st.fail_t = -99.0
-			P.vy = 14.0
-			P.grounded = false
-			var o := Vector3(P.x - OX, 0.0, P.z - OZ).normalized()
-			P.vx = o.x * 9.0
-			P.vz = o.z * 9.0
-			C.hurt_player(P, 12.0, OX, OZ, "melee")
-			fx.shake = 2.0
+		# (the ring's end is OmRingFight's run now: it falls away behind you. The JS closed explosions in from both sides and threw you off after 13 s)
 	_update_lifter(dt, P)
 	_marks(P)
 	if ride.ph == "hold":
@@ -756,7 +743,7 @@ func update(dt: float, P: Player, C: Combat) -> void:
 	else:
 		beacon_g.visible = false
 	# a fall before the job is done: caught and put back on the last checkpoint's spot (no 170 m wait for the magma)
-	if st.ring_on and float(st.final) < 0.0 and P.y < float(TOWER.jam_y) - 8.0 and not P.dead:
+	if st.ring_on and float(st.final) < 0.0 and P.y < float(TOWER.jam_y) - 8.0 and not P.dead and not fight.safe_ok:      # (on the broken ring the fight puts him back on the piece he fell from)
 		st.fall_t = float(st.fall_t) + dt
 		if float(st.fall_t) > .25:
 			st.fall_t = 0.0
@@ -799,7 +786,8 @@ func ring(on: bool = true) -> void:
 		Game.hud.toast("%s IS CIRCLING BELOW  -  YOUR WAY OUT" % pilot_name, 3.2)
 	st.ring_on = on
 	if on:
-		marks.ring_w = .05
+		marks.ring_w = 0.0 if fight.seized else .05
+		fight.begin(ems_dead())
 
 
 ## he is off the ring: wherever the lifter is, it is under him now
@@ -846,7 +834,7 @@ func reset(stage: String, obj: int, _retry: bool) -> void:
 	for e in ems:
 		e.dead = false
 		e.ph = "shut"
-		e.t = EM_FIRST + e.k * EM_STAGGER
+		e.t = 0.0
 		e.open = 0.0
 		e.T.hp = e.T.max
 		e.last_hp = e.T.max
@@ -868,6 +856,8 @@ func reset(stage: String, obj: int, _retry: bool) -> void:
 	beacon_g.visible = false
 	ride_mark.visible = false
 	jun.boost = 0.0
+	fight.reset(clampi(obj - 8, 0, 3) if stage == "escape" else 0, stage == "escape")
+	last_rot = ring_g.rotation.y
 	if stage == "escape":
 		if obj >= 6:      # past the lift
 			lift.ph = "jammed"

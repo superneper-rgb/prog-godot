@@ -14,6 +14,7 @@ var pause: PauseMenu
 var menu: MainMenu
 var console: DebugConsole
 var tuning: TuningPanel
+var city_map: CityMap
 var _ver: PanelContainer
 var _fade: ColorRect
 var _fade_lab: Label
@@ -52,6 +53,9 @@ func _ready() -> void:
 	add_child(wheel)
 	tuning = TuningPanel.new()
 	add_child(tuning)
+	city_map = CityMap.new()      # View / Back (M): the hub's map
+	add_child(city_map)
+	Game.menus.append(city_map)
 	menu = MainMenu.new()
 	add_child(menu)
 	pause = PauseMenu.new()
@@ -93,7 +97,7 @@ func _ready() -> void:
 	Game.menus.append(Game.forge)
 
 
-# ---- preferences (the browser's localStorage: prog.character, prog.costume) ----
+# ---- preferences (the browser's localStorage: prog.character) ----
 
 func _prefs_load() -> void:
 	var c := ConfigFile.new()
@@ -105,14 +109,11 @@ func _prefs_load() -> void:
 				given = true
 		if Builds.BUILDS.has(id) and not given:
 			Game.char_pick = id
-		var co: String = c.get_value("menu", "costume", Builds.prog_costume)
-		Builds.prog_costume = co if co in ["prog_v2", "prog_v3"] else "standard"
 
 
 func prefs_save() -> void:
 	var c := ConfigFile.new()
 	c.set_value("menu", "character", Game.char_pick)
-	c.set_value("menu", "costume", Builds.prog_costume)
 	c.save(PREFS)
 
 
@@ -369,11 +370,18 @@ func frame_begin(dt: float) -> void:
 		return
 	if Game.paused:
 		pause.update_pause_pad(dt)
+	# View / Back (M): the map, in the hub. Elsewhere there is no map, and the pad's Back goes on to open the dev panel as it always did (F3 does so on the keyboard in the hub too)
+	var map_press := Inp.btn(&"map").pressed
+	if city_map.is_open:
+		map_press = false      # (CityMap.update closes it: Game calls it on every open menu)
+	elif map_press and CityMap.available() and Game.player != null and not Game.player.dead and not Game.paused and not wheel.is_open and not Game.menu_open():
+		city_map.open()
+		map_press = false
 	if Inp.btn(&"pause").pressed and not Game.menu_open() and (Inp.using_pad or Time.get_ticks_msec() - last_unlock_ms > 250):
 		set_paused(not Game.paused)
 		if not Game.paused:
 			lock()
-	if Inp.btn(&"debug").pressed:
+	if Inp.btn(&"debug").pressed or (map_press and Inp.using_pad):
 		tuning.toggle_debug()
 		if tuning.debug_open and Inp.pointer_locked:
 			_relock_after_tools = true

@@ -159,7 +159,11 @@ var ships: Array[Ship] = []
 var missiles: Array[Missile] = []
 var doug := Doug.new()
 var doug_talker := false
-var drum_deck := {"id": "drum", "x0": float(J.x) - 44.0, "x1": float(J.x) + 44.0, "z0": float(J.z) - 44.0, "z1": float(J.z) + 44.0, "top": J.floor, "disc": [J.x, J.z, 44.0], "big": true}
+# THE FIGHT'S FLOOR (reworked, user 2026-11-15: you could stand there shooting the cuffs off, or on the walkway and take nothing). While the fight runs the drum is live on EVERY Draw, not only when a cuff comes off, and everything bolted down carries it: the floor and what stands on it (band: the ramps, the plinth, a cabinet), and the walkway ring. What moves is safe (om_lab.gd's lifts, carriages and baskets), and so are the banks' caps and the air. It hits for 45, twice if you stay. Robots are only cooked by a cuff's own surge (cook), or every Draw would clear the floor for you.
+var drum_deck := {"id": "drum", "x0": float(J.x) - 44.0, "x1": float(J.x) + 44.0, "z0": float(J.z) - 44.0, "z1": float(J.z) + 44.0, "top": J.floor, "disc": [J.x, J.z, 44.0], "big": true, "band": 4.4, "dmg": 45.0, "cook": false}
+var walk_deck := {"id": "drum-walk", "x0": float(J.x) - 36.0, "x1": float(J.x) + 36.0, "z0": float(J.z) - 36.0, "z1": float(J.z) + 36.0, "top": float(J.floor) + 4.5, "disc": [J.x, J.z, 36.7], "r0": 29.0, "dmg": 45.0, "cook": false, "n": 16}
+const CUFF_ORDER: Array[int] = [2, 3, 0, 1]      # one cuff is live at a time: the lower pair, then the upper pair (which you want height for)
+var belt_draw_t := 0.0
 var drum_surge_t := 0.0
 var fin := {"slam_t": 4.0, "arrivals_t": 3.0, "door": 0, "done": false}
 var hay := {"on": false, "t": 0.0, "api": null, "spawn_t": 3.0, "made": [], "wait": -1.0, "wait_api": null}
@@ -310,8 +314,13 @@ func arm_seals(is_belt: bool) -> void:
 	var C: Combat = Game.combat
 	if C == null:
 		return
+	var live := -1      # the one wrist cuff that is live now (was: all four at once, shot off from the doorway)
+	for ci in CUFF_ORDER:
+		if not jun.cuffs[ci].open:
+			live = ci
+			break
 	for s in seals:
-		if (s.c.name == "belt") != is_belt:
+		if (s.c.name == "belt") != is_belt or (not is_belt and s.ci != live):
 			continue
 		s.T.dead = s.c.open
 		s.T.hp = s.T.max
@@ -573,12 +582,20 @@ func _update_presses(dt: float, t: float, P: Player, C: Combat) -> void:
 # a cuff comes off: his current gets loose across the whole floor (the Draw's warn -> surge on a round live deck), then the deck is withdrawn
 func _drop_drum_deck() -> void:
 	draw.live_decks.erase(drum_deck)
+	draw.live_decks.erase(walk_deck)
+	drum_deck.cook = false
 	drum_surge_t = 0.0
 
 
+func _live_drum() -> void:
+	for d: Dictionary in [drum_deck, walk_deck]:
+		if not draw.live_decks.has(d):
+			draw.live_decks.append(d)
+
+
 func _cuff_surge() -> void:
-	if not draw.live_decks.has(drum_deck):
-		draw.live_decks.append(drum_deck)
+	_live_drum()
+	drum_deck.cook = true      # this one cooks the robots on the floor
 	drum_surge_t = 4.6
 	draw.trigger({})
 	alarm.call(5.0)
@@ -594,10 +611,10 @@ func _finale_waves(dt: float, P: Player, C: Combat) -> void:
 			if not r.dead:
 				alive += 1
 	if float(fin.arrivals_t) <= 0.0 and alive < 9 and not fin.done:
-		fin.arrivals_t = 7.5
+		fin.arrivals_t = 4.0      # (was 7.5: the cuffs were off before the third arrival reached you)
 		var d: OmSecurity.Door = doors_w[int(fin.door) % 3]
 		fin.door = int(fin.door) + 1
-		var kinds: Array = [["robot", "assault"], ["drone", ""], ["robot", "suppression"]][int(fin.door) % 3]
+		var kinds: Array = [["drone", ""], ["robot", "assault"], ["drone", ""], ["robot", "suppression"]][int(fin.door) % 4]      # (drones are half of them now: height is not free)
 		var out := Vector3(d.x - float(J.x), 0.0, d.z - float(J.z)).normalized()
 		var F: float = J.floor
 		var a := {"via": "door", "door": d, "kind": kinds[0], "speed": 2.8 if kinds[0] == "robot" else 4.2, "from": [d.x + out.x * 3.0, F, d.z + out.z * 3.0], "path": [[d.x - out.x * 3.0, F, d.z - out.z * 3.0], [d.x - out.x * 12.0, F, d.z - out.z * 12.0]]}
@@ -734,8 +751,10 @@ func ships_down(n: int) -> bool:
 func finale(on: bool) -> void:
 	fin.done = not on
 	fin.arrivals_t = 2.0
+	belt_draw_t = 6.5
 	if on:
 		doug.flee = true
+		_live_drum()
 
 
 func doug_on() -> void:
@@ -751,6 +770,7 @@ func doug_on() -> void:
 func release() -> void:
 	fin.done = true
 	released = true
+	_drop_drum_deck()
 	jun.tear_hoses()
 	alarm.call(60.0)
 	audio.play_at("boomBig", Vector3(J.x, 30.0, J.z))
@@ -850,12 +870,18 @@ func update(dt: float, P: Player, C: Combat) -> void:
 						n += 1
 				say("cuff%d" % n)
 				_cuff_surge()
+				arm_seals(false)      # the next cuff goes live
 				if on_cuff.is_valid():
 					on_cuff.call(n)
 	if drum_surge_t > 0.0:
 		drum_surge_t -= dt
 		if drum_surge_t <= 0.0:
-			_drop_drum_deck()
+			drum_deck.cook = false
+	if not fin.done and arms_free():      # the belt: the siphon pulls on him almost without a break
+		belt_draw_t -= dt
+		if belt_draw_t <= 0.0:
+			belt_draw_t = 6.5
+			draw.trigger({})
 	for s in seals:
 		if not s.T.dead:
 			s.armed_once = true

@@ -9,6 +9,7 @@ render_mode unshaded, shadows_disabled;
 
 #include "res://levels/shaders/city_env.gdshaderinc"
 #include "res://levels/shaders/city_cut.gdshaderinc"
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform float ground_y = -10.0;
 uniform float kit_k = 0.32;          // how far the kit drops toward the towers' values
@@ -50,5 +51,5 @@ void fragment() {
 		vec3 top = c * kit_k * 0.7 + sky * (0.03 + 0.4 * fres);      // a wet top: dark, with the sky in it at a low angle
 		c = mix(c, mix(face, top, up), kit);
 	}
-	ALBEDO = c;
+	ALBEDO = c + flash_light(w_pos, n, vec3(0.3));
 }

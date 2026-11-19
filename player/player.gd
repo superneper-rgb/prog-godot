@@ -182,6 +182,8 @@ var max_mana := 100.0
 var mana := 100.0
 var mana_t := 0.0
 var power_aim := false
+var lock_on := false        # Combat's hip-fire auto-aim holds an enemy (set each frame before the player moves)
+var lock_yaw := 0.0         # heading to it: while shooting he faces it instead of the camera
 var shield := 0.0
 var shield_max := -1.0
 var shield_t := 0.0
@@ -218,6 +220,7 @@ func reset() -> void:
 	y = s.y
 	z = s.z
 	yaw = s.yaw
+	lock_on = false
 	vx = 0.0
 	vz = 0.0
 	vy = 0.0
@@ -597,7 +600,8 @@ func step(dt: float, inp: Variant, cam_yaw: float) -> void:
 	elif punch_face != null:
 		yaw = U.damp_angle(yaw, float(punch_face), 34.0, dt)
 	elif strafing or aiming:
-		yaw = U.damp_angle(yaw, cam_yaw, 48.0 if aiming else C.strafe_turn_k, dt)    # shooting from the hip squares him up to the camera
+		var face := lock_yaw if (aiming and lock_on) else cam_yaw                       # an auto-aim lock turns him to the enemy he is shooting
+		yaw = U.damp_angle(yaw, face, 48.0 if aiming else C.strafe_turn_k, dt)    # shooting from the hip squares him up to the camera
 	elif mag > 0.12:
 		var ht := atan2(dx, dz)
 		var hd := absf(U.wrap_angle(ht - yaw))    # bigger heading error => faster turn, so pivots stay crisp

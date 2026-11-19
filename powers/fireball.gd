@@ -112,6 +112,7 @@ func _light(col: int, rng: float) -> OmniLight3D:
 	l.omni_attenuation = 2.0
 	l.shadow_enabled = false
 	l.visible = false
+	l.add_to_group(FlashLights.GROUP)
 	add_child(l)
 	return l
 

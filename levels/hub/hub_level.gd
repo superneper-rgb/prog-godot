@@ -46,12 +46,22 @@ var _fog_k := -1.0
 var _sky_k := -1.0
 var life: HubLife = null           # the traffic, the crowd, the street clock (levels/hub/hub_life.gd)
 var actors: Dictionary = {}        # talker id -> its body (levels/hub/hub_npcs.gd)
+var race_rig: HubRaceRig = null    # Pauly's beaten-up saucer outside CLUB 9, and him once the club talk is had (levels/hub/hub_race_rig.gd)
+var sambo: HubSambo = null         # SAMBO FENRIR on the east quay, and the Pervert Palace site over the water (levels/hub/hub_sambo.gd)
+## The level's cutscene while it is `on` (core/view.gd, Game._process): the rig taking off (levels/hub/rig_launch.gd), or Sambo's walk in at the site's gate
+var cine: Variant:
+	get:
+		if sambo != null and sambo.walk != null and sambo.walk.on:
+			return sambo.walk
+		return race_rig.launch if race_rig != null else null
 var _targets_in := false
 var _npc_t := 0.0
 const CHERUB_ID := 98              # combat target id of the hub's cherub
 var _cherub_at := -100000
 var _cherub_last := -1
 var _pain_at := -100000
+const PUPPY := Vector3(-7.15, 0.15, 29.0)      # the puppy on the street, and where his talk is
+var _warp: PuppyWarp = null        # his thank-you: the aura and the zap up the MEAT SPIRE (levels/hub/puppy_warp.gd)
 
 
 func build() -> void:
@@ -63,6 +73,9 @@ func build() -> void:
 		var s: Variant = world.water.call(&"at", x, z) if world.water != null else null
 		return float(s) if s != null else -13.6      # WATER_Y - 1
 	_doors_and_talkers()
+	_warp = PuppyWarp.new()
+	add_child(_warp)
+	HubDrain.build(self, GY)
 	city = CityLife.new(self, true)
 	city_ambience = true
 	var d: Array = node_named("FointDistrict")
@@ -118,6 +131,10 @@ func build() -> void:
 		_hide_baked_talkers()
 		_place_vending()
 		_place_shop_tv()
+		race_rig = HubRaceRig.new()
+		add_child(race_rig)
+		race_rig.build(self)
+		sambo = HubSambo.build_for(self)
 		life.release_bin()      # (100 MB of geometry, in the meshes by now)
 
 
@@ -190,6 +207,12 @@ func apply_spawn(at: String) -> void:
 			world.spawn = {"x": -7.5 + 1.5, "y": 0.15, "z": -36.6, "yaw": PI / 2.0}
 		"foint":      # out of FOINT DOME: in the gate hall, facing the city
 			world.spawn = {"x": 0.0, "y": GY + 0.1, "z": 220.5 - 4.0, "yaw": PI}
+		"passout":    # five drinks at CLUB 9 (player/drunk.gd): face down on the pavement by the WASTE dumpster, at the Armchair General's feet
+			world.spawn = {"x": -5.15, "y": 0.15, "z": 13.95, "yaw": -0.45}      # (facing the General, the dumpster at his right shoulder)
+		"sewer":      # back up out of the storm drain (UNDERFOINT): beside it, looking out over the yard
+			world.spawn = {"x": HubDrain.AT.x - 2.2, "y": GY + 0.1, "z": HubDrain.AT.y - 2.0, "yaw": -PI / 2.0}
+		"palace":     # back from the Pervert Palace: on the east quay at the site's gate, facing the city (levels/hub/hub_sambo.gd)
+			world.spawn = {"x": 128.2, "y": GY + 0.1, "z": 201.0, "yaw": -PI / 2.0}
 
 
 ## JS index.html ~13585-13609: the office's people and what they do: the first walk up to the Boss's desk, Shit-chan and the Cherub on X, and the talkers' Boss turns to face you.
@@ -269,9 +292,78 @@ func _beatdown_end(finished: bool) -> void:
 
 
 ## JS index.html ~13498-13584: the hub's doors and the people you can talk to: everything they say is here, their bodies are levels/hub/hub_npcs.gd.
+## The puppy's talk (user, 2026-11-16): he has lost his toy. He never says where (user, 2026-11-17): it sounds like a lost toy on the street, and the joke is that his thank-you zaps you into the MEAT SPIRE. Keep the spire out of his lines. The first time he tells it all; after that he just asks again. The player's answers are recorded (Fish Audio, Prog's and Tommy's voices, assets/sfx/puppy/); the puppy keeps his babble.
+func _puppy_lines() -> Array:
+	var me := Dialogue.player_name()
+	var who := "tommy" if Game.char_pick == "tommy" else "prog"
+	var ask: Array = ["Oh! Hi. ...Sorry. I'm not crying. Dogs don't cry. My eyes are just leaking a little.",
+		"I lost my toy. He's red, and he squeaks, and he's my best friend in the whole city.",
+		"I had him just a minute ago. He can't have gone far. He's very small, and very squeaky."]
+	if Game.story_get("puppyAsked"):
+		ask = []
+	var q := "Could you... help me get him back? Please? I will be very, very good." if ask.size() > 0 else "You came back! ...Are you going to help me get my toy back?"
+	ask.append({"text": q, "choices": [
+		{"label": "I'll get your toy back.", "hold": _puppy_warp, "lines": [
+			{"who": me, "text": "...Yeah, alright. I'll get your toy back, pup. Quit leaking, will ya?", "clip": "res://assets/sfx/puppy/%s-accept.wav" % who},
+			"REALLY?! Thank you thank you THANK YOU! You're the best friend in the whole city! ...Okay. Hold still.",
+			{"who": me, "text": "...Huh?", "clip": "res://assets/sfx/puppy/%s-huh.wav" % who}]},
+		{"label": "I'll come back and help soon.", "lines": [
+			{"who": me, "text": "Not right now, pup. ...But I'll come back and help. Soon. Don't go anywhere.", "clip": "res://assets/sfx/puppy/%s-later.wav" % who},
+			"Oh. ...Okay. Soon is good. I'll wait right here. I'm really good at waiting."]}]})
+	return ask
+
+
+## He said yes: still in the talk's shot, a gold aura swells off the puppy, then the player zaps out (a hurt cry, sparks, a column of light) and comes down in the MEAT SPIRE
+func _puppy_warp(_d: Dictionary) -> void:
+	Game.story_set("puppyAsked")
+	Game.story_set("puppyQuest")
+	var tree := get_tree()
+	var P := Game.player
+	var dog: Variant = actors.get("puppy")
+	_warp.aura((dog as Node3D).global_position if dog is Node3D else PUPPY)
+	if Game.sfx != null:
+		Game.sfx.play_at("arcStart", PUPPY.x, PUPPY.y + 0.5, PUPPY.z, {"range": 30.0, "ref": 3.0})
+	await tree.create_timer(1.7, true).timeout
+	if not is_inside_tree():
+		return
+	var an := Game.animator
+	var feet := Vector3(P.x, P.y, P.z)
+	var base := an.actor.scale
+	_warp.zap(feet)
+	if Game.sfx != null:
+		var hurt: AudioStream = Game.sfx.voice_clip(["progHurt1", "progHurt2", "progHurt3"][randi() % 3])
+		Game.sfx.clip(hurt, {"gain": 0.6, "wet": 0.08, "voice": true})
+		Game.sfx.play_at("zap", feet.x, feet.y + 1.0, feet.z, {"range": 40.0, "ref": 4.0})
+	var t := 0.0
+	while t < 0.14:      # he is pulled thin and tall, then gone
+		t += get_process_delta_time()
+		var k := minf(1.0, t / 0.14)
+		an.actor.scale = Vector3(base.x * (1.0 - 0.75 * k), base.y * (1.0 + 0.9 * k), base.z * (1.0 - 0.75 * k))
+		await tree.process_frame
+		if not is_inside_tree():
+			an.actor.scale = base
+			return
+	an.actor.visible = false
+	an.actor.scale = base
+	_warp.aura_off()
+	await tree.create_timer(0.9, true).timeout
+	if not is_inside_tree():
+		an.actor.visible = true
+		return
+	Game.ui.set_fade(true)
+	await tree.create_timer(0.5, true).timeout
+	an.actor.visible = true      # (on black: the MEAT SPIRE's frame shows him again)
+	Game.doors.travel({"to": "spire", "before": func() -> void: pass})
+
+
 func _doors_and_talkers() -> void:
 	portals.append({"id": "club9", "label": "ENTER CLUB 9", "x": -7.0, "z": -36.6, "radius": 1.6, "to": "club"})      # the CLUB 9 doorway on the street
 	portals.append({"id": "foint-dome", "label": "ENTER FOINT DOME", "x": 0.0, "z": 220.5, "y": GY, "radius": 4.2, "to": "foint-dome"})      # the gate hall of the FOINT DOME (the `foint-dome` level), at the end of the bridge plaza
+	# the storm drain in the yard behind the Deck's last pier on Gleeman (levels/hub/hub_drain.gd): down into UNDERFOINT. Until he has been through it the door does not say where it goes; after, it takes him straight to the old city
+	portals.append({"id": "storm-drain", "label": "CLIMB DOWN THE STORM DRAIN", "x": HubDrain.AT.x, "z": HubDrain.AT.y, "y": GY, "radius": 1.5, "to": "underfoint", "loading": "THE STORM DRAIN",
+		"active": func() -> bool: return not Game.story_get("ufFound") and absf(Game.player.y - GY) < 1.5})
+	portals.append({"id": "storm-drain-known", "label": "CLIMB DOWN TO UNDERFOINT", "x": HubDrain.AT.x, "z": HubDrain.AT.y, "y": GY, "radius": 1.5, "to": "underfoint", "spawn_at": "city",
+		"active": func() -> bool: return Game.story_get("ufFound") and absf(Game.player.y - GY) < 1.5})
 	actions.append({"x": 108.0, "z": 327.26, "label": "PRISE OPEN THE INTAKE GRATE", "active": func(p: Player) -> bool: return Game.story_get("ventJob") and absf(p.y - GY) < 1.5 and U.hyp(p.x - 108.0, p.z - 327.26) < 1.3,      # (1.3 m: the JS portal's radius) the alley's return-air grate, open once the Boss has given the ventilation job. Only the opening is made: nothing is behind it yet (DEAD AIR is being redesigned), so the cards end on black and the alley comes back
 		"run": func() -> void:
 			if Game.doors.travelling:
@@ -292,17 +384,11 @@ func _doors_and_talkers() -> void:
 	D.add_talker({"id": "green_alien", "name": "GREEN ALIEN", "x": -7.2, "y": 0.15, "z": -39.0, "yaw": PI / 2.0, "radius": 2.6, "color": "#7be34a",
 		"lines": ["You should try your luck at the Foint dome for some extra cash if you're strapped. Fuck these gray aliens man shiet."],
 		"on_end": func(_t: Dictionary) -> void: Game.story_set("talkedGreen")})      # the gray alien only has his line for someone who has been seen talking to the green one
-	D.add_talker({"id": "puppy", "name": "PUPPY", "x": -7.15, "y": 0.15, "z": 29.0, "yaw": PI / 2.0, "radius": 2.6, "color": "#e9b36a", "voice": "dogSyl", "voice_pitch": 1.0, "type_rate": 30.0,
+	D.add_talker({"id": "puppy", "name": "PUPPY", "x": PUPPY.x, "y": PUPPY.y, "z": PUPPY.z, "yaw": PI / 2.0, "radius": 2.6, "color": "#e9b36a", "voice": "dogSyl", "voice_pitch": 1.0, "type_rate": 30.0,
 		"shot": {"cam_dist": 2.7, "cam_y": 1.15, "look_y": 0.95, "spot_fwd": 0.85},
-		"lines": ["Woof! ...I mean, hello! Are you a friend? I like friends. Do you have any snacks? I will be very, very good."]})
-	D.add_talker({"id": "winged", "name": "WINGED THING", "x": 7.1, "y": 0.15, "z": -8.0, "yaw": -PI / 2.0, "radius": 2.6, "color": "#d9b3a3", "voice_pitch": 1.35, "type_rate": 26.0,
-		"shot": {"cam_dist": 3.4, "cam_y": 1.6, "look_y": 1.4, "spot_fwd": 1.05},
-		"lines": ["Oh. You can see me. Most people only see the wings.", "Please do not stare at them. ...Everyone stares at the wings."]})
-	D.add_talker({"id": "cherub", "name": "CHERUB", "x": -7.05, "y": 0.15, "z": -20.5, "yaw": PI / 2.0, "radius": 2.8, "color": "#e0a9a0", "voice_pitch": 1.2, "type_rate": 24.0, "voice": null,      # no synthesized speech: his recording plays once each time you start talking to him
-		"active": func() -> bool: return not (actors.has("cherub") and (actors["cherub"] as HubNpcs.Cherub).dead),
-		"on_start": func(_t: Dictionary) -> void: Game.sfx.clip_at(load("res://assets/sfx/cherub-hey-tommy.wav" if Game.char_pick == "tommy" else "res://assets/sfx/cherub-hey-prog.wav"), -7.05, 1.6, -20.5, {"range": 40.0, "ref": 4.0, "wet": 0.1}),      # "hey Prog" or "hey Tommy", by who is playing
-		"shot": {"cam_dist": 3.4, "cam_y": 1.6, "look_y": 1.4, "spot_fwd": 1.05},
-		"lines": ["I was painted on a church ceiling once. They painted over me.", "Now I just stand here. My eyes do not close all the way anymore."]})
+		"lines": _puppy_lines,
+		"on_end": func(_t: Dictionary) -> void: Game.story_set("puppyAsked")})
+	# The street no longer has the winged thing or the cherub (user, 2026-11-16): neither talker is added here and HubNpcs.build skips both bodies. The cherub still sits in the office (HubOfficeActors).
 	if not Game.story_get("beaten"):      # the gray alien on the far pavement: he only appears once you have talked to the green alien; when his line ends the beat-down cutscene plays and he is gone for good
 		D.add_talker({"id": "gray_alien", "name": "GRAY ALIEN", "x": 7.2, "y": 0.15, "z": 39.0, "yaw": -PI / 2.0, "radius": 2.6, "color": "#b9c3cc", "voice_pitch": 0.7,
 			"active": func() -> bool: return Game.story_get("talkedGreen") and not (_beatdown != null and _beatdown.on),
@@ -413,6 +499,8 @@ func camera_placed(cam: Vector3, real_dt: float) -> void:
 func on_exit() -> void:
 	if life != null and life.driving != null:
 		life.driving.release_all()
+	if sambo != null:
+		sambo.on_exit()
 	super.on_exit()
 
 
@@ -434,6 +522,8 @@ func _targets_once() -> void:
 			T.hp = T.max
 			T.dead = false
 			Game.combat.targets.append(T)
+	if sambo != null:
+		sambo.targets_in()
 
 
 ## This frame's combat events (JS index.html frame(), the hub's lines: the cherub, the crowd).
@@ -447,6 +537,9 @@ func combat_events(events: Array) -> void:
 	if life != null:
 		for e: Dictionary in events:
 			life.crowd.on_event(e, Game.player)
+	if sambo != null:
+		for e: Dictionary in events:
+			sambo.combat_event(e)
 	for e: Dictionary in events:
 		var tid := int(e.get("tid", -1))
 		var et := String(e.get("t", ""))
@@ -464,7 +557,7 @@ func combat_events(events: Array) -> void:
 					k = (k + 1 + randi() % 2) % 3
 				_cherub_last = k
 				Game.sfx.clip_at(load("res://assets/sfx/cherub-hurt-%d.wav" % (k + 1)), e.x, e.y, e.z, {"range": 40.0, "ref": 4.0, "wet": 0.1})
-		elif e.get("npc", false) and tid != CHERUB_ID and (et == "hit" or et == "kill"):
+		elif e.get("npc", false) and tid != CHERUB_ID and tid != HubSambo.TID and (et == "hit" or et == "kill"):      # (Sambo has his own: levels/hub/hub_sambo.gd)
 			var now := Time.get_ticks_msec()
 			if et == "kill" or now - _pain_at > 380:
 				_pain_at = now
@@ -473,6 +566,10 @@ func combat_events(events: Array) -> void:
 
 func tick(_dt: float) -> void:
 	_targets_once()
+	if race_rig != null:
+		race_rig.tick(_dt)
+	if sambo != null:
+		sambo.update(_dt)
 	if _clerk != null:
 		var now := Time.get_ticks_msec() / 1000.0
 		_clerk.update_at(now)
@@ -520,11 +617,12 @@ func tick(_dt: float) -> void:
 		_sky_mat.set_shader_parameter(&"uMoonR", lerpf(VIOLET.moon_r, EMBER.moon_r, k))
 		_sky_mat.set_shader_parameter(&"uCloud", lerpf(VIOLET.cloud, EMBER.cloud, k))
 		_fog_k = -1.0
-	# down town the haze is the city's smog
+	# down town the haze is the city's smog. Thinned 2026-11-11 (user): at the JS's 0.0034 the far skyline went to flat dark shapes against the sky; at 0.0012 it keeps its windows
+	# and still fades with distance
 	var fk := smoothstep(66.0, 130.0, cam.z)
 	if absf(fk - _fog_k) > 0.001 or _fog_k < 0.0:
 		_fog_k = fk
 		var smog: Color = (VIOLET.fog as Color).lerp(EMBER.fog, k)      # (JS mixes the arrays, then reads them as sRGB)
 		var sl := smog.srgb_to_linear()
 		RenderingServer.global_shader_parameter_set(&"prog_smog", Vector3(sl.r, sl.g, sl.b))
-		Game.view.set_fog_exp2(_fog_hub.lerp(smog.srgb_to_linear(), fk).linear_to_srgb(), lerpf(0.0145, 0.0034, fk))
+		Game.view.set_fog_exp2(_fog_hub.lerp(smog.srgb_to_linear(), fk).linear_to_srgb(), lerpf(0.0145, 0.0012, fk))

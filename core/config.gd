@@ -6,7 +6,7 @@ extends Node
 var deadzone := 0.15          # radial deadzone (both sticks)
 var move_exp := 1.3           # left stick response curve
 var cam_exp := 1.8            # right stick response curve
-var invert_y := false         # right stick Y invert
+var invert_y := false         # inverted camera: Y look (right stick and mouse); toggled in the pause menu's controls page
 var pad_look_speed := 3.4     # rad/s at full right-stick deflection
 var pad_look_ease := 45.0     # spring rate of the stick's turn speed; off while aiming; the mouse is never eased
 var mouse_sens := 0.0023      # rad per pixel
@@ -37,6 +37,14 @@ var auto_reload := 1
 var aim_hold := 0.3
 var aim_hold_semi := 0.3
 var aim_hold_max := 1.0
+
+# --- hip-fire auto-aim (combat/auto_aim.gd; ADS and the scope stay free aim) ---
+var auto_aim := 1                 # 0 = off
+var aim_cone_near_yaw := 22.0     # degrees either side of the crosshair, close up
+var aim_cone_near_pitch := 30.0
+var aim_cone_far := 5.0           # degrees at the gun's reach; eases in from near with 1 - (1 - d/R)^3
+var aim_cone_range := 35.0        # metres, capped by the gun's own range
+var aim_lock_dwell := 0.08        # s another enemy must stay the better pick before the lock moves to it
 var reload_tilt := 1.0
 
 # --- jumping ---

@@ -42,8 +42,6 @@ class Worn:
 static func wear_suit_by_id(an: Animator, id: String) -> bool:
 	if an == null or an.model == null:
 		return false
-	if an is Prog3Animator:        # (the suits are still fitted to the old body)
-		return false
 	if an.suit != null and an.suit.id == id:
 		return true
 	if an.suit != null:

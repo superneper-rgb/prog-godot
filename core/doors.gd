@@ -1,7 +1,7 @@
 class_name Doors
 extends RefCounted
 ## LEVEL DOORS and world actions (JS index.html addPortal, WORLD_ACTIONS, nearInteract, travel): the one way between levels. X at a doorway shows "X <LABEL>", fades to black, swaps the level in and fades back.
-## A level lists its own: `portals` ({id, label, x, z, radius, to, spawn_at, active, before}) and `actions` ({x, z, label, active(player), run()}) on its Level node; both die with the level. X picks the nearest of talkers, doors and actions.
+## A level lists its own: `portals` ({id, label, x, z, radius, to, spawn_at, active, before, loading, card}) and `actions` ({x, z, label, active(player), run()}) on its Level node; both die with the level. X picks the nearest of talkers, doors and actions.
 
 var portals: Array[Dictionary] = []
 var actions: Array[Dictionary] = []
@@ -124,7 +124,10 @@ func travel(p: Dictionary) -> void:
 	else:
 		Game.ui.set_fade(true)
 		await tree.create_timer(0.48, true).timeout
-	Game.ui.set_fade(true, "LOADING %s ..." % MainMenu.level_name(to).to_upper())
+	if p.get("card", true):
+		Game.ui.set_fade(true, "LOADING %s ..." % String(p.get("loading", MainMenu.level_name(to))).to_upper())      # `loading`: a door that does not say where it really goes (the hub's storm drain)
+	else:
+		Game.ui.set_fade(true)      # `card: false`: a door whose cutscene stands in for the loading screen (the Pervert Palace's walk in) loads on plain black
 	await tree.process_frame
 	await Game.enter_level(to, String(p.get("spawn_at", "")))
 	Game.ui.set_fade(true)

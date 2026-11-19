@@ -9,7 +9,8 @@ const Z1 := 333.8
 const Z := 330.0
 const FLOOR := -10.0
 const HEIGHT := 4.6
-const BUTTON := Vector3(115.615, FLOOR + 1.1, 331.65)
+# x was 115.615 (JS): that buried the button inside the alley-fittings pillar whose face is at x 115.54, so only the prompt showed. Now it sits flush on that face; the stance moved out the same 0.095.
+const BUTTON := Vector3(115.52, FLOOR + 1.1, 331.65)
 # Cabinet centres: wall coordinate z, height y, width, height, depth, finish, channel (JS OFFICE_TVS, in the order of the "Vintage TV i" screens)
 const TVS: Array[Array] = [[327.5, .56, 1.2, .95, .75, 0, 0], [328.9, .66, 1.5, 1.15, .86, 1, 1], [330.55, .70, 1.65, 1.28, .9, 0, 2], [332.2, .56, 1.35, .95, .75, 2, 3], [327.4, 1.50, 1.0, .78, .64, 2, 4], [328.65, 1.77, 1.35, 1.0, .75, 3, 0], [330.15, 1.87, 1.43, 1.05, .78, 1, 4], [331.7, 1.63, 1.25, .92, .7, 0, 2], [332.8, 1.40, .7, .65, .52, 3, 5], [327.3, 2.32, .82, .72, .58, 1, 1], [328.45, 2.84, 1.35, 1.0, .75, 0, 2], [330.0, 2.91, 1.3, .9, .72, 2, 0], [331.5, 2.68, 1.35, 1.05, .78, 0, 1], [332.75, 2.20, .92, .82, .58, 3, 4], [327.3, 3.05, .72, .64, .50, 3, 5], [328.5, 3.74, .95, .70, .6, 1, 3], [330.1, 3.72, .70, .62, .5, 3, 4], [331.5, 3.64, .98, .75, .62, 2, 0], [332.75, 2.97, .70, .62, .48, 1, 2]]
 const TINTS: Array[int] = [0xbac4ba, 0xaaa18e, 0x99b7cd, 0xb2a997, 0xa1b7dd, 0x748073]
@@ -36,7 +37,7 @@ var button_depression := 0.0
 var op_phase := "idle"
 var op_time := 0.0
 var op_weight := 0.0
-var stance := Vector3(115.48, FLOOR, BUTTON.z)
+var stance := Vector3(115.385, FLOOR, BUTTON.z)
 var facing := BUTTON
 var pose := Player.FactoryInteraction.new()
 # ---- createOfficeEntry update ----

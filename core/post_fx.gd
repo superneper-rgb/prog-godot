@@ -193,7 +193,9 @@ layout(set = 0, binding = 6, std140) uniform U {
 	vec4 uMistCol, uGlowCol, uLightDir, uStreakTint;                                 // w: uFar, uAspect, uFrame, uDebug
 	vec4 uLift, uInvGamma, uGain, uShadowTint, uHighTint, uVigTint;
 	vec4 uTone, uLens;                                                               // uTone: s-curve, saturation, vibrance, black point. uLens: vignette, aberration, grain, sharpen
+	vec4 uDrunk, uDrunk2;                                                            // Prog drunk (player/drunk.gd). uDrunk: ghost, blur px, double vision, time. uDrunk2: wobble, saturation, tunnel, hue drift
 };
+layout(rgba16f, set = 0, binding = 7) uniform restrict image2D oHist;               // the last finished frame, for the drunk ghosting
 float hash(vec2 p) { vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
 void main() {
 	ivec2 px = ivec2(gl_GlobalInvocationID.xy), sz = imageSize(oColor);
@@ -202,7 +204,22 @@ void main() {
 	float uAspect = uGlowCol.w;
 	vec2 uv = fc * uPx, dc = uv - 0.5; float r2 = dot(dc * vec2(uAspect, 1.0), dc * vec2(uAspect, 1.0)) / (0.25 * uAspect * uAspect + 0.25);   // 0 at the centre, 1 in a corner
 	vec3 c;
-	if (uLens.y > 0.0) { vec2 ca = dc * r2 * uLens.y; c = vec3(textureLod(tScene, uv + ca, 0.0).r, textureLod(tScene, uv, 0.0).g, textureLod(tScene, uv - ca, 0.0).b); }
+	bool drunk = uDrunk.x + uDrunk.y + uDrunk.z + uDrunk2.x + uDrunk2.z + uDrunk2.w > 0.0;
+	float dt_ = uDrunk.w;
+	if (drunk) {                                                                     // drunk: the picture swims, splits in two and smears
+		uv += uDrunk2.x * vec2(sin(uv.y * 6.0 + dt_ * 1.3) + 0.6 * sin(uv.y * 13.0 - dt_ * 2.1), sin(uv.x * 5.0 + dt_ * 1.1) + 0.6 * sin(uv.x * 11.0 + dt_ * 1.7));
+		uv = clamp(uv, uPx, 1.0 - uPx);
+		vec2 dv = uDrunk.z * vec2(cos(dt_ * 0.71), 0.55 * sin(dt_ * 0.93)) * (0.65 + 0.35 * sin(dt_ * 0.37));
+		vec2 o = uDrunk.y * uPx;
+		c = vec3(0.0);
+		for (int i = 0; i < 2; i++) {
+			vec2 q = uv + (i == 0 ? dv : -dv);
+			c += textureLod(tScene, q, 0.0).rgb * 0.2 + (textureLod(tScene, q + vec2(o.x, o.y * 0.6), 0.0).rgb + textureLod(tScene, q - vec2(o.x, o.y * 0.6), 0.0).rgb
+				+ textureLod(tScene, q + vec2(-o.x * 0.6, o.y), 0.0).rgb + textureLod(tScene, q + vec2(o.x * 0.6, -o.y), 0.0).rgb) * 0.2;
+		}
+		c *= 0.5;
+	}
+	else if (uLens.y > 0.0) { vec2 ca = dc * r2 * uLens.y; c = vec3(textureLod(tScene, uv + ca, 0.0).r, textureLod(tScene, uv, 0.0).g, textureLod(tScene, uv - ca, 0.0).b); }
 	else c = textureLod(tScene, uv, 0.0).rgb;
 	if (uLens.w > 0.0) {                                                             // contrast-adaptive sharpening (AMD CAS): leaves edges that are already hard alone
 		vec3 n = textureLod(tScene, uv - vec2(0.0, uPx.y), 0.0).rgb, s = textureLod(tScene, uv + vec2(0.0, uPx.y), 0.0).rgb, e = textureLod(tScene, uv + vec2(uPx.x, 0.0), 0.0).rgb, w = textureLod(tScene, uv - vec2(uPx.x, 0.0), 0.0).rgb;
@@ -240,10 +257,21 @@ void main() {
 	c = pow(max(c * uGain.rgb + uLift.rgb, vec3(0.0)), uInvGamma.rgb);
 	c = clamp(c, 0.0, 1.0); c = mix(c, c * c * (3.0 - 2.0 * c), uTone.x);
 	float lum = dot(c, vec3(0.2126, 0.7152, 0.0722)), chroma = max(c.r, max(c.g, c.b)) - min(c.r, min(c.g, c.b));
-	c = mix(vec3(lum), c, uTone.y * (1.0 + uTone.z * (1.0 - chroma)));
+	c = mix(vec3(lum), c, uTone.y * uDrunk2.y * (1.0 + uTone.z * (1.0 - chroma)));
+	if (uDrunk2.w > 0.0) {                                                           // the colours drift round the wheel (YIQ hue turn)
+		vec3 yiq = mat3(vec3(0.299, 0.596, 0.211), vec3(0.587, -0.274, -0.523), vec3(0.114, -0.322, 0.312)) * c;
+		float a = uDrunk2.w * sin(dt_ * 0.45 + uv.x * 2.0);
+		yiq.yz = mat2(vec2(cos(a), sin(a)), vec2(-sin(a), cos(a))) * yiq.yz;
+		c = clamp(mat3(vec3(1.0), vec3(0.956, -0.272, -1.106), vec3(0.621, -0.647, 1.703)) * yiq, 0.0, 1.0);
+	}
 	c *= mix(uShadowTint.rgb, uHighTint.rgb, smoothstep(0.0, 0.7, lum));
 	c *= mix(vec3(1.0), uVigTint.rgb, uLens.x * smoothstep(0.12, 1.0, r2));
+	c *= 1.0 - uDrunk2.z * smoothstep(0.15, 1.0, r2);                               // drunk: the edges of the world go dark
 	c = clamp(c, 0.0, 1.0);
+	if (drunk) {                                                                     // the frames before linger: a smear behind everything that moves (or the camera)
+		c = mix(c, imageLoad(oHist, px).rgb, uDrunk.x);
+		imageStore(oHist, px, vec4(c, 1.0));
+	}
 	float uDebug = uStreakTint.w;
 	if (uDebug > 0.5) { if (uDebug < 1.5) c = vec3(ao); else if (uDebug < 2.5) c = pow(textureLod(tBloom, uv, 0.0).rgb * uAoBloom.z, vec3(1.0 / 2.2)); else c = vec3(fract(z * 0.1)); }
 	float n = hash(fc + uLightDir.w * vec2(17.0, 59.0)) - 0.5;                       // film grain, strongest in the mids; at least one 8 bit step so the 10 bit gradients reach the canvas unbanded
@@ -265,6 +293,7 @@ class Chain:
 	var ao: Array[RID] = []
 	var glow: Array[RID] = []
 	var streak: Array[RID] = []
+	var hist := RID()             # the drunk ghosting's last frame
 	var us_display := RID()
 	var us_ao := RID()
 	var us_blur: Array[RID] = []
@@ -300,6 +329,8 @@ var exposure := 1.0
 var fog_color := Color(0.0, 0.0, 0.0)   # the fog the world is showing right now, linear: the mist takes it when the look has no colour of its own
 var has_fog := false
 var cpu_us := 0.0             # last frame's cost of this effect on the render thread
+var drunk := Vector4.ZERO     # Prog drunk (player/drunk.gd sets these every frame): ghost (0..1 at 60 fps), blur (px at 1080p), double vision (uv), time (s)
+var drunk2 := Vector4(0.0, 1.0, 0.0, 0.0)   # wobble (uv), saturation (x), tunnel (0..1), hue drift (rad)
 var timing := false           # capture one RD timestamp per pass group (peek profiling only)
 
 var _rd: RenderingDevice = null
@@ -318,13 +349,15 @@ var _ao_on := false
 var _mist_on := false
 var _lin_mist := Vector3.ZERO
 var _build_ms := 0.0
+var _drunk_frame := 0
 
 
 func _init() -> void:
 	effect_callback_type = EFFECT_CALLBACK_TYPE_POST_TRANSPARENT
 	access_resolved_color = true    # Godot resolves once, before this pass; what this pass writes to the resolved buffer is what its output pass reads
 	access_resolved_depth = true
-	_u.resize(76)                   # the block in CS_FINAL, as floats: vec4 by vec4 in its order
+	_u.resize(84)                   # the block in CS_FINAL, as floats: vec4 by vec4 in its order
+	_u[81] = 1.0                    # (drunk saturation: 1 = sober)
 	apply()
 	_rd = RenderingServer.get_rendering_device()
 	if _rd != null:                 # (headless: no RenderingDevice, the effect stays off)
@@ -504,6 +537,7 @@ func _chain(rsb: RenderSceneBuffersRD) -> Chain:
 		ch.g_glow.append(Vector2i((s.x + 7) >> 3, (s.y + 7) >> 3))
 	var ss := Vector2i(maxi(1, size.x >> 3), maxi(1, size.y >> 4))
 	ch.streak = [_tex(rsb, &"streak0", R16F, ss), _tex(rsb, &"streak1", R16F, ss)]
+	ch.hist = _tex(rsb, &"hist", R16F, size)
 	ch.g_full = Vector2i((size.x + 7) >> 3, (size.y + 7) >> 3)
 	ch.g_half = Vector2i((hs.x + 7) >> 3, (hs.y + 7) >> 3)
 	ch.g_streak = Vector2i((ss.x + 7) >> 3, (ss.y + 7) >> 3)
@@ -526,7 +560,7 @@ func _chain(rsb: RenderSceneBuffersRD) -> Chain:
 	ub.uniform_type = RenderingDevice.UNIFORM_TYPE_UNIFORM_BUFFER
 	ub.binding = 6
 	ub.add_id(_ubo)
-	ch.us_final = _uset(&"final", [_img(0, color), _smp(1, ch.display, true), _smp(2, depth, false), _smp(3, ch.ao[0], false), _smp(4, ch.glow[0], true), _smp(5, ch.streak[0], true), ub])
+	ch.us_final = _uset(&"final", [_img(0, color), _smp(1, ch.display, true), _smp(2, depth, false), _smp(3, ch.ao[0], false), _smp(4, ch.glow[0], true), _smp(5, ch.streak[0], true), ub, _img(7, ch.hist)])
 	# what depends on the size alone
 	var ht := Vector2(1.0 / hs.x, 1.0 / hs.y)
 	ch.pc_blur = [_pc([ht.x, 0.0, ht.x, ht.y, 1.0, 0.0, 0.0, 0.0]), _pc([0.0, ht.y, ht.x, ht.y, 1.0, 0.0, 0.0, 0.0])]
@@ -669,6 +703,10 @@ func _render_callback(callback_type: int, render_data: RenderData) -> void:
 	else:
 		U[24] = 0.0
 	U[43] = float(debug)
+	var gh := pow(clampf(drunk.x, 0.0, 0.97), 60.0 * maxf(Engine.get_process_frames() - _drunk_frame, 1) / maxf(Engine.get_frames_per_second(), 30.0)) if drunk.x > 0.0 else 0.0
+	_drunk_frame = Engine.get_process_frames()
+	U[76] = gh; U[77] = drunk.y * h / 1080.0; U[78] = drunk.z; U[79] = drunk.w
+	U[80] = drunk2.x; U[81] = drunk2.y; U[82] = drunk2.z; U[83] = drunk2.w
 	rd.buffer_update(_ubo, 0, U.size() * 4, U.to_byte_array())
 	if timing:
 		rd.capture_timestamp("post final")

@@ -146,6 +146,7 @@ func _ready() -> void:
 	_light.omni_range = 7.0
 	_light.omni_attenuation = 2.0
 	_light.visible = false
+	_light.add_to_group(FlashLights.GROUP)
 	add_child(_light)
 	if AudioServer.get_bus_index(&"PowerHiss") < 0:
 		AudioServer.add_bus()

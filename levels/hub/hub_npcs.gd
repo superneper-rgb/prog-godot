@@ -456,6 +456,8 @@ static func build(level: ExportedLevel, J: Dictionary, bin: PackedByteArray) -> 
 	level.add_child(group)
 	var npcs: Dictionary = J.get("npcs", {})
 	for id: String in npcs:
+		if id == "winged" or id == "cherub":      # not on the street any more (user, 2026-11-16); the office builds its own cherub from the same data
+			continue
 		var d: Dictionary = npcs[id]
 		if id == "green_alien" or id == "gray_alien":      # the real models: JS createGreenAlienLeaner, createGrayAlienNPC
 			var al: GrayAlienNpc = GreenAlienLeaner.new() if id == "green_alien" else GrayAlienNpc.new()

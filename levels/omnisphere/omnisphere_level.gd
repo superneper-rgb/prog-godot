@@ -21,6 +21,7 @@ var act2: OmAct2
 var esc: OmEscape
 var summit: OmSummit
 var chamber: OmChamber
+var lab: OmLab
 var towers: OmTowers
 var tram: OmTram
 var field: OmField
@@ -116,6 +117,7 @@ func _enter_stage(_b: Blockout, o: Dictionary) -> void:
 	dive.stop()
 	summit.reset(stage, objective, retry)
 	chamber.reset(stage)
+	lab.reset(stage)
 	towers.reset(stage, objective)
 	tram.reset(stage, objective)
 	field.reset(bo, stage)
@@ -225,6 +227,7 @@ func setup() -> void:
 	chamber = OmChamber.new(self, OmAct2.J, sets, audio)
 	act2.on_cuff = chamber.cuff
 	act2.on_release = chamber.release
+	lab = OmLab.new(self, OmAct2.J, sets, chamber, act2, audio)      # (new, user 2026-11-15: the chamber's lab and engine-room dressing and its moving platforms: om_lab.gd)
 	esc = OmEscape.new(self, sec, sets, craft, audio, marks, act2, _alarm)
 	summit = OmSummit.new(self, sec, sets, craft, audio, marks, act2, _alarm)
 	summit_cine.S = summit
@@ -412,14 +415,14 @@ func setup() -> void:
 	bo.stage({"id": "drum", "name": "Containment", "task": "Free Juniper.", "spawn": {"x": -200.0, "y": 18.1, "z": -216.0, "yaw": PI},
 		"on_enter": func(_b: Blockout, _o: Dictionary) -> void: _pa_in(.6, "drum"), "objectives": [
 		{"id": "see", "label": "Juniper", "text": "There he is. Somebody is sitting with him: press X to talk, or walk up to the plinth to start.", "at": [-200.0, 18.0, -238.0], "radius": 4.0, "on_done": func(_b: Blockout) -> void: act2.say("hi")},
-		{"id": "cuffs", "label": "Wrist cuffs", "kind": "custom", "text": "Shoot both glowing seals on each of his four wrist cuffs. Security will keep coming: every arm you free fights with you. Every cuff that comes off lets his current loose across the floor: get up on the plinth or in the air. It cooks the robots; the goons wear rubber boots.", "at": [-200.0, 18.0, -250.0], "radius": 4.0, "guide": false,
+		{"id": "cuffs", "label": "Wrist cuffs", "kind": "custom", "text": "One wrist cuff is live at a time: shoot both of its glowing seals and the next lights up. Security will keep coming: every arm you free fights with you. Every Draw runs his current through everything bolted down, the floor, the walkway and the plinth: get onto something that moves, a bank's cap, or into the air. A cuff coming off sets one off early, and that one cooks the robots.", "at": [-200.0, 18.0, -250.0], "radius": 4.0, "guide": false,
 			"on_start": func(_b: Blockout, _o: Dictionary) -> void:
 				sec.open_wave("finale")
 				act2.arm_seals(false)
 				act2.finale(true)
 				_alarm(30.0),
 			"done": func(_b: Blockout, _P: Player, _C: Combat) -> bool: return act2.arms_free()},
-		{"id": "belt", "label": "The belt", "kind": "custom", "text": "The belt. Shoot its two seals.", "at": [-200.0, 18.0, -250.0], "radius": 4.0, "guide": false,
+		{"id": "belt", "label": "The belt", "kind": "custom", "text": "The belt. Shoot its two seals. The Draws are coming almost without a break now.", "at": [-200.0, 18.0, -250.0], "radius": 4.0, "guide": false,
 			"on_start": func(_b: Blockout, o: Dictionary) -> void:
 				if o.get("retry", false):
 					sec.open_wave("finale")
@@ -448,7 +451,7 @@ func setup() -> void:
 			"on_start": func(_b: Blockout, _o: Dictionary) -> void:
 				summit.ring(true)
 				if n == 1:
-					Game.hud.toast("SHOOT THE CAPACITORS WHEN THE SHUTTERS OPEN", 3.0),
+					Game.hud.toast("KILL THE GUARDS  -  THEN SHOOT THE CAPACITORS", 3.0),
 			"done": func(_b: Blockout, _P: Player, _C: Combat) -> bool: return summit.ems_dead() >= n}
 		if n == 1:
 			d["spawn"] = sp3.call(SM.ring_drop)
@@ -479,10 +482,10 @@ func setup() -> void:
 		{"id": "ledges", "label": "Up the riser", "text": "The hoist is gone. Maintenance ledges up the tower: jump, burn, keep going.", "at": at3.call(SM.top), "radius": 4.0, "spawn": sp3.call(SM.jam)},
 		{"id": "ring", "label": "The containment ring", "kind": "custom", "text": "Across the feed bridge and drop onto the ring. It turns: it carries you with it.", "at": at3.call(SM.ring_drop), "radius": 4.0, "spawn": sp3.call(SM.top),
 			"done": func(_b: Blockout, P: Player, _C: Combat) -> bool: return summit.on_ring(P)},
-		em_obj.call(1, "Field emitters", "Three field emitters hold his current in the core. Their shutters open to vent: shoot the capacitor bank inside while they are open."),
-		em_obj.call(2, "Field emitters", "One down. Two to go."),
-		em_obj.call(3, "Field emitters", "The last emitter. Then the whole thing lets go."),
-		{"id": "jump", "label": "Jump", "kind": "custom", "text": "The ring is going. Your ride is right under you: over the railing and jump.", "at": at3.call(SM.ring_drop), "radius": 4.0, "guide": false, "spawn": sp3.call(SM.ring_drop),
+		em_obj.call(1, "Field emitters", "Three field emitters hold his current in the core, and FOINT is landing a garrison on each. The green arcs are the guards feeding its armour: kill them all and the shutters blow open, then shoot the capacitor bank inside."),
+		em_obj.call(2, "Field emitters", "One down, and the ring's drive went with it: the walkway is coming apart. Burn across the gaps to the next emitter. Drones in the air, a garrison waiting."),
+		em_obj.call(3, "Field emitters", "The last emitter, and everything FOINT has left is on it: a garrison and a gunship. Across the gaps, kill the guards, bring the gunship down, then the whole thing lets go."),
+		{"id": "jump", "label": "Jump", "kind": "custom", "text": "The ring is falling away behind you and the walkway ahead is breaking up. Run, burn across the gaps, and jump for the lifter off the far end.", "at": at3.call(SM.ring_drop), "radius": 4.0, "guide": false, "spawn": sp3.call(SM.ring_drop),
 			"on_start": func(_b: Blockout, o: Dictionary) -> void:
 				summit.ring(true)
 				if o.get("retry", false) or float(summit.st.final) < 0.0:
@@ -553,7 +556,8 @@ func _tick(dt: float, P: Player, C: Combat, b: Blockout) -> void:
 	esc.update(dt, P, C)
 	summit.update(dt, P, C)
 	chamber.update(dt)
-	if float(summit.st.final) >= 0.0 and not dive.st_on and not dive.done and not fly.on and P != null and not P.dead and not summit.on_ring(P) and P.y < OmSummit.DECK - 1.2 and P.y > 20.0:      # off the ring once the containment is gone: the jump
+	lab.update(dt)
+	if float(summit.st.final) >= 0.0 and not dive.st_on and not dive.done and not fly.on and P != null and not P.dead and not summit.on_ring(P) and P.y < OmSummit.DECK - 1.2 and P.y > 20.0 and summit.fight.in_zone(P):      # off the ring once the containment is gone: the jump
 		summit.snap_lifter(P)
 		dive.start(P)
 	dive.update(dt, P)

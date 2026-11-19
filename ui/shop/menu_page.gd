@@ -48,6 +48,10 @@ func layout() -> void:
 	var u := M.u
 	var W := size.x
 	var H := size.y
+	if M.portrait:
+		_layout_portrait(W, H)
+		return
+	pad_l = 62.0
 	inner_w = W - 124.0
 	r_head = Rect2(pad_l, 26.0, inner_w, 40.0)
 	var ph := maxf(13.0 * u * 1.61, 13.0 * u * 1.2)      # (the key chips set the prompts' height)
@@ -59,6 +63,23 @@ func layout() -> void:
 	slot_w = 118.0 * u
 	slot_h = 76.0 * u
 	slot_gap = 12.0 * u
+	M._view_m.set_shader_parameter(&"band", Vector2(r_main.position.y / H, (r_main.position.y + r_main.size.y) / H))
+	_layout_car(true)
+
+
+## A tall, narrow glass (CLUB 9's handheld pad): slim margins, the subtitle alone in the header (the page shows the balance itself), a smaller carousel.
+func _layout_portrait(W: float, H: float) -> void:
+	pad_l = 16.0
+	inner_w = W - 32.0
+	r_head = Rect2(pad_l, 10.0, inner_w, 30.0)
+	var ph := 13.0 * 1.61
+	r_prompts = Rect2(pad_l, H - 12.0 - ph, inner_w, ph)
+	r_car = Rect2(pad_l, r_prompts.position.y - 8.0 - 98.0, inner_w, 98.0)
+	r_main = Rect2(pad_l, r_head.end.y + 4.0, inner_w, r_car.position.y - 8.0 - (r_head.end.y + 4.0))
+	r_cview = Rect2(pad_l + 34.0, r_car.position.y, inner_w - 68.0, r_car.size.y)
+	slot_w = 82.0
+	slot_h = 56.0
+	slot_gap = 10.0
 	M._view_m.set_shader_parameter(&"band", Vector2(r_main.position.y / H, (r_main.position.y + r_main.size.y) / H))
 	_layout_car(true)
 
@@ -415,6 +436,8 @@ func view_overlays(inr: Rect2, chip_key: String, chip: String, chip_cls: String,
 	var st := VendorMenu.stage
 	st.set_view_size(Vector2i(maxi(2, roundi(inr.size.x * M.k)), maxi(2, roundi(inr.size.y * M.k))))
 	var tex := st.get_texture()
+	# tell the screen's colour filter where the item is, so it shows in its own colours (vendor_view.gdshader)
+	M._view_m.set_shader_parameter(&"keep_rect", Vector4(inr.position.x / size.x, inr.position.y / size.y, inr.end.x / size.x, inr.end.y / size.y))
 	var rv := st.reveal
 	if rv < 1.0:      # the scan front (see VendorStage)
 		if vertical:
@@ -572,11 +595,20 @@ func _draw_head() -> void:
 	ga = head_a
 	draw_set_transform(Vector2(0, head_y))
 	var fs := 12.0 * u
+	var sp := 0.32
+	if M.portrait:
+		fs = 11.0
+		sp = 0.2
 	var base := CrtTheme.baseline(_f600, roundi(fs), r_head.position.y, r_head.size.y)
 	var x := r_head.position.x + 6.0
-	x += tx(x, base, M.sub_a + " ", fs, M.th("dim"), _f600, 0.32)
-	x += tx(x, base, "// ", fs, M.th("ink2"), _f700, 0.32)
-	tx(x, base, M.sub_c, fs, M.th("dim"), _f600, 0.32)
+	x += tx(x, base, M.sub_a + " ", fs, M.th("dim"), _f600, sp)
+	x += tx(x, base, "// ", fs, M.th("ink2"), _f700, sp)
+	tx(x, base, M.sub_c, fs, M.th("dim"), _f600, sp)
+	if M.portrait:
+		var ry := r_head.end.y - 1.0
+		rect_h(Rect2(r_head.position.x, ry, r_head.size.x, 1.0), M.cm("edge", 70.0), M.cm("edge", 0.0))
+		draw_set_transform(Vector2.ZERO)
+		return
 	# the balance
 	var fb := 26.0 * u
 	var fsm := 11.0 * u
@@ -609,8 +641,8 @@ func _draw_car() -> void:
 	ga = car_a
 	draw_set_transform(Vector2(0, car_y))
 	var steel := M.th("steel")
-	var aw := 34.0 * u
-	var ah := 60.0 * u
+	var aw := (22.0 if M.portrait else 34.0) * u
+	var ah := (44.0 if M.portrait else 60.0) * u
 	var ay := r_car.position.y + (r_car.size.y - ah) / 2.0
 	var ax := r_car.position.x + 10.0 * u
 	var kl := 0.86 if float(M.anim.get("kick0", 9.0)) < 0.09 else 1.0

@@ -3,6 +3,7 @@
 // ring with the rain, the bay's expansion joint, and the parapet lamps and the sky haze reflected in it. UV: u across the carriageway (0..1), v along it, 12 m per unit.
 shader_type spatial;
 render_mode unshaded, shadows_disabled, cull_disabled;
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 global uniform vec3 prog_smog;     // FOINT CITY's haze colour (levels/hub/hub_level.gd): what the wet deck mirrors when it mirrors nothing else
 
@@ -130,5 +131,5 @@ void fragment() {
 		vec3 tint = lamps[i].w > 0.5 ? tint_b : tint_a;
 		col += tint * lamp_k * s * wet * (0.4 + 0.6 * fres) * shine * 0.004 / (1.0 + d * 0.02);
 	}
-	ALBEDO = under ? vec3(0.0055, 0.0055, 0.0072) * (0.8 + 0.4 * grit) : col;
+	ALBEDO = (under ? vec3(0.0055, 0.0055, 0.0072) * (0.8 + 0.4 * grit) : col) + flash_light(wp, under ? vec3(0.0, -1.0, 0.0) : n, vec3(0.2));
 }

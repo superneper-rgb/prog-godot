@@ -14,9 +14,12 @@ const LEVEL_INFO := {
 	"apartment": ["PROG'S APARTMENT", "Home. Grimy one-bedroom over the city: save, cutscenes, the closet. No door in the hub yet."],
 	"omnisphere": ["OMNISPHERE", "FOINT's top-secret plant on the magma."],
 	"visiting-hours": ["VISITING HOURS", "Saltmarsh Correctional, a stormy night: get Oswald Fenn out."],
+	"underfoint": ["UNDERFOINT", "Down a storm drain: the old city under FOINT CITY, its outcasts, and the Sigil's hive."],
+	"palace": ["PERVERT PALACE", "FOINT's tower going up in the bay: film Sambo Fenrir's stream up a construction site, the crew on your back."],
 	"arena": ["TEST ARENA", "The movement and camera test floor."],
 }
 const LEVEL_NAMES := {
+	"sky-sphere": "SKYSPHERE",
 	"club": "CLUB 9", "warehouse": "WAREHOUSE ROBBERY", "dev": "DEV LEVEL", "blockout-demo": "BLOCKOUT DEMO", 
 	"kame-lab": "KAME LAB", "jungle-test": "JUNGLE TEST", 
 }
@@ -361,8 +364,6 @@ func pad() -> void:
 			_chars.pick("prog")
 		elif Inp.key_hit(KEY_2) or Inp.key_hit(KEY_KP_2):
 			_chars.pick("tommy")
-		if Inp.btn(&"quick").pressed:      # (a keyboard / pad way to the costume, which the browser's <select> had the mouse for)
-			_chars.toggle_costume()
 		refresh()
 	if Inp.btn(&"jump").pressed or Inp.key_hit(KEY_ENTER) or Inp.key_hit(KEY_KP_ENTER):
 		if panel == "chars":      # BUG-103: A / Enter picks the highlighted character (B closes the panel)
@@ -442,13 +443,12 @@ func _rebuild() -> void:
 		for i in n:
 			_rects["sl:%d" % i] = Rect2(px + 20.0, ly + i * (row_h + 8.0), pw - 40.0, row_h)
 	elif panel == "chars":
-		var ph := 18.0 + f13 + 14.0 + 276.0 + 14.0 + 18.0 + 5.0 + 40.0 + 20.0
+		var ph := 18.0 + f13 + 14.0 + 276.0 + 20.0      # (the PROG COSTUME box below the cards went with V2 and V3, 2026-11-15)
 		_panel_rect = Rect2(px, (vp.y - ph) * 0.5, pw, ph)
 		var cy := _panel_rect.position.y + 18.0 + f13 + 14.0
 		var cw := (pw - 40.0 - 14.0) * 0.5
 		_rects["ch:prog"] = Rect2(px + 20.0, cy, cw, 276.0)
 		_rects["ch:tommy"] = Rect2(px + 20.0 + cw + 14.0, cy, cw, 276.0)
-		_rects["costume"] = Rect2(px + 20.0, cy + 276.0 + 14.0 + 18.0 + 5.0, pw - 40.0, 40.0)
 		_chars.place(_rects["ch:prog"], _rects["ch:tommy"])
 	_tube.refresh()
 
@@ -619,13 +619,6 @@ func _draw_chars(v: Control) -> void:
 		for l in CrtTheme.wrap(fs, BLURB[id], 13, r.size.x - 20.0):
 			CrtTheme.draw_center(v, fs, r.position.x + r.size.x * 0.5, CrtTheme.baseline(fs, 13, yy, 16.0), l, 13, C_SUB)
 			yy += 16.0
-	var c: Rect2 = _rects["costume"]
-	CrtTheme.draw_text(v, fh, c.position.x, c.position.y - 6.0, "PROG COSTUME", 13, C_STATE_B, 2.0)
-	v.draw_rect(c, Color(10.0 / 255.0, 14.0 / 255.0, 18.0 / 255.0, 0.8))
-	v.draw_rect(c, Color(143.0 / 255.0, 240.0 / 255.0, 154.0 / 255.0, 0.4), false, 1.0)
-	var cn := "Prog V2" if Builds.prog_costume == "prog_v2" else ("Prog V3" if Builds.prog_costume == "prog_v3" else "Prog V1")
-	CrtTheme.draw_text(v, fs, c.position.x + 12.0, CrtTheme.baseline(fs, 16, c.position.y, c.size.y), cn, 16, C_FOCUS)
-	CrtTheme.draw_right(v, fh, c.end.x - 12.0, CrtTheme.baseline(fh, 12, c.position.y, c.size.y), "Y / Q  CHANGE  ▾", 12, C_SUB, 1.0)
 
 
 # ---- the mouse ----
@@ -688,6 +681,3 @@ func _gui_input(event: InputEvent) -> void:
 					_chars.pick(id)
 					refresh()
 					return
-			if (_rects["costume"] as Rect2).has_point(p):
-				_chars.toggle_costume()
-				refresh()

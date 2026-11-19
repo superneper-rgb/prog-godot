@@ -11,6 +11,7 @@ uniform vec3 u_shirt = vec3(1.0);
 uniform vec3 u_pants = vec3(1.0);
 uniform vec3 u_print_a[2];
 uniform vec3 u_print_b[2];
+uniform vec4 u_stripe = vec4(0.0);      // hi-vis tape (the Pervert Palace crew): two bands round the body at these rest heights (x, y), half width z, on w
 
 varying vec3 v_rest;
 
@@ -44,8 +45,16 @@ void fragment() {
 		t = mix(cloth * k, c * 0.85, keep);
 	}
 	c = mix(c, t, grey);
+	float tape = 0.0;
+	if (u_stripe.w > 0.5) {
+		float b1 = 1.0 - smoothstep(u_stripe.z, u_stripe.z + 0.006, abs(v_rest.y - u_stripe.x));
+		float b2 = 1.0 - smoothstep(u_stripe.z, u_stripe.z + 0.006, abs(v_rest.y - u_stripe.y));
+		tape = max(b1, b2) * (1.0 - skin) * grey;
+		c = mix(c, vec3(0.72, 0.74, 0.76), tape);
+	}
 	float led = u_led.w * step(0.2, src.r) * (1.0 - smoothstep(0.03, 0.08, src.g / (src.r + 1e-4)));
 	ALBEDO = mix(c, u_led.rgb, led);
-	ROUGHNESS = 0.82;
+	ROUGHNESS = mix(0.82, 0.3, tape);
 	METALLIC = 0.0;
+	EMISSION = vec3(0.16, 0.17, 0.18) * tape;      // (retro-reflective: it catches what little light there is)
 }

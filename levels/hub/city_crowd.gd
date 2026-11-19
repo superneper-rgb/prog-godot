@@ -42,6 +42,9 @@ class Person:
 	var still := false
 	var lead: Person = null
 	var lag := 0.0
+	var squeeze := -1.0     # no room to step round someone ahead: the pace to hold behind them (-1: free)
+	var hue := 0.0          # (new townsfolk) a second or third of its species: its own colouring, hue turned this far (turns) and brightness times val
+	var val := 1.0
 	var flee := 0.0
 	var al := 1.0
 	var has_al := false
@@ -54,13 +57,16 @@ class Person:
 	var slot := 0
 	var T: Target = null
 	var batch: Batch = null
-
+	var skin_id := ""       # its new species (tools/folk), or "" for the old one it was exported as
+	var cyc := 0.0          # (new townsfolk, FolkSkin) where in its walk cycle, 0..1: advanced by distance over the stride, so the feet stay planted
+	var run_w := 0.0        # how far into its run (fleeing)
 
 ## one species: its MultiMesh and a buffer of 20 floats per person (JS: instance matrix, aAnim, aLook, aCol)
 class Batch:
 	var mm: MultiMesh
 	var buf := PackedFloat32Array()
 	var list: Array[Person] = []
+	var skin: FolkSkin = null      # a new species (tools/folk): skinned on the GPU, its own instance data
 
 
 var plan: CityPlan
@@ -74,10 +80,34 @@ var batches: Dictionary = {}
 var targets: Array[Target] = []
 var by_tid: Dictionary = {}
 var aliens: CityAliens = null
+var people_grid: Dictionary = {}   # key(x, z) -> Array of Person: where everyone stood last frame, for spacing them (any loop)
+var _near_out: Array = []
 var grid: Dictionary = {}          # JS key(x, z) -> PackedFloat32Array of x, z, r: what walkers step round. A 4 m grid keeps the look-up local.
+var movers := PackedFloat32Array() # x, z, r of someone walking the pavements who is not one of the crowd (Sambo, levels/hub/hub_sambo.gd): stepped round like a person, rewritten each frame by its owner
 var people_solids: Array[World.Solid] = []
 var _near: Array = []
 
+## The new townsfolk (tools/folk/README.md's roster, levels/hub/folk_skin.gd) take the old walkers' places person by person (user, 2026-11-15: no more Earth animals or
+## plain humans; FOINT CITY's people are their own species; the strange ones stay, rebuilt). Old species -> the new species of its 1st, 2nd... walker. A new species only
+## steps in once its files are there (assets/folk/<id>.glb + .json): until then that walker stays the old one.
+## The disguised suit is SAMBO FENRIR's (levels/hub/hub_sambo.gd) and he is one of a kind (user, 2026-11-19): its old walker walks as a heart_tech, and no second one is drawn.
+const NEW_FOLK := {
+	&"frog": ["fin_exec"], &"wanderer": ["gardener"], &"crane": ["lilac_spider"], &"mantis": ["walkman"], &"rhino": ["cook"], &"skelly": ["nurse"],
+	&"moleboss": ["mob_boss"], &"snail": ["manta_maid"], &"gremlin": ["mop_fringe"], &"worm": ["naga"], &"squidface": ["accountant"], &"lanky": ["snakeneck"],
+	&"granny": ["veg_granny"], &"jogger": ["climber"], &"kid": ["bean_clock"], &"pizza": ["grocery_dad"],
+	&"agent": ["fish_biker", "demon_tail", "manta_goth", "lounge_singer"],
+	&"tvbot": ["tvbot"], &"cratebot": ["cratebot"], &"brainjar": ["brainjar"], &"fishbowl": ["fishbowl"], &"binocular": ["binocular"], &"conehat": ["conehat"],
+	&"cone": ["cone"], &"slime": ["slime"], &"ufo": ["ufo"], &"blob": ["blob"], &"twohead": ["twohead"], &"stilts": ["stilts"], &"noodle": ["noodle"],
+	&"disguised": ["heart_tech"], &"hotdog": ["hotdog"], &"cyclops": ["cyclops"], &"grinbuddy": ["grinbuddy"], &"sandwich": ["sandwich"],
+}
+## the new species with no old walker to replace: each gets a walker of its own on the loops
+const EXTRA_FOLK := ["mechanic", "couch_worm", "arch_legs", "heart_tech", "cyclops_gamer", "jelly_drill", "hole_chest", "spiral_rain"]
+const EXTRA_TID := 889000
+const MORE := 40           # walkers added beyond one walking each: this many species get a second (no species twice on one street)
+const TINT := 0.07         # a second or third of a species: its hue turned up to this either way (turns; 0.07 is 25 degrees), brightness 0.85-1.15
+const TINT_TEST := 0.0     # not 0: every second and third turned exactly this far instead (0.5 = their colours flipped), to judge the look
+## species whose colours are who they are (a hot dog, a traffic cone, the doom-sayer's board, the robots' screens): their copies vary only in brightness
+const KEEP_HUE := ["hotdog", "cone", "sandwich", "tvbot", "cratebot"]
 
 func _init(level: ExportedLevel, p: CityPlan, tr: CityTraffic, J: Dictionary, f: CityFolk) -> void:
 	plan = p
@@ -134,6 +164,114 @@ func _init(level: ExportedLevel, p: CityPlan, tr: CityTraffic, J: Dictionary, f:
 		if l >= 0:
 			folk[i].lead = order[l]
 		i += 1
+	# the new species into the old places, then walkers of their own for the rest
+	var seen := {}
+	for o in folk:
+		var olds: Array = NEW_FOLK.get(o.name, [])
+		var k: int = seen.get(o.name, 0)
+		seen[o.name] = k + 1
+		if not olds.is_empty() and FolkSkin.available(olds[k % olds.size()]):
+			o.skin_id = olds[k % olds.size()]
+	# the agents walked as two side-by-side pairs, each follower pinned beside its leader; four different species now, each walks for itself, a few
+	# metres apart (a pinned follower cannot step round anyone, and the pairs were spaced for human-sized agents)
+	var n_free := 0
+	for o in folk:
+		if o.lead != null and o.skin_id != "":
+			o.lead = null
+			o.lag = 0.0
+			o.side0 = 0.4 + 0.25 * rng.next()
+			o.side = o.side0
+			n_free += 1
+			o.s = fposmod(o.s + 4.0 * n_free * o.dir, o.loop.path.length)
+	# more walkers (user, 2026-11-16: the city felt empty and some species were hard to find; no handful repeated over and over). First every species
+	# that no one sees walking (the new ones with no old place, and those whose only place is standing still), then MORE others, one each, drawn
+	# from a shuffled deck. Each goes to the least crowded street that does not already have its species, into the widest gap between its walkers.
+	var kinds: Array[String] = []
+	for o in folk:
+		if o.skin_id != "" and not kinds.has(o.skin_id):
+			kinds.append(o.skin_id)
+	for sid: String in EXTRA_FOLK:
+		if FolkSkin.available(sid) and not kinds.has(sid):
+			kinds.append(sid)
+	kinds.sort()
+	var walks := {}
+	for o in folk:
+		if o.skin_id != "" and o.loop != null and not o.still:
+			walks[o.skin_id] = true
+	var deck: Array[String] = []
+	for sid in kinds:
+		if not walks.has(sid):
+			deck.append(sid)
+	var pool := kinds.duplicate()
+	for n in range(pool.size() - 1, 0, -1):
+		var r := int(rng.next() * (n + 1))
+		var tmp: String = pool[n]
+		pool[n] = pool[r]
+		pool[r] = tmp
+	deck.append_array(pool.slice(0, mini(MORE, pool.size())))
+	var j := 0
+	for sid in deck:
+		var best: Loop = null
+		var bd := INF
+		for lp in loops:
+			if lp.path.length < 30.0:      # (the little loop by the dome's gate)
+				continue
+			var has := false
+			for w in lp.walkers:
+				if w.skin_id == sid:
+					has = true
+					break
+			var dn := float(lp.walkers.size() + 1) / lp.path.length
+			if not has and dn < bd:
+				bd = dn
+				best = lp
+		if best == null:
+			continue
+		var L := best.path.length
+		var ss := PackedFloat32Array()
+		for w in best.walkers:
+			ss.append(fposmod(w.s, L))
+		ss.sort()
+		var at := rng.next() * L
+		var gap := 0.0
+		for k in ss.size():
+			var nx := ss[(k + 1) % ss.size()] + (L if k == ss.size() - 1 else 0.0)
+			if nx - ss[k] > gap:
+				gap = nx - ss[k]
+				at = fposmod(ss[k] + gap * 0.5, L)
+		var o := Person.new()
+		o.skin_id = sid
+		o.loop = best
+		o.s = at
+		o.dir = 1 if rng.next() < 0.5 else -1
+		o.vmax = 1.0 + 0.3 * rng.next()
+		o.amp = 1.0
+		o.phase = rng.next() * TAU
+		o.seed_ = rng.next()
+		o.pause = 25.0 + rng.next() * 50.0
+		o.side0 = 0.4 + 0.25 * rng.next()
+		o.side = o.side0
+		var q := o.loop.path.at(o.s)
+		o.x = q.x
+		o.z = q.y
+		o.hx = q.z * o.dir
+		o.hz = q.w * o.dir
+		o.T = Target.new(EXTRA_TID + j, 0.0, 0.0, GY, {"r": 0.4, "h": 1.7, "max": 60.0, "hp": 60.0, "npc": true, "crowd": true, "w": 0.0})
+		folk.append(o)
+		o.loop.walkers.append(o)
+		targets.append(o.T)
+		by_tid[o.T.id] = o
+		j += 1
+	# the second and third of a species each get their own colouring, so a pair never reads as the same person twice
+	var met := {}
+	for o in folk:
+		if o.skin_id == "":
+			continue
+		if met.has(o.skin_id):
+			o.val = 0.85 + 0.3 * rng.next()
+			if not KEEP_HUE.has(o.skin_id):
+				o.hue = TINT_TEST if TINT_TEST != 0.0 else (rng.next() * 2.0 - 1.0) * TINT
+		met[o.skin_id] = true
 	for q: Array in J["obstacles"]:
 		var k0x: float = q[0]
 		var k0z: float = q[1]
@@ -152,9 +290,10 @@ func _init(level: ExportedLevel, p: CityPlan, tr: CityTraffic, J: Dictionary, f:
 	# ---- instanced meshes per species
 	var names: Dictionary = {}
 	for o in folk:
-		if not names.has(o.name):
-			names[o.name] = []
-		(names[o.name] as Array).append(o)
+		var key := StringName("new:" + o.skin_id) if o.skin_id != "" else o.name
+		if not names.has(key):
+			names[key] = []
+		(names[key] as Array).append(o)
 	var group := Node3D.new()
 	group.name = "Folk"
 	var dn: Array = level.node_named("FointDistrict")
@@ -166,16 +305,27 @@ func _init(level: ExportedLevel, p: CityPlan, tr: CityTraffic, J: Dictionary, f:
 		b.mm.transform_format = MultiMesh.TRANSFORM_3D
 		b.mm.use_colors = true
 		b.mm.use_custom_data = true
-		b.mm.mesh = f.species_mesh(String(nm))
+		if String(nm).begins_with("new:"):
+			b.skin = FolkSkin.make(String(nm).substr(4), group)
+			b.mm.mesh = b.skin.mesh
+		else:
+			b.mm.mesh = f.species_mesh(String(nm))
 		b.mm.instance_count = list.size()
 		b.buf.resize(list.size() * 20)
 		for o: Person in list:
 			b.list.append(o)
 			o.batch = b
+			if b.skin != null:      # modelled at their own height and pace: only a little size variation, the target as tall and wide as they are
+				# a walker the city made a giant (the blob, sz 2.1: 3.57 m) stays as tall as it was; the rest vary only a little
+				o.sz = o.T.h / b.skin.height if o.sz > 1.2 else clampf(o.sz, 0.97, 1.03)
+				o.T.h = b.skin.height * o.sz
+				o.T.r = b.skin.radius * o.sz
+				o.vmax *= b.skin.speed
+				o.cyc = o.seed_
 		var mi := MultiMeshInstance3D.new()
-		mi.name = "Folk_" + String(nm)
+		mi.name = "Folk_" + (b.skin.id if b.skin != null else String(nm))
 		mi.multimesh = b.mm
-		mi.material_override = f.material
+		mi.material_override = b.skin.material if b.skin != null else f.material
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		mi.extra_cull_margin = 2.0      # (the arms and the hover move past the mesh's own box in the shader)
 		group.add_child(mi)
@@ -198,10 +348,38 @@ static func _key(x: float, z: float) -> int:
 
 
 ## steer the walker's lane on the sidewalk round whatever stands ahead
-func _avoid(f: Person, dt: float) -> void:
+## everyone within a cell of f (the 4 m grid of where walkers stood last frame), whatever their loop: twin loops run down the same pavement
+func _neighbours(f: Person) -> Array:
+	_near_out.clear()
+	var cx := int(floor(f.x / 4.0))
+	var cz := int(floor(f.z / 4.0))
+	for a in range(-1, 2):
+		for b in range(-1, 2):
+			var g: Variant = people_grid.get((cx + a) * 1000 + cz + b)
+			if g != null:
+				_near_out.append_array(g)
+	return _near_out
+
+
+func _avoid(f: Person, dt: float, near: Array) -> void:
 	var want := f.side0
 	var rx := -f.hz
 	var rz := f.hx
+	# other people in the way (standing, coming the other way, or slower on a twin loop): step round them by both bodies' widths (user, 2026-11-16:
+	# they stood inside each other; the new species are not all human-sized)
+	for o: Person in near:
+		if o == f or o.T.dead or o == f.lead or o.lead == f:
+			continue
+		var dx := o.x - f.x
+		var dz := o.z - f.z
+		var a := dx * f.hx + dz * f.hz
+		if a >= -0.4 and a <= 3.2:
+			var lat := dx * rx + dz * rz + f.side
+			var need := o.T.r + f.T.r + 0.1
+			if absf(lat - want) < need:
+				var l := lat - need
+				var r2 := lat + need
+				want = l if absf(l - f.side0) < absf(r2 - f.side0) else r2
 	var g: Variant = grid.get(_key(f.x, f.z))
 	if g != null:
 		var list: PackedFloat32Array = g
@@ -219,8 +397,43 @@ func _avoid(f: Person, dt: float) -> void:
 					var r2 := lat + need
 					want = l if absf(l - f.side0) < absf(r2 - f.side0) else r2
 			i += 3
+	var mi := 0
+	while mi + 2 < movers.size():
+		var dx := movers[mi] - f.x
+		var dz := movers[mi + 1] - f.z
+		var a := dx * f.hx + dz * f.hz
+		if a >= -0.4 and a <= 3.2:
+			var lat := dx * rx + dz * rz + f.side
+			var need := movers[mi + 2] + f.T.r + 0.1
+			if absf(lat - want) < need:
+				var l := lat - need
+				var r2 := lat + need
+				want = l if absf(l - f.side0) < absf(r2 - f.side0) else r2
+		mi += 3
 	want = clampf(want, -1.35, 1.35)
 	f.side += (want - f.side) * minf(1.0, dt * 2.6)
+	# the pavement's edge left no room to step round someone level with or ahead of it: hold back behind them next frame instead of walking into them
+	f.squeeze = -1.0
+	for o: Person in near:
+		if o == f or o.T.dead or o == f.lead or o.lead == f:
+			continue
+		var dx := o.x - f.x
+		var dz := o.z - f.z
+		var a := dx * f.hx + dz * f.hz
+		if a > 0.0 and a <= 1.6 + o.T.r + f.T.r and absf(dx * rx + dz * rz + f.side - want) < o.T.r + f.T.r:
+			var same := o.hx * f.hx + o.hz * f.hz > 0.3
+			if not same and not o.still and o.T.id > f.T.id:      # two coming head on with no room: one waits, the other goes (both waiting would be for ever)
+				continue
+			var hold := maxf(0.0, o.v * 0.7) if same else 0.0
+			f.squeeze = hold if f.squeeze < 0.0 else minf(f.squeeze, hold)
+	mi = 0
+	while mi + 2 < movers.size():      # (someone not of the crowd in the way with no room round them: wait)
+		var dx := movers[mi] - f.x
+		var dz := movers[mi + 1] - f.z
+		var a := dx * f.hx + dz * f.hz
+		if a > 0.0 and a <= 1.6 + movers[mi + 2] + f.T.r and absf(dx * rx + dz * rz + f.side - want) < movers[mi + 2] + f.T.r:
+			f.squeeze = 0.0
+		mi += 3
 
 
 ## back on their feet where they fell (the matrix loop has already stood them up); dazed, they hurry off
@@ -288,6 +501,13 @@ func update(t: float, dt: float, player: Player) -> void:
 	var pz := player.z
 	var p_on := player.y < GY + 2.5 and player.y > GY - 2.0
 	traffic.people.clear()
+	people_grid.clear()
+	for f in folk:
+		if not f.T.dead:
+			var gk := _key(f.x, f.z)
+			if not people_grid.has(gk):
+				people_grid[gk] = []
+			(people_grid[gk] as Array).append(f)
 	for f in folk:
 		var T := f.T
 		if T.dead:                      # lying where it fell (drawn below), no longer in anyone's way
@@ -340,10 +560,17 @@ func update(t: float, dt: float, player: Player) -> void:
 				if f.go == c and not inside and d < 0.0:
 					f.go = null
 			# the player and other walkers in the way
+			if f.squeeze >= 0.0:      # (from _avoid last frame: no room to pass)
+				target = minf(target, f.squeeze)
 			if p_on and _ahead(f, px, pz, 0.3):
 				target = 0.0
-			for o in lp.walkers:
-				if o != f and o.dir == f.dir and not o.T.dead and _ahead(f, o.x, o.z, 0.0):
+			var near := _neighbours(f)
+			for o: Person in near:      # anyone ahead going the same way, on this loop or its twin, by both bodies' sizes
+				var rr := maxf(0.0, f.T.r + o.T.r - 0.8)
+				if o != f and not o.T.dead and not o.still and o.hx * f.hx + o.hz * f.hz > 0.3 and _ahead(f, o.x, o.z, rr):
+					# side by side on a bend each is "ahead" of the other and both would wait for ever: then only the one further back gives way
+					if _ahead(o, f.x, f.z, rr) and (o.x - f.x) * f.hx + (o.z - f.z) * f.hz < (f.x - o.x) * o.hx + (f.z - o.z) * o.hz:
+						continue
 					target = minf(target, o.v)
 			f.v += (target - f.v) * minf(1.0, dt * (6.0 if target < f.v else (7.0 if fleeing else 2.5)))
 			if f.lead != null:
@@ -351,7 +578,7 @@ func update(t: float, dt: float, player: Player) -> void:
 				f.v = f.lead.v
 			else:
 				f.s = fposmod(f.s + f.v * dt * f.dir + ln, ln)
-			_avoid(f, dt)
+			_avoid(f, dt, near)
 			var q := lp.path.at(f.s)
 			var hx := q.z * f.dir
 			var hz := q.w * f.dir
@@ -365,6 +592,10 @@ func update(t: float, dt: float, player: Player) -> void:
 			f.hx = sin(ha)
 			f.hz = cos(ha)
 			f.phase += dt * f.v * 4.6 / maxf(0.6, f.amp * 0.8)
+			var sk := f.batch.skin
+			if sk != null:
+				f.run_w = smoothstep(1.7, 2.9, f.v)
+				f.cyc = fposmod(f.cyc + dt * f.v / (lerpf(sk.stride_walk, sk.stride_run, f.run_w) * f.sz), 1.0)
 		f.on_rd = plan.on_road(f.x, f.z)
 		if f.on_rd:
 			traffic.people.append(f)
@@ -383,6 +614,8 @@ func update(t: float, dt: float, player: Player) -> void:
 		var b: Batch = batches[nm]
 		var bf := b.buf
 		var o := 0
+		if b.skin != null:
+			RenderingServer.material_set_param(b.skin.material.get_rid(), &"uTime", t)
 		for f in b.list:
 			var yaw := atan2(f.hx, f.hz)
 			var y := GY - (CURB if f.on_rd else 0.0)
@@ -410,6 +643,17 @@ func update(t: float, dt: float, player: Player) -> void:
 			bf[o + 9] = xf.y.z
 			bf[o + 10] = xf.z.z
 			bf[o + 11] = f.z
+			if b.skin != null:      # levels/shaders/folk_skinned.gdshader: COLOR.r head turn; custom = cycle, walk, idle offset, run
+				bf[o + 12] = f.look
+				bf[o + 13] = f.hue      # COLOR.g, COLOR.b: this one's colouring (0 and 1: as built)
+				bf[o + 14] = f.val
+				bf[o + 15] = 0.0
+				bf[o + 16] = f.cyc
+				bf[o + 17] = walk
+				bf[o + 18] = f.seed_ * 37.0
+				bf[o + 19] = f.run_w * walk
+				o += 20
+				continue
 			bf[o + 12] = f.col.r
 			bf[o + 13] = f.col.g
 			bf[o + 14] = f.col.b
@@ -436,7 +680,7 @@ func update(t: float, dt: float, player: Player) -> void:
 			var d: float = _near[j][0]
 			var f: Person = _near[j][1]
 			var y := GY - (CURB if f.on_rd else 0.0)
-			var h := 1.7 * f.sz
+			var h := f.T.h      # (was 1.7 * sz: the new species have their own heights)
 			sol.bottom = y
 			sol.top = y + h
 			sol.place(f.x, f.z)

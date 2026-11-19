@@ -543,3 +543,71 @@ def saucer_n():
         parts['neon'].append(ribbon('lift', bvh, bottom_rays([(1.10, sd * 0.30), (-1.30, sd * 0.34)]), 0.07, 0.006, M['neon']))
     parts['gap'].append(ribbon('hatch', bvh, top_rays([(-0.70, -0.45), (-0.74, 0.0), (-0.70, 0.45)], 0.03), 0.010, 0.0025, M['gap']))
     return finish(parts, [canopy], [], M)
+
+
+def emitter(name, f, s, u, r, w, M):
+    """a hover emitter in a wheel's place (the BLUE SAUCER): a gunmetal drum, a lit ring on its face, a chrome hub, and the axle it rides on running in toward the hull.
+    s is its centre plane, + the left side. Origin at its centre, so it can be taken off whole (CLUB 9's rig has one lying in the street, axle and all)."""
+    side = 1.0 if s > 0 else -1.0
+    hw = w / 2
+    parts = [lathe('drum', [(-hw * 0.80, r * 0.72), (-hw, r * 0.86), (-hw, r * 0.97), (-hw * 0.84, r), (hw * 0.84, r), (hw, r * 0.97), (hw, r * 0.86), (hw * 0.92, r * 0.84)], f, s, u, M['rim'], side=side),
+             lathe('vents', [(-hw * 0.5 - 0.012, r + 0.002), (-hw * 0.5 + 0.012, r + 0.002)], f, s, u, M['trim'], side=side),
+             lathe('vents', [(hw * 0.5 - 0.012, r + 0.002), (hw * 0.5 + 0.012, r + 0.002)], f, s, u, M['trim'], side=side),
+             lathe('bezel', [(hw * 0.92, r * 0.84), (hw * 0.96, r * 0.82), (hw * 0.96, r * 0.76), (hw * 0.90, r * 0.74)], f, s, u, M['chrome'], side=side),
+             lathe('ring', [(hw * 0.90, r * 0.74), (hw * 0.90, r * 0.50)], f, s, u, M['neon'], side=side),
+             lathe('throat', [(hw * 0.90, r * 0.50), (hw * 0.60, r * 0.40), (hw * 0.60, r * 0.30)], f, s, u, M['trim'], side=side),
+             lathe('hub', [(hw * 0.60, r * 0.30), (hw * 0.86, r * 0.26), (hw * 0.98, r * 0.16), (hw * 1.0, 0.0005)], f, s, u, M['chrome'], side=side),
+             lathe('back', [(-hw * 0.80, r * 0.72), (-hw * 0.70, r * 0.30), (-hw * 0.70, 0.0005)], f, s, u, M['trim'], side=side),
+             lathe('axle', [(-hw * 0.70, 0.05), (-hw - 0.24, 0.045), (-hw - 0.26, 0.07), (-hw - 0.30, 0.07), (-hw - 0.30, 0.0005)], f, s, u, M['chrome'], side=side, segs=14)]
+    verts, faces = [], []      # the vanes across the throat
+    for b in range(6):
+        a = math.tau * b / 6
+        for (rr, da, ax) in ((r * 0.30, -0.10, hw * 0.62), (r * 0.30, 0.10, hw * 0.62), (r * 0.50, 0.30, hw * 0.88), (r * 0.50, 0.10, hw * 0.88)):
+            verts.append(P(f + rr * math.cos(a + da), s + side * ax, u + rr * math.sin(a + da)))
+        faces.append((b * 4, b * 4 + 1, b * 4 + 2, b * 4 + 3))
+    vn = mesh_obj('vanes', verts, faces, M['rim2'], smooth=False)
+    outward(vn, P(f, s - side * 0.5, u))
+    parts.append(vn)
+    ob = join(name, parts)
+    c = P(f, s, u)
+    ob.data.transform(__import__('mathutils').Matrix.Translation(-c))
+    ob.location = c
+    return ob
+
+
+def saucer_b():
+    """BLUE SAUCER (2026-11-17, CLUB 9: Pauly's racing rig): a round bubble car of a saucer on four hover emitters in arches where a car has its wheels, its flank tall enough to
+    hang a driver's door on, and under its canopy two seats side by side sized for Prog at full size (1.85 m, seated 1.01 m hips to crown, a metre across the shoulders) and Pauly
+    beside him (2026-11-17, user: "big enough that it can fit Prog and the alien"). Driver on the left (the door side). No steering wheel (user): like the GRAY SAUCER and the GREEN
+    POD, it is driven with the mind. Paint takes the car's colour (blue); the lit lines are cold cyan."""
+    M = materials(0x1b3f9a, 0x7fe6ff, lit=True)
+    SF, SX = 2.1, 1.28
+    AX, TRACK, WR, WW = 1.35, 1.0, 0.34, 0.26
+    hull = lathe_up('hull', [(0.0005, 0.38), (0.50, 0.34), (0.80, 0.38), (0.95, 0.48), (1.0, 0.60), (1.0, 0.82), (0.97, 0.93), (0.90, 1.0), (0.70, 1.05), (0.0005, 1.07)], M['paint'], SF, SX, sharp=40)
+    arches(hull, M, [(AX, WR, 0.76, None), (-AX, WR, 0.76, None)])
+    bvh = bvh_of(hull)
+    parts = new_parts(hull)
+    for f in (AX, -AX):
+        for sd in (1, -1):
+            parts['trim'].append(arch_lip('lip', f, WR, WR + 0.08, sd * (TRACK + 0.05), M['trim']))
+    parts['neon'].append(lathe_up('rim', [(1.003, 0.700), (1.010, 0.708), (1.010, 0.732), (1.003, 0.740)], M['neon'], SF, SX))
+    parts['trim'].append(lathe_up('skirt', [(0.80, 0.375), (0.83, 0.37), (0.96, 0.47), (0.955, 0.48)], M['trim'], SF, SX))
+    parts['neon'].append(lathe_up('lift', [(0.40, 0.343), (0.62, 0.355)], M['neon'], SF, SX))
+    # the canopy over the seats (2.4 tall: Prog's crown clears it by 0.17 seated upright) and its collar on the deck
+    DF, DX = 1.12, 1.04
+    dome = lathe_up('Glass', [(1.0, 0.98), (1.0, 1.30), (0.95, 1.62), (0.84, 1.92), (0.66, 2.16), (0.40, 2.32), (0.0005, 2.38)], M['dome'], DF, DX, sharp=60)
+    parts['chrome'].append(lathe_up('collar', [(1.10, 1.02), (1.08, 1.08), (1.01, 1.10), (1.0, 1.06)], M['chrome'], DF, DX))
+    parts['head'].append(ribbon('head', bvh, water_rays(0.0, 0.80, -26, 26, 60), 0.07, 0.012, M['head']))
+    parts['tail'].append(ribbon('tail', bvh, water_rays(0.0, 0.80, 154, 206, 60), 0.07, 0.012, M['tail']))
+    for k in range(8):      # deck plates
+        a = math.tau * (k + 0.5) / 8
+        parts['gap'].append(ribbon('plate', bvh, top_rays([(0.62 * SF * math.cos(a), 0.62 * SX * math.sin(a)), (0.84 * SF * math.cos(a), 0.84 * SX * math.sin(a))], 0.04), 0.010, 0.0025, M['gap']))
+    door = {'f0': -0.62, 'f1': 0.55, 'u0': 0.44, 'u1': 0.92, 's_in': 1.12, 's_out': 1.28, 'belt': None, 'cab': (-0.55, 0.50, 0.42, 0.88),
+            'seat': (-0.10, 0.46, 1.12), 'wheel': (0.48, 0.46, 1.50, 0.55, 0.17)}
+    out = finish(parts, [dome], [], M, door=door)
+    for o in [o for o in out if o.name.startswith('Steer')]:      # (door_split makes one; this craft has none)
+        out.remove(o)
+        bpy.data.objects.remove(o)
+    for i, (f, s_) in enumerate([(AX, TRACK), (AX, -TRACK), (-AX, TRACK), (-AX, -TRACK)]):
+        out.append(emitter('Wheel_%d' % i, f, s_, WR, WR, WW, M))
+    return out

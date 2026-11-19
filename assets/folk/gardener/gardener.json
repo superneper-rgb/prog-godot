@@ -1,0 +1,18 @@
+{
+ "height": 1.45,
+ "stride_walk": 0.62,
+ "stride_run": 0.98,
+ "speed": 0.55,
+ "look": [
+  "head",
+  "antenna.L",
+  "antenna.R"
+ ],
+ "neck": "neck",
+ "pivot": [
+  0.0,
+  1.07,
+  0.045
+ ],
+ "radius": 0.34
+}

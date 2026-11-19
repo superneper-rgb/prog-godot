@@ -2,7 +2,7 @@
 shader_type canvas_item;
 
 uniform vec3 phos = vec3(0.5, 1.0, 0.68);
-uniform float keep : hint_range(0.0, 1.0) = 0.42;
+uniform float keep : hint_range(0.0, 1.0) = 0.85;      // 0.42 hid what a suit or vial really looks like (user, 2026-11-16)
 uniform float reveal = 1.0;
 uniform bool vertical = false;
 uniform float lines = 140.0;

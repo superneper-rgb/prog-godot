@@ -9,6 +9,7 @@ shader_type spatial;
 render_mode unshaded, shadows_disabled;
 
 #include "res://levels/shaders/city_env.gdshaderinc"
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform int skin = 0;
 uniform vec3 mass : source_color = vec3(0.098, 0.075, 0.145);      // the JS skin's base colour
@@ -22,6 +23,7 @@ uniform float lamp_k = 0.3;                                         // a lit roo
 uniform float ground_y = -10.0;                                     // the street (JS GY): its glow washes up the lowest floors
 uniform vec3 upwash : source_color = vec3(0.32, 0.14, 0.42);
 uniform float upwash_k = 0.03;
+uniform float sky_k = 0.1;                                          // the sky's light on the wall (faint: the mass stays near black)
 
 varying vec3 v_shade;
 varying vec3 w_pos;
@@ -32,6 +34,7 @@ varying flat vec3 v_alu;
 const float FH = 3.6;                // floor to floor (JS: 8 floors to a 28.8 m tile)
 const float CEIL = 3.2;              // a room's ceiling, under the slab
 const vec3 KEY = vec3(-0.423, 0.0, -0.906);      // the city's faint key (JS city-style.js massShade)
+const vec2 MOON = vec2(0.502, -0.865);           // the moon's bearing, level (JS city-style.js createNightSky): the side of a tower that sees the brighter sky
 
 // A room seen through its glass: p on the glass (room-local metres: x across 0..size.x, y up from the floor, z = 0 at the glass), rd into the building.
 // Unlit (radiance per unit of the room's light): the walls, the ceiling's lights, the floor's pool, a desk row or a sofa, now and then someone standing.
@@ -221,6 +224,11 @@ void fragment() {
 	float wet = 0.55 + 0.45 * vnoise(vec2(um * 4.0, hm * 0.25 + TIME * 0.5));
 	float Fw = F0 + (max(1.0 - rough, F0) - F0) * fres;
 	vec3 wall = base * shade + city * Fw * (skin == 2 ? 1.0 : wet);
+	// the sky's light (2026-11-11, user): faint, in the live sky's own colour (city_env's sky uniforms, purple or red as the level's sky drifts), more on the faces turned to the
+	// moon's side and on the high floors that see open sky than down in the street's canyon
+	vec3 sky_c = mix(sky_hor, sky_band, 0.35) * sky_gain;
+	float sky_face = 0.55 + 0.45 * dot(n.xz, MOON);
+	wall += sky_c * sky_k * sky_face * (0.25 + 0.75 * smoothstep(2.0, 80.0, above));
 	vec3 street = upwash * upwash_k * exp(-max(above, 0.0) / 14.0);
 	wall += street * (0.7 + 0.3 * wea);
 	// a lit window's light spilling out onto the wall round it, strongest on the sill under it
@@ -231,5 +239,5 @@ void fragment() {
 
 	vec3 jamb_c = lit_mass * 0.5 + lc * L * 0.12 + street * 0.4;
 	vec3 opening = mix(glass + street * 0.12, jamb_c, jamb);
-	ALBEDO = mix(wall, opening, open);
+	ALBEDO = mix(wall, opening, open) + flash_light(w_pos, n, mix(vec3(0.3), vec3(0.08), open));      // (a flash on the wall; the glass mostly lets it through)
 }

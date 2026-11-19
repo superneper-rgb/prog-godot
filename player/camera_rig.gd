@@ -28,7 +28,8 @@ var aim_w := 0.0
 var ads_w := 0.0
 var scope_w := 0.0   # 0 = normal third-person, 1 = looking through a scope
 var pow_w := 0.0
-var fov := 0.0       # the driving camera widens the lens (vehicles/vehicles.gd); 0 = the game's own
+var fov := 0.0       # the driving camera widens the lens (vehicles/vehicles.gd); 0 = the game's own. Vehicles owns this: it eases it back and zeroes it whenever nobody is driving
+var fov_add := 0.0   # degrees a level's set piece adds to the lens (UNDERFOINT's train ride): the level sets it every frame, Game clears it when the level goes
 var manual_t := 99.0 # seconds since the last manual look input
 var yaw_vel := 0.0   # smoothed auto-follow swing (rad/s)
 var follow_t := 0.0  # how long the travel heading has been steady

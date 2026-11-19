@@ -2,6 +2,7 @@
 shader_type spatial;
 
 varying vec3 wp;
+uniform vec2 centre = vec2(0.0);      // where the plate is faded from: the viewer moves the plate along with whoever is chasing about on it
 
 void vertex() {
 	wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -20,7 +21,7 @@ void fragment() {
 	vec3 c = vec3(0.035, 0.038, 0.042) + fine * 0.012 + coarse * 0.05;
 	c = mix(c, vec3(0.25, 0.7, 0.35), ax_z * step(0.0, wp.z) * 0.8);
 	c = mix(c, vec3(0.75, 0.3, 0.25), ax_x * step(0.0, wp.x) * 0.8);
-	float fade = smoothstep(16.0, 5.0, length(wp.xz));
+	float fade = smoothstep(16.0, 5.0, length(wp.xz - centre));
 	ALBEDO = mix(vec3(0.03, 0.032, 0.035), c, fade);
 	ROUGHNESS = 0.92;
 }

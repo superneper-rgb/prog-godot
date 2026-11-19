@@ -1,0 +1,16 @@
+{
+ "height": 1.6,
+ "stride_walk": 0.8,
+ "stride_run": 1.2,
+ "speed": 0.75,
+ "look": [
+  "head"
+ ],
+ "neck": "neck.2",
+ "pivot": [
+  0.0,
+  1.3157517910003662,
+  0.3136977255344391
+ ],
+ "radius": 0.5
+}

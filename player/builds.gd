@@ -50,8 +50,7 @@ class Build:
 	var support := false
 	var relax_l := false
 	var hang_fit := false
-	var clips := false             # plays authored moves (Prog V3, player/prog3_animator.gd) instead of the procedural layers
-	var skin_fix := false          # runtime mesh fixes tuned to the old model (PROG_ORIGINAL_BUILD); never for V2
+	var skin_fix := false          # runtime mesh fixes tuned to Prog's body (player/prog_v1_fix.gd)
 	var grips := ""                # baked hands-on-the-gun grips (tools/v1_grips/bake.py): Prog V1 player/v1_grips.json
 	var v1_arms := false           # Prog V1's arm rules in the procedural animator: elbows hang down and out, body avoidance capped
 	var stock := Vector3.ZERO      # aimed long guns put the butt plate here: the shoulder pocket, from the right shoulder joint in chest axes (x his left, y up, z forward); ZERO = off
@@ -87,10 +86,6 @@ const PROG_CARRY := Vector3(0.08, 0.08, -0.025)
 const PROG_PISTOL := Vector3(0.0, 0.0, -0.025)
 static var PROG_HOLDS: Dictionary = _make_prog_holds()
 static var BUILDS: Dictionary = _make_builds()
-## Prog V2 is the standard Prog (BUILDS.prog). The old model stays selectable at the character select as the "Prog V1" costume: it only changes the playable model and its preview.
-static var PROG_ORIGINAL_BUILD: Build = _make_prog_original()
-static var PROG_V3_BUILD: Build = _make_prog_v3()
-static var prog_costume := "prog_v2"
 static var FLIP_HOLD: Dictionary = _make_flip_hold()
 
 
@@ -103,7 +98,7 @@ static func _prog_hold(aim: Vector3, twist: float, low: Vector3, low_yaw: float 
 	return h
 
 
-## Prog V1's own holds: PROG_HOLDS (V2 keeps those), but the long guns go stock-in-shoulder (Build.stock), and with the gun in the right shoulder his short left arm only reaches the
+## Prog's own holds: PROG_HOLDS, but the long guns go stock-in-shoulder (Build.stock), and with the gun in the right shoulder his short left arm only reaches the
 ## handguard from a more side-on stance, so those twist further. Each twist was measured in the running game: the smallest that leaves the left hand ~8-10 cm inside his reach.
 ## (The Bellows Beast keeps its old hold: no twist under 1.3 rad lets the left hand reach it from the shoulder.)
 static func _make_prog_v1_holds() -> Dictionary:
@@ -152,7 +147,7 @@ static func _make_prog() -> Build:
 	var b := Build.new()
 	b.id = "prog"
 	b.name = "PROG"
-	b.file = "res://assets/prog_v2.glb"
+	b.file = "res://assets/prog.glb"
 	b.blurb = "Peak performance. The PERFECT weapon. #1 Fat Fuck."
 	b.scale = 1.0
 	b.pivot = 0.95
@@ -168,13 +163,16 @@ static func _make_prog() -> Build:
 	b.bounce = 0.0
 	b.head_k = 1.0
 	b.bend = 1.0
-	b.w_off = PROG_HOLDS
+	b.w_off = _make_prog_v1_holds()
 	b.aim_twist = 0.6
 	b.low_twist = 0.5
 	b.pouch = Vector3(0.2, -0.45, 0.12)
 	b.support = true
 	b.hang_fit = false
-	b.skin_fix = false
+	b.skin_fix = true
+	b.v1_arms = true
+	b.grips = "res://player/v1_grips.json"
+	b.stock = Vector3(0.11, -0.03, 0.12)       # (the hollow between his shoulder and collarbone: 11 cm in from the joint, 3 cm down, 12 cm out: the butt presses ~1 cm into the skin, measured on his aimed body)
 	b.cam_height = 1.45
 	b.muz_y = 1.4
 	b.muz_crouch = 0.95
@@ -239,25 +237,6 @@ static func _make_builds() -> Dictionary:
 	return {"prog": _make_prog(), "tommy": _make_tommy()}
 
 
-## Prog V3: the rebuilt body and his own moves (assets/prog3). Only the playable character and his preview wear him so far: cutscene stand-ins stay on character_build.
-static func _make_prog_v3() -> Build:
-	var b := _make_prog()
-	b.file = "res://assets/prog3/prog3.glb"
-	b.clips = true
-	return b
-
-
-static func _make_prog_original() -> Build:
-	var b := _make_prog()
-	b.file = "res://assets/prog.glb"
-	b.skin_fix = true
-	b.v1_arms = true
-	b.grips = "res://player/v1_grips.json"
-	b.stock = Vector3(0.11, -0.03, 0.12)       # (the hollow between his shoulder and collarbone: 11 cm in from the joint, 3 cm down, 12 cm out: the butt presses ~1 cm into the skin, measured on his aimed body)
-	b.w_off = _make_prog_v1_holds()
-	return b
-
-
 static func _make_flip_hold() -> Dictionary:
 	var deagle := FlipHold.new(-0.04, -0.02, 0.30, -1.0, 0.0, 0.0)
 	var rifle := FlipHold.new(-0.07, -0.04, 0.28, -0.8, 0.55, 0.0)
@@ -286,15 +265,6 @@ static func _make_flip_hold() -> Dictionary:
 	}
 
 
-## JS characterBuild: the build to play for a character id (Prog's costume picks his model).
+## JS characterBuild: the build to play for a character id. (Prog's costumes are gone (user, 2026-11-15): V2 and V3 were deleted, V1 with V3's head is the one Prog.)
 static func character_build(id: String) -> Build:
-	if id == "prog" and prog_costume == "standard":
-		return PROG_ORIGINAL_BUILD
 	return BUILDS[id]
-
-
-## The build for the character you play: like character_build, plus the costumes that cutscenes cannot wear yet.
-static func play_build(id: String) -> Build:
-	if id == "prog" and prog_costume == "prog_v3":
-		return PROG_V3_BUILD
-	return character_build(id)

@@ -10,6 +10,9 @@ uniform vec3 pzr = vec3(1.0, 0.22, 0.19);
 uniform vec3 bg1 = vec3(0.17, 0.02, 0.035);
 uniform vec3 bg2 = vec3(0.04, 0.01, 0.01);
 uniform vec2 px = vec2(0.001, 0.002);      // 3 css px of drop shadow, in uv
+// The 3D item preview (weapon, suit, vial, glass) keeps its own colours: the JS's monochrome CSS filter hid what the items actually look like (user, 2026-11-16). `keep_rect` is the preview box in uv (x0, y0, x1, y1), `keep` how much of the real colour shows there (0 = the old all-one-colour look); the page sets both each frame it draws a preview.
+uniform vec4 keep_rect = vec4(0.0);
+uniform float keep : hint_range(0.0, 1.0) = 0.9;
 // staged open: the main band opens from its middle
 uniform vec2 band = vec2(0.0, 1.0);
 uniform float band_open = 1.0;
@@ -48,6 +51,10 @@ void fragment() {
 	c = hue_rot(c, hue);
 	c = clamp(c * bright, vec3(0.0), vec3(1.0));
 	c = clamp((c - 0.5) * contrast + 0.5, vec3(0.0), vec3(1.0));
+	// inside the preview box, bring the item's real colours back (soft edge so the box does not show)
+	vec2 kd = min(uv - keep_rect.xy, keep_rect.zw - uv);
+	float inside = clamp(min(kd.x, kd.y) / 0.006, 0.0, 1.0) * step(0.0001, keep_rect.z);
+	c = mix(c, clamp(t.rgb * 1.08, vec3(0.0), vec3(1.0)), keep * inside);
 	// drop-shadow(0 0 3px pzr .55)
 	float sh = 0.0;
 	sh += texture(menu, uv + px * vec2(1.0, 0.0)).a + texture(menu, uv - px * vec2(1.0, 0.0)).a;

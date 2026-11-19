@@ -66,7 +66,7 @@ class Tile:
 		for q: Array in strips:
 			var s: World.Solid = q[0]
 			s.place(x + float(q[1]), z + float(q[2]))
-			s.set_span(top - 0.6, top, top)
+			s.set_span(top - MsArena.DEPTH, top, top)      # (the export's 0.6 m slab is a 1 m platform now, keel included: ms_arena.gd)
 
 	func top_at(x: float, z: float) -> Variant:
 		for q: Array in strips:
@@ -132,6 +132,7 @@ var rail_w: MsBeams.Rail
 var rail_n: MsBeams.Rail
 var tiles: Array[Tile] = []
 var tile_floor: World.Solid
+var arena: MsArena = null
 var petals: Array = []      # [node, open, cur]
 var pockets: Array = []      # [solid, a, r, mesh]
 var wheel: Node3D
@@ -325,6 +326,7 @@ func _build_tiles() -> void:
 			tl.set_off(true)
 			tiles.append(tl)
 			idx += 1
+	arena = MsArena.new(L, self)      # the tiles' real bodies, the drum, the gift ledge and the pit under them
 
 
 # ================================================================== the gates
@@ -694,6 +696,8 @@ func update(dt: float, P: Player, C2: Combat, t: float) -> void:
 			truce.start(P)
 	if truce != null and truce.on:
 		truce.update(dt, P)
+	if arena != null and P != null and P.y > PENT_F - 14.0:
+		arena.update(dt, t)
 	if gm != null:
 		gm.update(dt, P, C2, t)
 		L.bo.boss_bar(gm.get_bar() if stage_id == "godmother" and P != null and P.y > PENT_F - 3.0 else null)
@@ -849,7 +853,7 @@ func stages() -> void:
 				if gm != null and gm.phase == 1:
 					return "Shoot out the THREE glowing emitters under her chair to bring her down, then hit her while she's DOWN."
 				if gm != null and gm.phase == 2:
-					return "Get up on the HIGH tiles when the red beam sweeps; hit her glowing head while she channels."
+					return "When the red beam sweeps, get up on a HIGH tile and shoot her glowing head: break her focus and she's DIZZY."
 				return "Jump the shockwave rings; hit her while she's DIZZY.",
 				"done": func(_a: Variant = null, _P: Variant = null, _c: Variant = null) -> bool: return gm != null and gm.is_done(), "on_start": _mark("respect")},
 			{"id": "truce", "label": "The truce", "kind": "custom", "text": "She raised her hand. \"Enough.\"", "guide": false, "done": func(_a: Variant = null, _P: Variant = null, _c: Variant = null) -> bool: return bo.flag("truce") == true, "on_start": _mark("truce")},

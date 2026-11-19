@@ -26,7 +26,7 @@ Moved word for word from PORT_STATUS.md on 2026-11-09: proof numbers, the piece 
 | Frame loop | index.html main.js frame() | core/game.gd | started |
 | Playable characters | index.html BUILDS, PROG_HOLDS, FLIP_HOLD | player/builds.gd | done |
 | Gait | index.html GAIT | player/gait.gd | done |
-| Animator | index.html class Animator | player/animator.gd + tank_fx / eye_fx / skin_fx gdshaders, gun_hulls.json + body_shapes.json (numbers the JS measured from its own meshes) | done. The old prog.glb's skinFix mesh edits are in `player/prog_v1_fix.gd` (nose normals smooth, not flat), and that costume is "Prog V1" in the menu |
+| Animator | index.html class Animator | player/animator.gd + tank_fx / eye_fx / skin_fx gdshaders, gun_hulls.json + body_shapes.json (numbers the JS measured from its own meshes) | done. The old prog.glb's skinFix mesh edits are in `player/prog_v1_fix.gd` (nose normals smooth, not flat); since 2026-11-15 that model is the only Prog, with a new head (tools/prog_paint) |
 | Hair spring | hair-spring.js | player/hair_spring.gd | done |
 | Peek / check tools | tests/lib/peek.cjs, devtools/check.mjs | tools/ | done |
 | Robot AI, barks, population | index.html enemy.js (Robot, Barks, Enemies) | enemies/ai.gd, barks.gd, robot.gd, enemies.gd | done (range robots idle until hit, as the JS: `ai_notice_range` is 0) |

@@ -17,6 +17,13 @@ const SUITS := {
 	"goint_undertaker": {"waist": 0.745, "boot": 0.235, "hand": 0.83, "shirt": Vector3(0.03, 0.03, 0.035), "pants": Vector3(0.025, 0.025, 0.03)},
 	"goint_warden": {"waist": 0.745, "boot": 0.235, "hand": 0.83, "shirt": Vector3(0.72, 0.7, 0.62), "pants": Vector3(0.03, 0.04, 0.09)},
 }
+## The FOINT Pervert Palace's site crew (levels/palace, user 2026-11-19): the security body dyed hi-vis over work trousers with reflective tape round the chest, a hard hat (the foreman's white),
+## a yellow nail gun; the hod carriers carry a brick in the throwing hand. No glb: the pieces are made here.
+const CREW := {
+	"crew": {"hat": Color(0.95, 0.7, 0.04), "shirt": Vector3(0.62, 0.78, 0.02), "pants": Vector3(0.035, 0.045, 0.075)},
+	"crew_hod": {"hat": Color(0.95, 0.36, 0.04), "shirt": Vector3(1.0, 0.2, 0.0), "pants": Vector3(0.08, 0.06, 0.045), "brick": true},
+	"foreman": {"hat": Color(0.94, 0.94, 0.9), "shirt": Vector3(0.62, 0.78, 0.02), "pants": Vector3(0.11, 0.09, 0.07)},
+}
 const BEAM_RANGE := 11.0
 const BEAM_ANGLE := 0.36
 const SHIELD_W := 0.96
@@ -48,6 +55,8 @@ static var _shield_edge_mat: ShaderMaterial = null
 static func _kit(costume: String, B: FointGoonView.Body) -> Kit:
 	if _kits.has(costume):
 		return _kits[costume]
+	if CREW.has(costume):
+		return _crew_kit(costume, B)
 	var K := Kit.new()
 	var sc: Node = (load("res://assets/objects/goon_dress_%s.glb" % costume) as PackedScene).instantiate()
 	var look: Array[Node] = [sc]
@@ -98,6 +107,114 @@ static func _kit(costume: String, B: FointGoonView.Body) -> Kit:
 	return K
 
 
+## The site crew's kit: the dye (shirt and trousers by where a texel sits, as the suits are; tape round the chest), a hard hat on the head bone, a brick in a hod carrier's right hand
+static func _crew_kit(costume: String, B: FointGoonView.Body) -> Kit:
+	var K := Kit.new()
+	var C: Dictionary = CREW[costume]
+	K.back_depth = -B.back_z
+	for s in B.mesh.get_surface_count():
+		var src: Material = B.mats[s]
+		if src.resource_name == "face":
+			K.mats.append(src)
+			continue
+		var m := ShaderMaterial.new()
+		m.shader = load(SHADER)
+		m.set_shader_parameter(&"albedo_tex", (src as StandardMaterial3D).albedo_texture)
+		m.set_shader_parameter(&"u_band", Vector4(0.05, 0.3, 0.0, 0.15))
+		m.set_shader_parameter(&"u_split", Vector4(0.745, 0.235, 0.83, 1.0))
+		m.set_shader_parameter(&"u_shirt", C.shirt)
+		m.set_shader_parameter(&"u_pants", C.pants)
+		m.set_shader_parameter(&"u_stripe", Vector4(0.87, 1.0, 0.022, 1.0))
+		m.set_shader_parameter(&"u_print_a", PackedVector3Array([Vector3(0.0, 0.84, -9.0), Vector3(0.42, 1.0, -9.0)]))
+		m.set_shader_parameter(&"u_print_b", PackedVector3Array([Vector3(0.3, 1.27, -0.16), Vector3(0.82, 1.42, 9.0)]))
+		K.mats.append(m)
+	# the hard hat: a shell over the crown and a brim with a peak to the front, sat on the top of the head (found from the skin: the head's highest vertices)
+	var head: int = B.i[&"head"]
+	var top := _head_top(B, head)
+	K.pieces.append({"mesh": _hard_hat(C.hat), "bone": head, "follow": -1, "k": 0.0, "pivot": Vector3.ZERO, "xf": B.rest_m[head].affine_inverse() * top})
+	if C.get("brick", false):
+		var hand: int = B.i[&"hand.R"]
+		var bm := BoxMesh.new()
+		bm.size = Vector3(0.11, 0.065, 0.22)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.5, 0.18, 0.1)
+		mat.roughness = 0.95
+		bm.material = mat
+		var at := B.rest_mp[hand] + B.rest_dir[hand] * 0.1
+		K.pieces.append({"mesh": bm, "bone": hand, "follow": -1, "k": 0.0, "pivot": Vector3.ZERO, "xf": B.rest_m[hand].affine_inverse() * Transform3D(Basis(), at)})
+	_kits[costume] = K
+	return K
+
+
+## Where a hat sits on the toad's head at rest (model space): over the middle of the head's highest skin, scaled to the head's width there (the hat is made for a head 0.16 m across)
+static func _head_top(B: FointGoonView.Body, head: int) -> Transform3D:
+	var a: Array = B.mesh.surface_get_arrays(0)
+	var vs: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+	var bones: PackedInt32Array = a[Mesh.ARRAY_BONES]
+	var wts: PackedFloat32Array = a[Mesh.ARRAY_WEIGHTS]
+	var per := bones.size() / maxi(1, vs.size())
+	var bind := -1
+	for b in B.skin.get_bind_count():
+		if B.skin.get_bind_bone(b) == head or String(B.skin.get_bind_name(b)) == "head":
+			bind = b
+	var pts: Array[Vector3] = []
+	var top_y := -INF
+	for v in vs.size():
+		var w := 0.0
+		for k in per:
+			if bones[v * per + k] == bind:
+				w += wts[v * per + k]
+		if w > 0.6:
+			pts.append(vs[v])
+			top_y = maxf(top_y, vs[v].y)
+	if pts.is_empty():
+		return Transform3D(Basis(), B.rest_mp[head] + Vector3(0.0, 0.3, 0.0))
+	var cut := top_y - 0.09
+	var c := Vector3.ZERO
+	var n := 0
+	for p in pts:
+		if p.y > cut:
+			c += p
+			n += 1
+	c /= maxi(1, n)
+	var w := 0.0
+	for p in pts:
+		if p.y > cut:
+			w = maxf(w, Vector2(p.x - c.x, p.z - c.z).length())
+	var r := clampf(w + 0.03, 0.12, 0.32)
+	return Transform3D(Basis().scaled(Vector3.ONE * (r / 0.16)), Vector3(c.x, top_y - 0.06, c.z))
+
+
+## A hard hat for a head 0.16 m across: the shell (a squashed dome with a ridge down its middle), the brim, a peak forward (+Z)
+static func _hard_hat(col: Color) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var seg := 20
+	var rings := 6
+	for j in rings:
+		for i in seg:
+			for k: Array in [[i, j], [i + 1, j], [i + 1, j + 1], [i, j], [i + 1, j + 1], [i, j + 1]]:
+				var a := TAU * float(k[0]) / seg
+				var e := (PI * 0.5) * float(k[1]) / rings
+				var r := 0.17 * cos(e)
+				var ridge := 1.0 + 0.06 * exp(-pow(sin(a) * 8.0, 2.0)) * cos(e)
+				st.set_normal(Vector3(sin(a) * cos(e), sin(e), cos(a) * cos(e)).normalized())
+				st.add_vertex(Vector3(sin(a) * r, 0.13 * sin(e) * ridge, cos(a) * r * 1.08))
+	for i in seg:      # the brim: a flat ring, wider at the front (the peak)
+		for k: Array in [[i, 0], [i + 1, 0], [i + 1, 1], [i, 0], [i + 1, 1], [i, 1]]:
+			var a := TAU * float(k[0]) / seg
+			var front := maxf(0.0, cos(a))
+			var r := 0.165 if int(k[1]) == 0 else 0.205 + 0.07 * front * front
+			st.set_normal(Vector3.UP)
+			st.add_vertex(Vector3(sin(a) * r, 0.005 - 0.012 * float(k[1]) * front, cos(a) * r * 1.08))
+	var m := StandardMaterial3D.new()
+	m.albedo_color = col
+	m.roughness = 0.32
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	st.set_material(m)
+	return st.commit()
+
+
 static func _bone_name(key: String) -> String:
 	var i := key.rfind("_")
 	if i > 0 and (key.ends_with("_L") or key.ends_with("_R")):
@@ -128,7 +245,7 @@ static func _walk(K: Kit, n: Node, bone: int, follow: int, k: float, pivot: Vect
 ## Returns null for the plain FOINT costumes.
 static func dress(view: FointGoonView) -> FointGoonDress:
 	var costume := view.R.costume
-	if not RECOLOUR.has(costume) and not SUITS.has(costume):
+	if not RECOLOUR.has(costume) and not SUITS.has(costume) and not CREW.has(costume):
 		return null
 	return FointGoonDress.new(view, costume)
 
@@ -180,6 +297,16 @@ func _init(v: FointGoonView, c: String) -> void:
 		_build_flashlight()
 	elif v.gun.torch != null:
 		v.gun.torch.visible = false
+	if CREW.has(c):      # the crew's gun is a nail gun: site yellow; a hod carrier throws by hand (his sprayer goes)
+		var yel := StandardMaterial3D.new()
+		yel.albedo_color = Color(0.95, 0.68, 0.04)
+		yel.roughness = 0.45
+		for mi: Node in v.gun.g.find_children("*", "MeshInstance3D", true, false):
+			var gm := mi as MeshInstance3D
+			if gm.get_aabb().size.length() > 0.12:
+				gm.material_override = yel
+		if c == "crew_hod":
+			v.gun.g.visible = false
 	if c == "goint_adjuster":
 		_build_shield()
 		hits = R.shield_hits

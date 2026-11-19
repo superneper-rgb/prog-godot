@@ -1471,6 +1471,7 @@ func _make_flash() -> void:
 	light.omni_attenuation = 2.0         # (three.js' inverse square inside its window)
 	light.light_energy = 0.0
 	light.visible = false
+	light.add_to_group(FlashLights.GROUP)
 	group.add_child(light)
 
 

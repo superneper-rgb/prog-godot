@@ -12,7 +12,6 @@ class Turntable:
 
 
 var _views: Array[Turntable] = []
-var _built_costume := ""
 ## BUG-103 (tracker): the card the pad / mouse is on. It is only a highlight; the card that says SELECTED is `Game.char_pick`, set by A / Enter / a click (`pick`). (The three.js game had the mouse only, where a click was both.)
 var focus := "prog"
 
@@ -26,9 +25,7 @@ func set_active(on: bool) -> void:
 	visible = on
 	if on:
 		focus = Game.char_pick
-	if on and (_views.is_empty() or _built_costume != Builds.prog_costume):
-		_free_all()
-		_built_costume = Builds.prog_costume
+	if on and _views.is_empty():
 		for id: String in ["prog", "tommy"]:
 			_views.append(_make(id))
 	for t in _views:
@@ -52,7 +49,7 @@ func _make(id: String) -> Turntable:
 	var t := Turntable.new()
 	t.id = id
 	t.ph = 0.0 if id == "prog" else 1.7
-	var B := Builds.play_build(id)
+	var B := Builds.character_build(id)
 	t.vp = SubViewport.new()
 	t.vp.own_world_3d = true
 	t.vp.transparent_bg = true
@@ -177,13 +174,3 @@ func step(d: int) -> void:
 
 func confirm() -> void:
 	pick(focus)
-
-
-func toggle_costume() -> void:
-	if Game.started:
-		return
-	var order := ["prog_v2", "prog_v3", "standard"]
-	Builds.prog_costume = order[(order.find(Builds.prog_costume) + 1) % order.size()]
-	Game.ui.prefs_save()
-	pick("prog")
-	set_active(true)

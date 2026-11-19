@@ -101,6 +101,13 @@ func add_joint(nm: String, parent_joint: int) -> int:
 	return i
 
 
+## A row that should shine only as the view tells it to (kind 1 or 2) loses the emission its material came with: left on, it is added on top and the light can never be turned down.
+func drop_emission(row_name: String) -> void:
+	var e: PackedVector4Array = body_mat.get_shader_parameter(&"mat_emit")
+	e[rows[row_name]] = Vector4(0.0, 0.0, 0.0, -1.0)
+	body_mat.set_shader_parameter(&"mat_emit", e)
+
+
 ## Build from res://assets/objects/<name>.glb. `glow_fill(soup, model)` adds the sprites. `glow_joints` (joint name -> channel): the additive JS parts, drawn in the glow layer instead of the body. `row_kinds` (JS material name -> rigid_batch kind): a material that follows the copy's colour A / B. `extra(model, parts)`: geometry the JS rebuilds by hand each frame, added here with joints of its own (add_joint). Materials are read from the export.
 static func build(path: String, glow_fill: Callable = Callable(), glow_joints: Dictionary = {}, row_kinds: Dictionary = {}, extra: Callable = Callable()) -> CreatureModel:
 	var ps: PackedScene = load(path)

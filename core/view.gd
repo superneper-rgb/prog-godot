@@ -48,6 +48,8 @@ void sky() {
 """
 
 var camera: Camera3D = null
+var sway := Vector3.ZERO        # the gameplay camera's drunk lurch (pitch, yaw, roll, rad) and drift (camera axes, m): player/drunk.gd sets them every frame
+var sway_pos := Vector3.ZERO
 var env: Environment = null
 var compositor: Compositor = null
 var post: PostFx = null
@@ -139,6 +141,20 @@ func setup(cam: Camera3D) -> void:
 	dynamic_res = not Peek.enabled      # (a test on a machine that is busy with other things must not get a different picture)
 
 
+## The levels whose sun shadow is the lean one (user, 2026-11-11: every level keeps its sun or moon shadow, the ones where it cost the most get it cut down hard).
+## Measured at 1080p on a GTX 1660 Ti, the full shadow cost 3 to 11 ms a frame in these (the back alley and the jungle went under 60 fps with it); lean, about a fifth of that, and it looks the same.
+const SUN_LEAN_LEVELS: Array[String] = ["worldbackalley", "apartment", "blockout-demo", "jungle-test", "hub"]
+
+
+## The sun's shadow, full or lean. Full: soft, contact-hardening edges (2 degrees of penumbra), the project's filter, four cascades over 72 m. Lean: a 1 degree penumbra, the low
+## filter, two cascades over 40 m. The soft edge search is most of the cost (on its own it was 9 of the back alley's 10.7 ms); past 40 m a level's own fog and dark take over.
+func set_sun_lean(on: bool) -> void:
+	sun.light_angular_distance = 1.0 if on else 2.0
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if on else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.directional_shadow_max_distance = 40.0 if on else 72.0
+	RenderingServer.directional_soft_shadow_filter_set_quality(RenderingServer.SHADOW_QUALITY_SOFT_LOW if on else int(ProjectSettings.get_setting("rendering/lights_and_shadows/directional_shadow/soft_shadow_filter_quality", 3)) as RenderingServer.ShadowQuality)
+
+
 # ---- the render state: JS renderState().restore and what level files set ------------------------------------------------------------------------------------
 
 ## JS BASE_LOOK.restore(): the look of a fresh View. Every level starts from it (Game.enter_level), the hub's build sets its own.
@@ -153,6 +169,7 @@ func reset_render_state() -> void:
 	set_sun(Color.hex(0xfff1d6ff), 1.9)
 	sun.visible = true
 	sun.shadow_enabled = true
+	set_sun_lean(false)
 	city = null
 	camera.fov = Config.fov
 
@@ -169,7 +186,7 @@ func level_built(lv: Level) -> void:
 
 
 ## A level's whole render state as data (what its mount sets in the JS): any key not named stays as it is. For the exporter.
-## {"background": Color, "fog": null | [Color, near, far] | [Color, density], "tone_mapping": View.TONE_*, "exposure": float, "hemi": [Color, Color, intensity], "sun": [Color, intensity], "sun_cast": bool, "clip": [near, far]}
+## {"background": Color, "fog": null | [Color, near, far] | [Color, density], "tone_mapping": View.TONE_*, "exposure": float, "hemi": [Color, Color, intensity], "sun": [Color, intensity], "sun_cast": bool, "sun_lean": bool, "clip": [near, far]}
 func apply_render_state(d: Dictionary) -> void:
 	if d.has("tone_mapping") or d.has("exposure"):
 		set_tone_mapping(d.get("tone_mapping", tone_mapping), d.get("exposure", exposure))
@@ -189,6 +206,8 @@ func apply_render_state(d: Dictionary) -> void:
 		set_sun(d.sun[0], d.sun[1])
 	if d.has("sun_cast"):
 		sun.shadow_enabled = d.sun_cast
+	if d.has("sun_lean"):
+		set_sun_lean(d.sun_lean)
 	if d.has("clip"):
 		set_clip(d.clip[0], d.clip[1])
 
@@ -532,6 +551,8 @@ func render(cam: RefCounted, player: Player, shake: float = 0.0, vertical_shake:
 	var fov: float = shot.fov if (shot != null and shot.fov != 0.0) else lerpf(Config.fov + fov_k + pull_eff * pull_fov + pull_w * (1.0 - pull_eff) * pull_fov * 0.5, _sf if _sf != 0.0 else Config.fov, clampf(scw, 0.0, 1.0))   # scope zoom
 	if shot == null and rig_v != null and rig_v.fov != 0.0:      # the driving camera (vehicles/vehicles.gd)
 		fov += rig_v.fov - Config.fov
+	if shot == null and rig_v != null:
+		fov += rig_v.fov_add
 	if absf(c.fov - fov) > 0.01:
 		c.fov = fov
 	var p: Vector3 = rig_v.pos if rig_v != null else shot.pos
@@ -553,6 +574,9 @@ func render(cam: RefCounted, player: Player, shake: float = 0.0, vertical_shake:
 	else:
 		xf = _look_at(p, look, shot.up if (shot != null and shot.up != Vector3.ZERO) else Vector3.UP)   # shot.up: a banked view (OMNISPHERE's freefall)
 	xf.origin.y += vertical_shake * Config.cam_shake
+	if rig_v != null and (sway != Vector3.ZERO or sway_pos != Vector3.ZERO):      # Prog drunk (player/drunk.gd): the view lurches with him, in the camera's own axes
+		xf.origin += xf.basis * sway_pos
+		xf.basis = xf.basis * Basis.from_euler(sway, EULER_ORDER_YXZ)
 	c.global_transform = xf
 	# (the sun follows the player in the JS only to keep its one shadow box around them: Godot's cascades follow the camera)
 	_update_blob(player)

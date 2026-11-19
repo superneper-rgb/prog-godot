@@ -1,8 +1,18 @@
 class_name HubLife
 extends RefCounted
-## What makes FOINT CITY move (JS levels/hub/district-view.js, its per-frame parts): the street clock, the traffic, the crowd, the drivers, the signal lenses, the three roaming lamp lights. Everything comes out of life.json + life.bin, the exporter's picture of the JS city as it was built.
+## What makes FOINT CITY move (JS levels/hub/district-view.js, its per-frame parts): the street clock, the traffic, the crowd, the drivers, the signal lenses, the street lamps' real light on whatever moves. Everything comes out of life.json + life.bin, the exporter's picture of the JS city as it was built.
 
-const WARM_L := 3
+const LAMP_L := 8      # real lamp lights in the pool: the lamps nearest the camera get one
+## JS city-streets.js LAMP_KINDS (user, 2026-11-04): a street lamp is white leaning violet or white leaning red, by area (DeckLook.lamp_area). The light takes its glass colour.
+const LAMP_TINT: Array[Color] = [Color(0.784, 0.706, 1.0), Color(1.0, 0.604, 0.682)]
+const LAMP_FADE := 4.0   # how fast a lamp light fades in or out, per second
+
+## One light of the pool. It stands on a lamp until that lamp is no longer among the nearest, then fades out where it is and comes up again on its next lamp
+## (it never travels: 2026-11-11, the old three lights glided across the street to trade lamps whenever two of them swapped places in the ranking).
+class LampLight:
+	var node: OmniLight3D
+	var lamp := -1       # the lamp it stands on (-1: none)
+	var want := -1       # the lamp it should be on
 
 var level: ExportedLevel
 var J: Dictionary = {}
@@ -25,8 +35,8 @@ var _lamp_x := PackedFloat32Array()
 var _lamp_z := PackedFloat32Array()
 var _lamp_top := PackedFloat32Array()
 var _lamps: Array = []
-var _warm: Array[OmniLight3D] = []
-var _tgt: Array = []
+var _lamp_tint := PackedInt32Array()     # LAMP_TINT index, or -1: the lamp has a colour of its own (the office's)
+var _pool: Array[LampLight] = []
 var _pick := 0.0
 var _sky_mats: Array[ShaderMaterial] = []
 ## the flying cars' kinds (tools/cars/sky_cars.py) and where their glows sit on each model: (forward, up), the engines (forward, side, up)
@@ -43,6 +53,7 @@ var _pod_loop := 1.0
 var _pods: Array = []          # [s, v]
 var _pod_lamps: MultiMesh = null
 var dome: FointDomeLife = null
+var ad: FointAdMonitor = null     # the floating video billboard over the dome's plaza (levels/hub/foint_ad_monitor.gd)
 var trees: CityTrees = null       # levels/hub/city_trees.gd
 var _beams: Array = []         # [node, sx]: the bridge's two searchlights (JS city-bridge.js)
 var _bulb_m: ShaderMaterial = null      # the B-9 alley's door bulb (JS district-view.js)
@@ -388,6 +399,7 @@ func _pods_tick(dt: float) -> void:
 ## The district's small lights that move on their own clock: the FOINT DOME (levels/hub/foint_dome.gd), the bridge's searchlights and the alley's door bulb. The export has them where they stood; these find them by their JS colours.
 func _build_glints() -> void:
 	dome = FointDomeLife.new(level)
+	StandCanopy.apply(level)
 	var dn: Array = level.node_named("FointDistrict")
 	if dn.is_empty():
 		return
@@ -407,6 +419,7 @@ func _build_glints() -> void:
 			_beams.append([piv, signf(piv.position.x)])
 		elif FointDomeLife._is(m, 0xff8a4a) and mi.mesh.surface_get_primitive_type(0) == Mesh.PRIMITIVE_POINTS:
 			_bulb_m = GlowPoints.replace(mi, 6.5)
+	ad = FointAdMonitor.make(dn[0])      # (after the walk: it looks for the export's lights)
 	if _beams.size() != 2 or _bulb_m == null:
 		push_warning("HubLife: expected two bridge searchlights and the alley bulb, found %d and %s" % [_beams.size(), _bulb_m != null])
 
@@ -423,83 +436,105 @@ func _glints_tick(t: float) -> void:
 		_bulb_m.set_shader_parameter(&"opacity", 0.15 if f > 0.62 else 0.85 + 0.15 * sin(t * 11.0))
 
 
-## JS district-view.js warmL: three roaming lamp lights: the nearest lamps get them, so lit things (cars, people, the player) read under the baked street light.
+## The street lamps' real light (JS district-view.js warmL had three lights roaming the nearest lamps): a pool of LAMP_L shadowless lights on the lamps nearest the camera,
+## each in its lamp's own tint, so Prog, the cars and the people read under the light the street paints. The city itself is unshaded and does not take them.
 func _build_warm_lights() -> void:
 	_lamps = J["lamp_pts"]
 	var n := _lamps.size()
 	_lamp_x.resize(n)
 	_lamp_z.resize(n)
 	_lamp_top.resize(n)
+	_lamp_tint.resize(n)
 	for i in n:
 		var l: Dictionary = _lamps[i]
 		_lamp_x[i] = l["hx"]
 		_lamp_z[i] = l["hz"]
 		_lamp_top[i] = l["top"]
-	for l: Light3D in level.lights:      # (the export has them where the JS parks them, 60 m under the street)
-		if l is OmniLight3D and l.position.y < -50.0 and _warm.size() < WARM_L:
-			_warm.append(l)
-			_tgt.append({"x": 0.0, "y": -60.0, "z": 0.0, "i": -1, "warm": false, "intensity": 26.0, "distance": 17.0, "color": -1, "office": false})
+		_lamp_tint[i] = -1 if l.has("color") else _street_area(_lamp_x[i], _lamp_z[i])
+	var template: OmniLight3D = null
+	for l: Light3D in level.lights:      # (the export has the JS's three where it parks them, 60 m under the street: one is the pattern for the pool, all three go)
+		if l is OmniLight3D and l.position.y < -50.0:
+			if template == null:
+				template = l as OmniLight3D
+			l.visible = false
+	if template == null:
+		push_warning("HubLife: no parked lamp light in the export to make the pool from")
+		return
+	for k in LAMP_L:
+		var ll := LampLight.new()
+		ll.node = template.duplicate() as OmniLight3D
+		ll.node.visible = true
+		ll.node.light_energy = 0.0
+		ll.node.shadow_enabled = false
+		template.get_parent().add_child(ll.node)
+		_pool.append(ll)
+
+
+## the area a street lamp's tint is decided on: its road's centre line (JS city-streets.js lampKind). A lamp beside one of the avenues or streets that cut the city into areas
+## stands 5.2 m off that cut, so it takes the cut itself; anywhere else no cut lies between the lamp and its road's centre.
+static func _street_area(x: float, z: float) -> int:
+	var cx := x
+	var cz := z
+	for c: float in [-72.0, 0.0, 72.0]:
+		if absf(x - c) < 6.5:
+			cx = c
+	for c: float in [236.0, 367.0, 451.0]:
+		if absf(z - c) < 6.5:
+			cz = c
+	return DeckLook.lamp_area(cx, cz)
 
 
 func _warm_tick(dt: float, t: float, cam: Vector3) -> void:
 	_pick -= dt
 	if _pick <= 0.0:
 		_pick = 0.25
-		var n := _lamps.size()
-		var used := {}
+		# the nearest lamps (within 38 m), nearest first
 		var office_room := cam.x > 114.0 and cam.x < 131.0 and absf(cam.z - 330.0) < 5.0 and cam.y < -5.0
-		var best: Array = []
-		for k in WARM_L:
-			var bd := 38.0 * 38.0
-			var bi := -1
-			for i in n:
-				if used.has(i):
-					continue
-				var dx := _lamp_x[i] - cam.x
-				var dz := _lamp_z[i] - cam.z
-				var dy := _lamp_top[i] - cam.y
-				var d := dx * dx + dz * dz + dy * dy * 0.3
-				if office_room and (_lamps[i] as Dictionary).get("office", false):
-					d *= 0.04
-				if d < bd:
-					bd = d
-					bi = i
-			if bi >= 0:
-				used[bi] = true
-			best.append(bi)
-		for k in WARM_L:
-			var T: Dictionary = _tgt[k]
-			var bi: int = best[k]
-			if bi < 0:
-				T.i = -1
+		var near: Array[Vector2] = []      # (distance, lamp)
+		for i in _lamps.size():
+			var dx := _lamp_x[i] - cam.x
+			var dz := _lamp_z[i] - cam.z
+			var dy := _lamp_top[i] - cam.y
+			var d := dx * dx + dz * dz + dy * dy * 0.3
+			if office_room and (_lamps[i] as Dictionary).get("office", false):
+				d *= 0.04
+			if d < 38.0 * 38.0:
+				near.append(Vector2(d, i))
+		near.sort()
+		var take := {}
+		for j in mini(LAMP_L, near.size()):
+			take[int(near[j].y)] = true
+		# a light whose lamp is still wanted keeps it; the others are handed the wanted lamps nobody has
+		var free: Array[LampLight] = []
+		for ll in _pool:
+			if ll.want >= 0 and take.has(ll.want):
+				take.erase(ll.want)
+			else:
+				free.append(ll)
+		var left: Array = take.keys()
+		for ll in free:
+			ll.want = int(left.pop_back()) if not left.is_empty() else -1
+	var q := minf(1.0, dt * LAMP_FADE)
+	for ll in _pool:
+		var L := ll.node
+		if ll.lamp != ll.want:
+			L.light_energy -= L.light_energy * q + dt * 0.5      # out where it stands
+			if L.light_energy > 0.02:
 				continue
-			if T.i != bi:
-				var l: Dictionary = _lamps[bi]
-				T.i = bi
-				T.x = float(l["hx"])
-				T.y = float(l["top"]) - 0.6
-				T.z = float(l["hz"])
-				T.warm = l["warm"]
-				T.intensity = float(l.get("intensity", 26.0))
-				T.distance = float(l.get("distance", 17.0))
-				T.color = int(l.get("color", -1))
-				T.office = l.get("office", false)
-	for k in WARM_L:
-		var T: Dictionary = _tgt[k]
-		var L2: OmniLight3D = _warm[k]
-		var on: bool = T.i >= 0
-		var q := minf(1.0, dt * 5.0)
-		var p := L2.position
-		p.x += (float(T.x) - p.x) * q
-		p.y += ((float(T.y) if on else -60.0) - p.y) * q
-		p.z += (float(T.z) - p.z) * q
-		L2.position = p
-		var pulse := 0.94 + 0.06 * sin(t * 8.1) if T.office and not T.warm else 1.0
-		L2.light_energy += ((float(T.intensity) * pulse / PI if on else 0.0) - L2.light_energy) * q
-		L2.omni_range = float(T.distance) if float(T.distance) > 0.0 else 17.0
-		if on:
-			var hx: int = T.color if int(T.color) >= 0 else (0xffb06a if T.warm else 0x9cc8ff)
-			L2.light_color = Color.hex((hx << 8) | 0xff)
+			L.light_energy = 0.0
+			ll.lamp = ll.want
+			if ll.lamp < 0:
+				continue
+			var l: Dictionary = _lamps[ll.lamp]
+			L.position = Vector3(_lamp_x[ll.lamp], _lamp_top[ll.lamp] - 0.6, _lamp_z[ll.lamp])
+			L.omni_range = float(l.get("distance", 17.0))
+			L.light_color = Color.hex((int(l["color"]) << 8) | 0xff) if _lamp_tint[ll.lamp] < 0 else LAMP_TINT[_lamp_tint[ll.lamp]]
+		if ll.lamp < 0:
+			continue
+		var lamp: Dictionary = _lamps[ll.lamp]
+		var office := bool(lamp.get("office", false))
+		var pulse := 0.94 + 0.06 * sin(t * 8.1) if office and not bool(lamp["warm"]) else 1.0
+		L.light_energy += (float(lamp.get("intensity", 26.0)) * pulse / PI - L.light_energy) * q
 
 
 ## JS city-water.js update: the water's glitter paths, under the lamps nearest the camera. Re-picked every 10 frames.
@@ -562,3 +597,5 @@ func update(dt: float, t: float, cam: Vector3, district_visible: bool) -> void:
 	for m: ShaderMaterial in _sky_mats:
 		RenderingServer.material_set_param(m.get_rid(), &"t", t)
 	_glints_tick(t)
+	if ad != null:
+		ad.update(t, cam)

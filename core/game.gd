@@ -16,11 +16,14 @@ const LEVELS := {
 	"spire": "res://levels/spire/spire_level.gd",
 	"mothership": "res://levels/mothership/mothership_level.gd",
 	"foint-dome": "res://levels/foint_dome/foint_dome_level.gd",
+	"sky-sphere": "res://levels/sky_sphere/sky_sphere_level.gd",
 	"hub": "res://levels/hub/hub_level.gd",
 	"dev": "res://levels/dev/dev_level.gd",
 	"blockout-demo": "res://levels/blockout_demo/level.gd",
 	"worldbackalley": "res://levels/worldbackalley/level.gd",
 	"jungle-test": "res://levels/jungle_test/jungle_test_level.gd",
+	"underfoint": "res://levels/underfoint/underfoint_level.gd",
+	"palace": "res://levels/palace/palace_level.gd",
 }
 const DEFAULT_LEVEL := "hub"      # JS START_LEVEL: a new game, CONTINUE with nowhere saved and the menu's world behind it all start on the hub street (the arena is the movement test ground: --level=arena)
 
@@ -40,6 +43,7 @@ var started := true                # false while the main menu / intro owns the 
 
 # Shared systems, filled in as they are ported. Untyped until every class exists; null-checked in the frame.
 var animator: Animator = null   # player/animator.gd  the playable character's procedural animation (JS Animator)
+var drunk := Drunk.new()        # player/drunk.gd     what CLUB 9's bar has done to him (lasts across levels until it wears off)
 var char_pick := "prog" # the character being played: 'prog' or 'tommy' (--char=; the JS start screen's pick)
 var combat: Combat = null  # combat/combat.gd       weapons, damage, targets (JS Combat)
 var input_dead := false # a cutscene or a machine has the player: combat reads no buttons (JS: (CINE && !PLAYCINE) || player.factoryInteraction.active)
@@ -247,12 +251,12 @@ func enter_level(id: String, spawn_at: String = "") -> void:
 
 ## Make `id` the playable character (JS spawnCharacter). Always from a fresh instance of the model: a new Animator takes the skeleton's pose as its rest.
 func spawn_character(id: String) -> void:
-	var B := Builds.play_build(id)
+	var B := Builds.character_build(id)
 	if animator != null:
 		animator.actor.queue_free()
 	char_pick = id
 	Config.cam_height = B.cam_height
-	animator = Prog3Animator.create(B)
+	animator = Animator.create(B)
 	root3d.add_child(animator.actor)
 	animator.update(0.016, player)
 	rig.snap_to(player)
@@ -301,6 +305,7 @@ func leave_level() -> void:
 		rig.pull_dist = 0.0
 		rig.pull_fov = 0.0
 		rig.pull_lock = false
+		rig.fov_add = 0.0
 	restore_shared()
 
 
@@ -450,6 +455,10 @@ func _kind_script(kind: String) -> GDScript:
 			return MarrowWarden
 		"dervish":
 			return BriarDervish
+		"taken":
+			return Taken
+		"tethered":
+			return Tethered
 		"goon":
 			return FointGoon
 		"wh_robot":
@@ -625,6 +634,12 @@ func _process(delta: float) -> void:
 			view.apply_camera(real_dt)
 		ui.frame_end(dt)
 		return
+	# F4 copies "[x, y, z]" in every level. It was only in the kit's (blockout) update, so the hub, exported levels and anything with no stages did nothing.
+	if Inp.key_hit(KEY_F4) and not Inp.text_capture:
+		var ps := "[%.1f, %.1f, %.1f]" % [player.x, player.y, player.z]
+		DisplayServer.clipboard_set(ps)
+		if hud != null:
+			hud.toast("POSITION " + ps, 2.2)
 	var sdt := dt       # 0 while a menu or the wheel freezes the simulation
 	if sfx != null and not paused:
 		sfx.enemy_audio.update(dt, player, not menu_open() and not wheel.is_open and not arena_blocked)
@@ -710,6 +725,7 @@ func _process(delta: float) -> void:
 		sdt = 0.0
 	if sdt > 0.0:
 		var driving: bool = vehicles != null and vehicles.driving   # in a vehicle the car is the body: no walking, no weapon input
+		drunk.tick(sdt)      # (before the player: a stumble goes into the stick; going down holds the controls)
 		var stunned := player.stun_t > 0.0 and not player.dead      # the night assassin's knife: no moving, jumping, shooting or powers (the camera still looks around)
 		var cine_held := cine and not play_cine      # JS (CINE && !PLAYCINE): a level cutscene has the player: no buttons reach him
 		combat.update(sdt, player, rig, driving or input_dead or stunned or cine_held or level.no_fight)
@@ -739,6 +755,7 @@ func _process(delta: float) -> void:
 			if lv_cine != null and lv_cine.on and lv_cine.has_method(&"pose_player"):
 				lv_cine.pose_player(animator)      # a level cutscene that poses the body itself (the Mawmother's entrance)
 			animator.death_pose(player)
+			drunk.pose(animator, player)
 		if power != null:
 			power.tick(sdt, not (driving or cine_held or cine or player.stun_t > 0.0), driving)
 		_player_life()
@@ -752,6 +769,7 @@ func _process(delta: float) -> void:
 			enemy_views.tick(sdt, camera.global_position)
 			combat.events.clear()
 		enemy_views.flush()      # the robots were posed in fx.update: upload their batches
+	FlashLights.push(get_tree(), camera.global_position)      # this frame's flashes, for the painted world (every frame: a paused flash stays lit)
 	night_vision.update(dt if (not wheel.is_open and not menu_open()) else 0.0, not menu_open())      # after the body is posed, before the frame renders
 	if power != null and (not started or paused or wheel.is_open or menu_open()):
 		power.quiet()      # frozen powers go quiet

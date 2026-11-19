@@ -5,6 +5,8 @@ extends Robot
 ##   hazmat    slow and tough, same post logic further out. Lobs globs of green acid in an arc: onto you, ahead of you, or a three-glob fan; a glob that lands leaves a hissing puddle.
 ##   labcoat   not a fighter. On alert he panics: runs for the nearest alarm panel and slaps it (every goon within 45 m comes running). Cornered he fires a shaky pistol.
 ##   goint_guard     prison guard = the security job, with a flashlight (beam = the cone in world space, for stealth checks).
+##   crew / crew_hod / foreman  the FOINT Pervert Palace's site crew (levels/palace, user 2026-11-19): hard hats and hi-vis on the security body. crew = the security job with a nail gun; crew_hod = the
+##             hazmat job, but it lobs BRICKS (no puddle); foreman = the labcoat job: he runs for the site's air horn (the level's alarm spot) and the whole crew comes.
 ##   goint_adjuster  heavy, own job: armour and a blue energy shield. A shot that crosses the raised shield is soaked and drains it; empty, it overloads, down for a few seconds. A core hit takes full damage, anything else on the armour half. One-handed past a shield he is sloppy.
 ## The look lives in enemies/foint_goon_view.gd.
 
@@ -104,6 +106,31 @@ const GOON_BARKS := {
 		"mate": ["Officer down! OFFICER DOWN!", "They got Pelling!", "That is a payout. Somebody notify the family.", "Lock it down! Lock the whole block down!"],
 		"move": ["Flank him!", "Block the corridor!", "Go left! My left!", "Cut him off!", "Spread out, sweep it!"],
 	},
+	# the Pervert Palace's crew: union men on a night shift, protective of their site
+	"crew": {
+		"alert": ["HEY! Off the scaffold!", "Hard hat area, pal!", "Nobody climbs my crane!", "Who let the rubber guy in?!", "That is a closed site!"],
+		"shoot": ["Nail gun's loaded, pal!", "Back down the stairs!", "Union rules!", "Get off my steel!", "You're on the clock now!"],
+		"pain": ["That's a workplace injury!", "I'm calling the union!", "My back! My actual back!", "Where's the first aid kit?!", "That's going on the board!"],
+		"die": ["Tell the union... I clocked out...", "Double time... for this...", "Put it... on the timesheet..."],
+		"reload": ["New strip!", "Loading nails!", "Hang on, she's jammed!", "Nails! Who's got nails?!"],
+		"mate": ["Man down! Stop the pour!", "He got Sal!", "That's a stop-work order!", "Somebody call it in!"],
+		"move": ["Cut 'em off at the hoist!", "Up the scaffold!", "Go round the core!", "Block the stairs!", "Get on the steel!"],
+	},
+	"crew_hod": {
+		"alert": ["Brick incoming!", "Oi! Off the site!", "I got bricks and I got time!", "Hold it right there!"],
+		"shoot": ["Catch!", "Special delivery!", "Here's your brick!", "Heads up!", "Mind your head!"],
+		"pain": ["Ow! My hod!", "That's my throwing arm!", "Oof. Union's hearing about this.", "My knees, man!"],
+		"die": ["Should've... stayed a plumber...", "Tell my... mortar... I loved her...", "Clock... me out..."],
+		"mate": ["Man down!", "They dropped Big Lou!", "Stop the job! STOP THE JOB!"],
+		"move": ["Getting the high ground!", "Moving up a lift!", "More bricks! Up here!"],
+	},
+	"foreman": {
+		"alert": ["NOPE! Not on my site!", "Stop work! STOP WORK!", "Somebody sound the horn!", "I'll have your hides for this!", "Get the crew! ALL of 'em!"],
+		"shoot": ["I got a permit for this!", "Get off my site!", "This is a hard hat area!", "Back! Back!"],
+		"pain": ["I'm the FOREMAN!", "You can't hit management!", "My clipboard!", "That's coming out of your wages!"],
+		"die": ["Who's... gonna sign... the sheets...", "Behind... schedule...", "Over... budget..."],
+		"mate": ["They're taking out my crew!", "That's my best scaffolder!", "Somebody do something!"],
+	},
 	"goint_adjuster": {
 		"alert": ["Incident detected. Assessing.", "Claim opened.", "You will be adjusted.", "Damages are about to occur.", "Please remain where you are."],
 		"shoot": ["Claim denied.", "Pre-existing condition.", "Adjusting.", "Liability: yours.", "Coverage does not extend to you."],
@@ -117,9 +144,11 @@ const GOON_BARKS := {
 	},
 }
 const NAMES := {"security": ["FOINT SECURITY", "SGT. CROAKLEY", "OFFICER BUFO", "GUARD 7"], "hazmat": ["HAZMAT TECH", "DECON UNIT 3", "TECH WARTZ"], "labcoat": ["DR. TADPOLE", "LAB TECH", "DR. KERMAN", "RESEARCH ASSOCIATE"],
-	"goint_guard": ["GOINT GUARD", "C.O. BUFORD", "OFFICER PELLING", "GUARD 12"], "goint_adjuster": ["CLAIMS ADJUSTER", "SENIOR ADJUSTER", "ADJUSTER MOSS"]}
+	"goint_guard": ["GOINT GUARD", "C.O. BUFORD", "OFFICER PELLING", "GUARD 12"], "goint_adjuster": ["CLAIMS ADJUSTER", "SENIOR ADJUSTER", "ADJUSTER MOSS"],
+	"crew": ["SITE CREW", "RIVET JOE", "SCAFFOLDER", "STEEL FIXER", "SAL"], "crew_hod": ["HOD CARRIER", "BIG LOU", "BRICKIE"], "foreman": ["THE FOREMAN", "SITE BOSS"]}
 const COSTUMES: Array[String] = ["security", "security", "hazmat", "labcoat"]      # "random" / no costume picks from these (FOINT staff)
-const ROLE := {"security": "security", "hazmat": "hazmat", "labcoat": "labcoat", "goint_guard": "security", "goint_adjuster": "adjuster"}
+const ROLE := {"security": "security", "hazmat": "hazmat", "labcoat": "labcoat", "goint_guard": "security", "goint_adjuster": "adjuster", "crew": "security", "crew_hod": "hazmat", "foreman": "labcoat"}
+const BRICK_DMG := 12.0
 
 ## JS this.fire
 class Fire:
@@ -394,9 +423,12 @@ func _acid_update(dt: float, P: Player) -> void:
 		i -= 1
 		if hit == "":
 			continue
+		var brick: bool = q.get("brick", false)
 		if hit == "player":
-			E.c.hurt_player(P, ACID_DMG, float(q.x) - float(q.vx), float(q.z) - float(q.vz), "bolt")
-		E.push({"t": "bolt_hit", "x": nx, "y": ny, "z": nz, "kind": "player" if hit == "player" else "world", "bk": "bile", "nx": 0.0, "ny": 1.0, "nz": 0.0})
+			E.c.hurt_player(P, BRICK_DMG if brick else ACID_DMG, float(q.x) - float(q.vx), float(q.z) - float(q.vz), "bolt")
+		E.push({"t": "bolt_hit", "x": nx, "y": ny, "z": nz, "kind": "player" if hit == "player" else "world", "bk": "brick" if brick else "bile", "nx": 0.0, "ny": 1.0, "nz": 0.0})
+		if brick:      # (a brick breaks where it lands: no puddle)
+			continue
 		var gy := W.ground_height(nx, nz, 0.3, ny + 1.5)      # the puddle lands on whatever floor is under the splash
 		if gy > -INF and ny - gy < 3.0:
 			A.pools.append({"x": nx, "y": gy, "z": nz, "r": ACID_POOL_R * _rnd(0.85, 1.1), "t": 0.0, "life": ACID_POOL_T, "seed": randf() * 10.0})
@@ -1147,7 +1179,7 @@ func _lob(dt: float, P: Player, dist: float) -> void:
 		var gx := gx0 * ca + gz0 * sa
 		var gz := -gx0 * sa + gz0 * ca
 		var vy2 := (P.y + 0.3 - m.y + 0.5 * ACID_G * T * T) / T
-		A.globs.append({"x": m.x, "y": m.y, "z": m.z, "vx": gx / T, "vy": vy2, "vz": gz / T, "life": 0.0, "owner": id})
+		A.globs.append({"x": m.x, "y": m.y, "z": m.z, "vx": gx / T, "vy": vy2, "vz": gz / T, "life": 0.0, "owner": id, "brick": costume == "crew_hod"})
 	var L := U.hyp(P.x - m.x, P.z - m.z)
 	if L == 0.0:
 		L = 1.0

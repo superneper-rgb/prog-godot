@@ -232,6 +232,8 @@ func update_hud(P: Player) -> void:
 			alive += 1
 	if finished:
 		_detail.text = ""
+	elif o.get("detail") is Callable:      # an objective that writes its own line here (a chase's score: no count, no arrows)
+		_detail.text = String((o["detail"] as Callable).call())
 	else:
 		var dt := "Objective %d / %d" % [int(bo.state.obj) + 1, (st.get("objectives", []) as Array).size()]
 		if alive > 0:

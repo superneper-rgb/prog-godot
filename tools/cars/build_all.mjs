@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const BLENDER = process.env.BLENDER || 'C:/Program Files/Blender Foundation/Blender 5.2/blender.exe';
 const OUT = path.resolve(HERE, '../../assets/vehicles/city');
-const KINDS = ['sedan', 'hatch', 'taxi', 'van', 'truck', 'bus', 'saucerG', 'saucerN', 'skyLimo', 'skyDart'];
+const KINDS = ['sedan', 'hatch', 'taxi', 'van', 'truck', 'bus', 'saucerG', 'saucerN', 'saucerB', 'skyLimo', 'skyDart'];
 const want = process.argv.slice(2).length ? process.argv.slice(2) : KINDS;
 let bad = 0;
 for (const k of want) {

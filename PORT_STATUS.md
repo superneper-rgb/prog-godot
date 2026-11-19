@@ -16,6 +16,7 @@ Working: movement, camera, combat and all guns, Robot and Drone AI and views, an
 - **Lighting (2026-11-05):** baked lighting is ported as it is. The warehouse gets a simple carry-over on the shared lights (no light volume, no extra fidelity) because the user will rework it.
 - **Frug showdown (2026-11-06):** the JS bug (his head and spine spin because `turn()` adds up every frame) is not copied. His head stays upright.
 - **Prog (2026-11-07):** V1 is the look and feel to keep, V3 is parked. V3's animation is new on purpose (port law exception). V1 gun holds (`B.skin_fix` only) deliberately differ from the JS. Prog V2 stays the default; V3 is bench only, details in the log.
+- **Prog (2026-11-15):** one Prog only (user): V2 and V3 deleted with the costume picker. V1 keeps his body, skeleton and moves and gets V3's head (with a jaw), V1's long back hair and a painted texture (`tools/prog_paint/`).
 - **Night Assassin and Dirgeworm** are in but dev-only; the user may still cut them.
 - **Balcony call** is not ported on purpose: the JS cannot play it either (the hub has no apartment).
 

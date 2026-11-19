@@ -2,6 +2,7 @@
 // rest of FOINT CITY, with its lighting painted in: a face shade (undersides darkest), occlusion into the slab, grime and wet streaks, so it reads as depth and material.
 shader_type spatial;
 render_mode unshaded, shadows_disabled;
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform vec3 mass : source_color = vec3(0.075, 0.068, 0.098);      // the Deck's steel (JS STEEL / TRIM family), display value
 uniform float wet_k = 0.35;                                          // the wet top of a pipe catching the haze
@@ -41,5 +42,5 @@ void fragment() {
 	vec3 col = base * shade * occl * grime * (1.0 - 0.3 * side * streak);
 	col += prog_smog * 0.25 * side * smoothstep(0.62, 0.9, streak);                   // the wet run of a streak catching the haze
 	col += prog_smog * wet_k * max(w_nrm.y, 0.0) * 0.5;
-	ALBEDO = col;
+	ALBEDO = col + flash_light(w_pos, w_nrm, vec3(0.25));
 }

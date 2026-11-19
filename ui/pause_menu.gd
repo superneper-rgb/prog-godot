@@ -217,6 +217,8 @@ func _layout_page() -> void:
 		_rects["tabKb"] = Rect2(x, y, tw, tab_h)
 		_rects["tabPad"] = Rect2(x + tw + 10.0, y, tw, tab_h)
 		y += tab_h + 6.0
+		_rects["pInvert"] = Rect2(x, y, w, tab_h)      # the camera-invert toggle (Config.invert_y), a row under the tabs
+		y += tab_h + 6.0
 		var back_h := 20.0 * 1.1 + 10.0 + 2.0
 		var img_h := ch - 8.0 - back_h - 6.0 - y
 		_rects["_img"] = Rect2(x, y, w, img_h)
@@ -272,6 +274,7 @@ func _draw_page(v: Control) -> void:
 	else:
 		_button(v, "tabKb", "KEYBOARD & MOUSE", 17, 26.0, 0.1, not ctl_pad)
 		_button(v, "tabPad", "CONTROLLER", 17, 26.0, 0.1, ctl_pad)
+		_button(v, "pInvert", "INVERT CAMERA (UP / DOWN LOOK): " + ("ON" if Config.invert_y else "OFF"), 17, 26.0, 0.1, Config.invert_y)
 		var im: Rect2 = _rects.get("_img", Rect2())
 		v.draw_rect(im, Color(2.0 / 255.0, 18.0 / 255.0, 8.0 / 255.0))
 		v.draw_rect(im, Color(110.0 / 255.0, 1.0, 170.0 / 255.0, 0.45), false, 1.0)
@@ -351,7 +354,7 @@ func controls_open() -> bool:
 
 func pause_targets() -> Array:
 	if _controls:
-		return ["tabKb", "tabPad", "pBack"]
+		return ["tabKb", "tabPad", "pInvert", "pBack"]
 	var t := ["pResume", "pInventory", "pControls", "pMenu"]
 	if Game.music != null:
 		t.append("musicVol")
@@ -468,6 +471,9 @@ func _press(id: String) -> void:
 		"pBack":
 			show_controls(false)
 			set_pause_focus("pResume", true)
+		"pInvert":
+			Config.invert_y = not Config.invert_y
+			_layout_page()
 		"tabKb":
 			show_controls(true, false)
 			set_pause_focus("tabKb", true)

@@ -9,6 +9,7 @@ var shop: WeaponShop = null
 var armory: ArmorShop = null
 var depot_shops := {}
 var plasmids: PlasmidShop = null
+var bar: BarMenu = null       # CLUB 9's bar terminal: the club says where it is (near_bar) and what a bought drink does (bar.bar)
 var vend_ads_t := 8.0 + randf() * 4.0
 
 
@@ -16,6 +17,7 @@ func _init() -> void:
 	shop = WeaponShop.new()
 	armory = ArmorShop.new()
 	plasmids = PlasmidShop.new()
+	bar = BarMenu.new()
 	depot_shops = {
 		"foint-ammo": WeaponShop.new({"sub": "FOINT-O-MATIC <b>//</b> LOW LOW PRICES, NO QUESTIONS", "cap": "FOINT-O-MATIC", "art": WeaponShop.GUNSHOP_ART, "stock": ["pistol", "legacy_smg", "legacy_deagle", "legacy_rifle", "shotgun", "smg", "rocket", "saw"], "buy_mul": 0.9, "rd_mul": 0.8}),
 		"goint-ammo": WeaponShop.new({"theme": "armor", "mode": "gw", "sub": "GOINT ASSURED ARMAMENTS <b>//</b> EVERY ROUND COVERED", "cap": "GOINT ASSURED", "art": ArmorShop.GOINT_ART, "stock": ["deagle", "rifle", "sniper", "legacy_sniper", "legacy_rocket", "arc", "yoke", "bellows"], "buy_mul": 1.15, "rd_mul": 1.25, "full_load": true}),
@@ -33,7 +35,7 @@ func dispose() -> void:
 
 
 func all() -> Array:
-	var a: Array = [shop, armory, plasmids]
+	var a: Array = [shop, armory, plasmids, bar]
 	a.append_array(depot_shops.values())
 	return a
 
@@ -105,6 +107,12 @@ func near_depot() -> Dictionary:
 	return {}
 
 
+## at a level's bar (CLUB 9): the level answers near_bar()
+func near_bar() -> bool:
+	var lv := Game.level
+	return lv != null and lv.has_method(&"near_bar") and bool(lv.call(&"near_bar"))
+
+
 func near_tv() -> bool:
 	var p := Game.player
 	return _hub() and p.y < 1.5 and U.hyp(p.x - 14.09, p.z - 6.96) < 1.9
@@ -117,6 +125,8 @@ func near_vendor() -> VendorMenu:
 		return armory
 	if near_plasmid():
 		return plasmids
+	if near_bar():
+		return bar
 	var d := near_depot()
 	return depot_shops[d.kind] if not d.is_empty() else null
 
@@ -133,6 +143,8 @@ func hint() -> Dictionary:
 		return {"text": "Goint Life Assurance — ARMOR", "cls": "armor", "key": "X"}
 	if near_plasmid():
 		return {"text": "DORBATELEPHINIUM IMPLANTS — PLASMIDS", "cls": "plasmid", "key": "X"}
+	if near_bar():
+		return {"text": "CLUB 9 BAR — ORDER A DRINK", "cls": "talk", "key": "X"}
 	var d := near_depot()
 	if not d.is_empty():
 		var h: Array = DEPOT_HINT[d.kind]

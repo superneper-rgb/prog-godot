@@ -18,7 +18,8 @@ extends RefCounted
 ## The GOINT costumes reuse the security body; foint_goon_dress.gd recolours them and adds their pieces. Poses read R.role (the job), not the look.
 
 const MODEL := "res://assets/npcs/foint-goon/model.glb"
-const GOINT_BODY := {"goint_guard": "security", "goint_adjuster": "security", "goint_suit": "security", "goint_undertaker": "security", "goint_warden": "security"}
+const GOINT_BODY := {"goint_guard": "security", "goint_adjuster": "security", "goint_suit": "security", "goint_undertaker": "security", "goint_warden": "security",
+	"crew": "security", "crew_hod": "security", "foreman": "security"}      # (the Pervert Palace's site crew: foint_goon_dress.gd CREW)
 const HELMETED := {"goint_guard": 1, "goint_adjuster": 1}
 const HELMET_DEATH := 1.1             # lying on his back in a pointed helmet: chin tucked, so the point clears the floor
 const GRIP := Vector3(0.78, 0.045, 0.035)      # the gun's grip top in the right fist: along the hand (x its length), toward the palm, over the knuckles
@@ -338,18 +339,27 @@ static func _draw_acid(E: Enemies) -> void:
 	var pools: Array[Dictionary] = A.pools if A != null else ([] as Array[Dictionary])
 	var t := Time.get_ticks_msec() / 1000.0
 	while _acid_globs.size() < globs.size():
-		_acid_globs.append([FxBeam.ball(0x7dff2e), FxBeam.dot(0x80ff30)])
+		_acid_globs.append([FxBeam.ball(0x7dff2e), FxBeam.dot(0x80ff30), _brick_node()])
 	while _acid_pools.size() < pools.size():
 		_acid_pools.append([FxBeam.puddle(0x5ee82a), FxBeam.puddle(0xd8ff8a)])
 	for i in _acid_globs.size():
 		var m: MeshInstance3D = _acid_globs[i][0]
 		var sp: MeshInstance3D = _acid_globs[i][1]
+		var br: MeshInstance3D = _acid_globs[i][2]
 		if i >= globs.size():
 			m.visible = false
 			sp.visible = false
+			br.visible = false
 			continue
 		var q: Dictionary = globs[i]
 		var at := Vector3(q.x, q.y, q.z)
+		br.visible = q.get("brick", false)
+		if br.visible:      # (the site crew's: a brick end over end)
+			m.visible = false
+			sp.visible = false
+			var spin := float(q.life) * 9.0 + i
+			br.global_transform = Transform3D(Basis(Vector3(1, 0, 0), spin) * Basis(Vector3(0, 1, 0), spin * 0.37), at)
+			continue
 		var s := 1.0 + 0.2 * sin(t * 30.0 + i)
 		FxBeam.place_ball(m, at, 0.16, 1.0)
 		m.scale = Vector3(0.16 * s, 0.16 / s, 0.16 * s)
@@ -368,6 +378,21 @@ static func _draw_acid(E: Enemies) -> void:
 		var rr := maxf(0.01, float(p.r) * grow * (0.6 + 0.4 * fade) * wob)
 		FxBeam.place_puddle(m, Vector3(p.x, float(p.y) + 0.03, p.z), rr, 0.75 * fade)
 		FxBeam.place_puddle(core, Vector3(p.x, float(p.y) + 0.035, p.z), rr * 0.45, (0.45 + 0.25 * sin(t * 11.0 + float(p.seed))) * fade)
+
+
+## A thrown brick (the site crew's): one of the acid pool's nodes, under the level
+static func _brick_node() -> MeshInstance3D:
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.11, 0.065, 0.22)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.5, 0.18, 0.1)
+	mat.roughness = 0.95
+	var mi := MeshInstance3D.new()
+	mi.mesh = bm
+	mi.material_override = mat
+	mi.visible = false
+	Game.level.add_child(mi)
+	return mi
 
 
 # ------------------------------------------------------------------------------------------------ one goon

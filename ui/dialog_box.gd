@@ -20,6 +20,8 @@ var _box_on := false
 var _bar_k := 0.0
 var _box_k := 0.0
 var _cine := false
+var _terminal: SigilTerminal = null      # the Sigil's talk is shown on the SchleedTech terminal, close up, in place of the box
+var _term_on := false
 
 
 func _init() -> void:
@@ -113,8 +115,22 @@ func set_bars(on: bool, cine: bool = false) -> void:
 	set_process(true)
 
 
+## A talker with `terminal: true` (the Sigil): its lines go to the terminal close-up (ui/sigil_terminal.gd) instead of the box, for as long as this is on
+func set_terminal(on: bool) -> void:
+	if on == _term_on:
+		return
+	if on and _terminal == null:
+		_terminal = SigilTerminal.new()
+		add_child(_terminal)
+	_term_on = on
+	if _terminal != null:
+		_terminal.open(on)
+
+
 ## #dlg.on
 func show_box(on: bool) -> void:
+	if _term_on and on:
+		return
 	_box_on = on
 	if on:
 		_panel.visible = true
@@ -122,6 +138,9 @@ func show_box(on: bool) -> void:
 
 
 func set_content(who: String, text: String, hint: String) -> void:
+	if _term_on:
+		_terminal.set_content(who, text, hint)
+		return
 	_name.text = who
 	_text.text = text
 	_hint.text = hint

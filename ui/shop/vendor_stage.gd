@@ -152,7 +152,7 @@ static func _hex(h: int) -> Color:
 	return Color8((h >> 16) & 255, (h >> 8) & 255, h & 255)
 
 
-## set the theme / framing mode ('w' weapon, 'a' armor, 'p' vials, 'gw' / 'fa' the arms depots: weapons in Goint amber / suits in Foint red)
+## set the theme / framing mode ('w' weapon, 'a' armor, 'p' vials, 'b' CLUB 9's bar glasses in green, 'gw' / 'fa' the arms depots: weapons in Goint amber / suits in Foint red)
 func attach(p_mode: String) -> void:
 	mode = p_mode
 	_snap = true
@@ -198,6 +198,13 @@ func attach(p_mode: String) -> void:
 		hemi_c = 0xffe0c0
 		ground_c = 0x180c04
 		edge = 0xffd9a0
+	if mode == "b":      # green: CLUB 9's bar terminal is the house phosphor
+		col = 0x46ff82
+		rim_c = 0x8dffb4
+		key_c = 0xf0fff5
+		hemi_c = 0xe0ffe8
+		ground_c = 0x04180a
+		edge = 0xc2ffd8
 	var c := _hex(col)
 	deck_m.albedo_color = Color(c.r, c.g, c.b, 0.5)
 	halo_m.albedo_color = Color(c.r, c.g, c.b, 0.32)

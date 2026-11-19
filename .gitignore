@@ -7,3 +7,6 @@
 *.tmp
 export_credentials.cfg
 godot.path
+# Python bytecode from the tools
+__pycache__/
+*.pyc

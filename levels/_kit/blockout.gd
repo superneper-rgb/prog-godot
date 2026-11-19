@@ -825,10 +825,7 @@ func update(dt: float, P: Player, C: Combat) -> void:
 		_hud.update_hud(P)
 	# dev keys (JS: F4 / F6 / F7 only exist in blockout mode)
 	if dev and P != null:
-		if Inp.key_hit(KEY_F4):
-			var s := "[%.1f, %.1f, %.1f]" % [P.x, P.y, P.z]
-			DisplayServer.clipboard_set(s)
-			toast("POSITION " + s)
+		# (F4, copy position: now global, in Game._process)
 		if Inp.key_hit(KEY_F7):
 			_guide_on = not _guide_on
 			_guide_root.visible = _guide_on

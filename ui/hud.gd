@@ -1095,6 +1095,9 @@ func health(dt: float, P: Player, show: bool) -> void:
 		hp_scr.refresh()
 	dead_mat.set_shader_parameter(&"k", (minf(1.0, P.dead_t / 2.4) if dead_now else 0.0))        # the black closes in around the text
 	# the death screen's own fade: opacity .4s on, .35s off
+	# Port fix: the screen is switched on by the player_die event, so a level that stands him back up with `P.dead = false` (Omnisphere's fly-off / free-fall resets) left YOU DIED stuck. Alive means it goes.
+	if _dead_on and not dead_now:
+		_dead_on = false
 	_dead_op = move_toward(_dead_op, 1.0 if _dead_on else 0.0, dt / (0.4 if _dead_on else 0.35))
 	dead_el.visible = _dead_op > 0.001
 	if dead_el.visible:
@@ -1297,6 +1300,13 @@ func is_dead_shown() -> bool:
 	return _dead_on
 
 
+## Every subtitle off the screen at once (a level that queues its own lines shows one at a time: UNDERFOINT's chase)
+func subtitles_clear() -> void:
+	for o in subs_box.get_children():
+		subs_box.remove_child(o)
+		o.queue_free()
+
+
 ## Robot dialogue subtitles (shown only for lines that were actually voiced, i.e. in earshot). e: {name, num, text, dur, speech}.
 func subtitle(e: Dictionary) -> void:
 	while subs_box.get_child_count() >= 3:
@@ -1379,7 +1389,7 @@ func update(dt: float, combat: Combat, show: bool) -> void:
 	var pw: Variant = _power() if pow_on else null
 	var vis := show and (pow_on or (w != null and (combat.ads_on or show_t > 0.0)))         # power mode: the reticle is always up (green, red when out of mana)
 	var off := Vector2.ZERO
-	if vis and combat.pull_aim and Game.camera != null:       # set-piece camera: the reticle sits where the gun is actually aimed, not at screen centre
+	if vis and (combat.pull_aim or combat.aim_lock != null) and Game.camera != null:       # set-piece camera / auto-aim lock: the reticle sits where the gun is actually aimed, not at screen centre
 		if not Game.camera.is_position_behind(combat.aim_point):
 			off = Game.camera.unproject_position(combat.aim_point) - get_viewport_rect().size * 0.5
 	var sw := combat.scope_w if (show and w != null and w.scope) else 0.0

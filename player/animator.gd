@@ -132,6 +132,12 @@ var w_seat := 0.0
 var pose_hook := Callable()              # optional pose override (used by the intro cutscene)
 var body: Body = null
 var hair: HairSpring = null              # null without hair bones
+var talking := false                     # his own lines are being said (the dialogue system sets it): the jaw flaps (_jaw_step)
+const JAW_OPEN := 0.16                   # radians at a full syllable: about 1.5 cm at the lower lip
+var _jaw := -1
+var _jaw_rest := Quaternion.IDENTITY
+var _jaw_open := 0.0
+var _jaw_t := 0.0
 var suit: Variant = null                 # the armor suit on him (JS an._suit: a PhantomSuit.Worn), null in his own clothes
 var wv: WeaponView = null                # the gun in the hand (combat/weapon_view.gd)
 
@@ -152,6 +158,7 @@ var w_slam := 0.0
 var w_aim := 0.0
 var w_arm := 0.0
 var w_fat := 0.0
+var drunk_fat := 0.0                     # the fatigue slouch asked for by drink (player/drunk.gd), whatever the health
 var w_pow := 0.0
 var w_wr := 0.0
 var w_rl := 0.0
@@ -302,6 +309,11 @@ static func q_axis(ax: Vector3, a: float) -> Quaternion:
 	return Quaternion(ax.x * s, ax.y * s, ax.z * s, cos(a * 0.5))
 
 
+## Everywhere that makes the playable character (or a clone of him) goes through here: a fresh instance of the build's model.
+static func create(build: Builds.Build) -> Animator:
+	return Animator.new((load(build.file) as PackedScene).instantiate(), build)
+
+
 func _init(gltf_scene: Node3D, build: Builds.Build = null) -> void:
 	B = build if build != null else Builds.BUILDS["prog"]
 	actor = Node3D.new()
@@ -360,6 +372,10 @@ func _init(gltf_scene: Node3D, build: Builds.Build = null) -> void:
 		for f in FINGER_NAMES.size():
 			for j in 3:
 				_fing.append(by_key.get(StringName("%s_0%d%s" % [FINGER_NAMES[f], j + 1, SIDE_NAMES[s]])))
+	var jaw: BoneRec = by_key.get(&"jaw")
+	if jaw != null:
+		_jaw = jaw.bone
+		_jaw_rest = jaw.rest
 	_arm_fx()
 	_eye_fx()
 	_body_shape()
@@ -513,7 +529,7 @@ func _restyle(mi: MeshInstance3D) -> void:
 				em.set_shader_parameter(&"emissive", Vector3(0.5, 0.48, 0.4))
 			_fx_eyes.append(em)
 			out = em
-		if nm == "bk_tank":                    # stains on the shirt
+		if nm == "bk_tank" and m.albedo_texture == null:      # stains on the shirt (the painted model has its own, tools/prog_paint)
 			_fx_tank = _fx_mat(SHADER_TANK, m, has_color)
 			var arr: Array = mesh.surface_get_arrays(i)
 			var lo := INF
@@ -948,7 +964,7 @@ func update(dt: float, P: Player) -> void:
 	w_aim = U.damp(w_aim, 1.0 if P.aiming else 0.0, 14.0, dt)
 	# fatigue: 0.4 at half health or less, 1 at a quarter or less. Cutscenes (pose_hook) and actors without health (their stand-in P) never show it
 	var hp_k := P.hp / P.max_hp if (P.max_hp != 0.0 and not P.dead and not pose_hook.is_valid()) else 1.0
-	w_fat = U.damp(w_fat, 1.0 if hp_k <= 0.25 else (0.4 if hp_k <= 0.5 else 0.0), 1.8, dt)
+	w_fat = U.damp(w_fat, maxf(1.0 if hp_k <= 0.25 else (0.4 if hp_k <= 0.5 else 0.0), drunk_fat if not pose_hook.is_valid() else 0.0), 1.8, dt)      # drunk_fat: player/drunk.gd's slouch
 	w_pow = U.damp(w_pow, 1.0 if (P.power_aim and normal and not P.dead and not P.punching) else 0.0, 25.0 if P.punching else 12.0, dt)      # a punch in power mode takes the arm back for a moment        # power mode: left arm out along the aim (_power), gun lowered in the right hand
 	cast_k = U.damp(cast_k, 0.0, 7.0, dt)                                              # a cast punches the left hand forward (set by cast_power)
 	var ldur := P.land_dur if P.land_dur != 0.0 else 0.44
@@ -1056,8 +1072,26 @@ func update(dt: float, P: Player) -> void:
 				if rec != null:
 					skel.set_bone_pose_rotation(rec.bone, rec.rest * q_axis(Vector3.RIGHT, FCURL * 0.45 * operating.weight))
 	_power(P)
+	_jaw_step(dt)
 	if hair != null:
 		hair.update(dt, 1.0 - w_seat, 1.0 - w_swim)     # last: it swings off the head's final pose and place
+
+
+## Prog's jaw (his new head, 2026-11-15: lower lip, chin, lower teeth and tongue ride on it): while `talking`, it opens and closes in a syllable rhythm of
+## uneven size; otherwise it eases shut. The bone rests world-aligned under the head, so a turn about its X axis drops the chin.
+func _jaw_step(dt: float) -> void:
+	if _jaw < 0:
+		return
+	var want := 0.0
+	if talking:
+		_jaw_t += dt
+		var syl := absf(sin(_jaw_t * 10.5))
+		var size := 0.45 + 0.55 * absf(sin(_jaw_t * 2.9 + 1.3) * cos(_jaw_t * 1.7))
+		want = syl * size
+	else:
+		_jaw_t = 0.0
+	_jaw_open += (want - _jaw_open) * minf(1.0, dt * 22.0)
+	skel.set_bone_pose_rotation(_jaw, _jaw_rest * q_axis(Vector3.RIGHT, _jaw_open * JAW_OPEN))
 
 
 func _set_blink(v: float) -> void:

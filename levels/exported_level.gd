@@ -348,6 +348,7 @@ func _apply_render_state() -> void:
 	var s: Dictionary = info.get("sun", {})
 	d["sun"] = [_srgb(s["color"]), float(s.get("intensity", 0.0)) if bool(s.get("visible", false)) else 0.0]
 	d["sun_cast"] = bool(s.get("cast", false)) and bool(info.get("shadows", true))
+	d["sun_lean"] = View.SUN_LEAN_LEVELS.has(id)
 	var cam: Dictionary = info.get("camera", {})
 	d["clip"] = [float(cam.get("near", 0.1)), float(cam.get("far", 500.0))]
 	Game.view.apply_render_state(d)

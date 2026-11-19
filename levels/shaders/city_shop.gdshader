@@ -5,6 +5,7 @@ shader_type spatial;
 render_mode unshaded, shadows_disabled;
 
 #include "res://levels/shaders/city_env.gdshaderinc"
+#include "res://levels/shaders/flash_light.gdshaderinc"      // the brief lights of play (core/flash_lights.gd)
 
 uniform sampler2D map : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D glowMap : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
@@ -79,5 +80,5 @@ void fragment() {
 	float rib = 0.6 + 0.4 * smoothstep(0.2, 0.8, abs(fract(f.y * 32.0) - 0.5) * 2.0) * (1.0 - smoothstep(0.03, 0.1, fp));
 	float wet = 0.6 + 0.4 * vnoise(vec2(um * 3.0, hm * 0.4 + TIME * 0.5));
 	vec3 rest = js + city * (0.03 + 0.3 * fres) * wet * (in_glass > 0.5 ? rib : 1.0);
-	ALBEDO = mix(rest, glass, in_glass * lit);
+	ALBEDO = mix(rest, glass, in_glass * lit) + flash_light(w_pos, n, vec3(0.25));
 }

@@ -1,4 +1,4 @@
-## Prog V1's mesh fixes at load (JS _reskinWaist, _matchShorts, _meldStraps, _reshapeNose, on the build's skinFix): waist weights, shorts on the skin, straps on the shirt, the nose. Only the old prog.glb needs them.
+## Prog's mesh fixes at load (JS _reskinWaist, _meldStraps, _reshapeNose, on the build's skinFix): waist weights, straps on the shirt, the old nose, and every flat-shaded corner's copies welded to one set of weights.
 class_name ProgV1Fix
 extends RefCounted
 
@@ -24,12 +24,14 @@ static func apply(src: Mesh, skin: Skin) -> ArrayMesh:
 	if not names.is_empty():
 		for a: Array in surf:
 			_reskin_waist(a, names)
-		_match_shorts(by_name, names)
-		_meld_straps(by_name, names)
+		# _match_shorts is no longer run (2026-11-16): Prog's jorts are built round his body with their own weights (tools/prog_paint/jorts.py), and its
+		# push off the thigh axis bent the seat out of shape and its nearest-skin weights tore the crotch seam between the legs
+		# _meld_straps is no longer run either (2026-11-16): the tank is one surface built round him with the skin's weights (tools/prog_paint/tank.py); its
+		# strap fix moved vertices at fixed heights, which would tear the new straps
 	if by_name.has("bk_nose"):
 		_reshape_nose(by_name["bk_nose"])
 	for a: Array in surf:
-		_weld_weights(a)
+		_weld_weights(a, names.find("jaw"))
 	var out := ArrayMesh.new()
 	for s in surf.size():
 		var a: Array = surf[s]
@@ -42,7 +44,9 @@ static func apply(src: Mesh, skin: Skin) -> ArrayMesh:
 
 
 ## Not in the JS. The mesh is flat shaded, each face with its own copy of a corner, and those copies can carry different bone weights: bent hard, a joint's faces pull apart and it tears. Every copy of a corner now shares one set of weights.
-static func _weld_weights(a: Array) -> void:
+## The lips are the exception (his new head, 2026-11-15): where the upper lip (the head's) meets the lower (the jaw's) the corners coincide but must part when the jaw
+## opens, so copies mostly on the jaw and copies mostly off it are welded apart.
+static func _weld_weights(a: Array, jaw: int = -1) -> void:
 	var pos: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
 	var si: PackedInt32Array = a[Mesh.ARRAY_BONES]
 	var sw: PackedFloat32Array = a[Mesh.ARRAY_WEIGHTS]
@@ -51,11 +55,19 @@ static func _weld_weights(a: Array) -> void:
 	var st := si.size() / pos.size()
 	var groups: Dictionary = {}
 	for v in pos.size():
-		var key := Vector3i((pos[v] * 2000.0).round())
+		var q := Vector3i((pos[v] * 2000.0).round())
+		var on_jaw := 0
+		if jaw >= 0:
+			var wj := 0.0
+			for c in st:
+				if si[v * st + c] == jaw:
+					wj += sw[v * st + c]
+			on_jaw = 1 if wj > 0.5 else 0
+		var key := Vector4i(q.x, q.y, q.z, on_jaw)
 		if not groups.has(key):
 			groups[key] = PackedInt32Array()
 		groups[key].append(v)
-	for key: Vector3i in groups:
+	for key: Vector4i in groups:
 		var g: PackedInt32Array = groups[key]
 		if g.size() < 2:
 			continue
@@ -245,66 +257,6 @@ static func _meld_straps(by_name: Dictionary, names: Array[String]) -> void:
 	a[Mesh.ARRAY_VERTEX] = pos
 	a[Mesh.ARRAY_BONES] = si
 	a[Mesh.ARRAY_WEIGHTS] = sw
-
-
-## Make the shorts follow the skin underneath exactly (copy skin weights from the nearest skin vertex) and push the cloth out a hair, so the thigh never pokes through while the legs swing.
-static func _match_shorts(by_name: Dictionary, names: Array[String]) -> void:
-	if not by_name.has("bk_skin"):
-		return
-	var sk: Array = by_name["bk_skin"]
-	var sp: PackedVector3Array = sk[Mesh.ARRAY_VERTEX]
-	var ss: PackedInt32Array = sk[Mesh.ARRAY_BONES]
-	var sww: PackedFloat32Array = sk[Mesh.ARRAY_WEIGHTS]
-	var st0 := ss.size() / sp.size()
-	var cand: Array[int] = []
-	# body skin only: his arms hang beside the hips, so without the bone test the waistband copied the arm's weights and stretched to the hands whenever the arms moved
-	for i in sp.size():
-		var q := sp[i]
-		if q.y <= 0.45 or q.y >= 1.2 or absf(q.x) >= 0.5:
-			continue
-		var b := 0
-		var bw := -1.0
-		for k in st0:
-			if sww[i * st0 + k] > bw:
-				bw = sww[i * st0 + k]
-				b = ss[i * st0 + k]
-		var nm := names[b] if b < names.size() else ""
-		if nm.begins_with("pelvis") or nm.begins_with("spine") or nm.begins_with("thigh") or nm.begins_with("shin") or nm.begins_with("foot") or nm.begins_with("toe"):
-			cand.append(i)
-	for key: String in ["bk_shorts", "bk_shorts_fray"]:
-		if not by_name.has(key):
-			continue
-		var a: Array = by_name[key]
-		var p: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
-		var si: PackedInt32Array = a[Mesh.ARRAY_BONES]
-		var sw: PackedFloat32Array = a[Mesh.ARRAY_WEIGHTS]
-		var st := si.size() / p.size()
-		for v in p.size():
-			var q := p[v]
-			var best := -1
-			var bd := 1e9
-			for i in cand:
-				var d := sp[i].distance_squared_to(q)
-				if d < bd:
-					bd = d
-					best = i
-			if best < 0:
-				continue
-			for k in mini(st, st0):
-				si[v * st + k] = ss[best * st0 + k]
-				sw[v * st + k] = sww[best * st0 + k]
-			# push outward from the leg axis by position only, so coincident (flat-shaded) vertices move together: no seams
-			var cx := 0.13 if q.x >= 0.0 else -0.13
-			var dx := q.x - cx
-			var dz := q.z
-			var l := sqrt(dx * dx + dz * dz)
-			if l == 0.0:
-				l = 1.0
-			var f := 0.014 * clampf((0.97 - q.y) / 0.12, 0.0, 1.0)
-			p[v] = Vector3(q.x + dx / l * f, q.y, q.z + dz / l * f)
-		a[Mesh.ARRAY_VERTEX] = p
-		a[Mesh.ARRAY_BONES] = si
-		a[Mesh.ARRAY_WEIGHTS] = sw
 
 
 static func _reshape_nose(a: Array) -> void:

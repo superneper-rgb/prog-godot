@@ -69,6 +69,10 @@ func add_for(rb: Robot) -> void:
 		bv = MarrowWardenView.new(rb)
 	elif rb is BriarDervish:
 		bv = BriarDervishView.new(rb)
+	elif rb is Tethered:
+		bv = TetheredView.new(rb)
+	elif rb is Taken:
+		bv = TakenView.new(rb)
 	elif rb is ProbeButler:
 		bv = GrayFamilyViews.ButlerView.new(rb)
 	elif rb is Consigliere:

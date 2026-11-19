@@ -3,7 +3,7 @@ extends RefCounted
 ## THE GODMOTHER, the boss you do not kill (JS levels/mothership/godmother.js). Six metres of gray matriarch in a quilted plum silk bathrobe with a pink marabou boa, pearls, curlers and rhinestone cat-eye glasses, sat in a tufted crimson wingback on a little gold saucer of her own.
 ## A three-eyed lavender Persian sleeps on her lap. You are not trying to kill her: you are trying to make her RESPECT you. The bar fills: hits on her hide barely count (x0.12); hits while she is DOWN, DIZZY, or while her head glows count in full. At 100 % she raises one huge hand ("Enough.") and the fight is over.
 ##   PHASE 1  THE MATRIARCH    she drifts round the room. PSI BLASTS (the palm glows purple 0.8 s, then a fan of five plasma bolts), the GRAVITY BOMB (a black hole wells up over her head; an amber ring marks where it lands 1.3 s later: a GRAVITY WELL for 4.5 s), THE CALL (a psychic finger-snap: two probe butlers ride up the Spine Beam's shaft). Three anti-grav EMITTERS glow under her chair: shoot all three and she is DOWN for 6 s.
-##   PHASE 2  THE FAMILY FLOOR (35 %) she tears the floor up: sixteen tiles float over the PIT. The SWEEP: a giant red beam turns round the room once, low: stand on a HIGH tile; her head glows while she channels it. BUTTON MEN ride the Spine Beam up (cloaked).
+##   PHASE 2  THE FAMILY FLOOR (35 %) she tears the floor up: sixteen tiles float over the PIT. The SWEEP: a giant red beam turns round the room once, low: stand on a HIGH tile; her head glows gold (a halo spins over it) while she channels it. Shots on the glowing head count in full and crack her FOCUS: crack it and the beam dies and she is DIZZY. BUTTON MEN ride the Spine Beam up (cloaked).
 ##   PHASE 3  THE HOUSE        (70 %) the floor comes back and the whole room TURNS. The SLAM: two golden shockwave rings (jump them); then she is DIZZY for 3.5 s. A tommy-gun gray and a Consigliere come up the beam.
 ## Every move is telegraphed by pose, face, colour and sound; nothing hits you from off screen; a hit gives you a moment of mercy. Each hit on her makes her flinch.
 
@@ -29,6 +29,8 @@ const SWEEP_DMG := 14.0
 const SLAM_SPEED := 10.0
 const SLAM_DMG := 16.0
 const PIT_DPS := 12.0
+const HEAD_HOT := 1.6      # her glowing head while she channels the sweep (the JS 1.15 read as no extra damage at all: 2026-11-15)
+const FOCUS := 260.0       # raw damage on the glowing head during one sweep that breaks her focus: the beam dies and she is DIZZY (new 2026-11-15: the glow had no payoff you could see)
 const EMIT_HP := 70.0
 const MERCY := 0.8
 const BIG := 1e6
@@ -176,6 +178,9 @@ var squash := 0.0
 var flash := 0.0
 var cup_in := 1.0
 var hissed := false
+var focus := 0.0
+var sweeps := 0
+var halo_hit := 0.0
 
 var g: Node3D
 var model: Node3D
@@ -213,6 +218,7 @@ var bomb_rings: Array[Node3D] = []
 var bomb_glow: MeshInstance3D
 var call_ring: MeshInstance3D
 var head_glow: MeshInstance3D
+var halo: MeshInstance3D
 var spirals: Array[MeshInstance3D] = []
 var stars: Node3D
 var t_body: Target
@@ -350,6 +356,9 @@ func _init(level: MothershipLevel, root: Node3D) -> void:
 	call_ring = MsKit.glow(root, MsKit.torus(1.0, 0.06, 64, 6), 0, 0x7affc0, 0.0)
 	head_glow = MsKit.sprite(head, 0xffd060, 0.0, 5.5)
 	head_glow.position.y = 1.4
+	# the sweep's tell: a gold halo turns over her head while she channels (shoot inside it); it shudders as her focus cracks
+	halo = MsKit.glow(head, MsKit.torus(1.7, 0.11, 56, 6), 0, 0xffd060, 0.0)
+	halo.position.y = 2.3
 	# DIZZY: spiral eyes (in front of each eye, spinning) and a ring of little gold stars round her curlers
 	var pts := PackedVector3Array()
 	for i in 81:
@@ -372,7 +381,7 @@ func _init(level: MothershipLevel, root: Node3D) -> void:
 	stars.visible = false
 	# ---- the hit targets (cylinders the game's guns hit) and her collider
 	t_body = Target.new(9100, 0.0, 0.0, PF, {"r": 2.3, "h": 6.2, "max": BIG, "hp": BIG, "boss": true})
-	t_head = Target.new(9101, 0.0, 0.0, PF, {"r": 1.3, "h": 2.6, "max": BIG, "hp": BIG, "boss": true})
+	t_head = Target.new(9101, 0.0, 0.0, PF, {"r": 1.4, "h": 3.2, "max": BIG, "hp": BIG, "boss": true})      # (neck to the top of the curlers and the halo)
 	for i in 3:
 		t_emit.append(Target.new(9102 + i, 0.0, 0.0, PF, {"r": 0.75, "h": 1.1, "max": EMIT_HP, "hp": EMIT_HP}))
 	all_t = [t_body, t_head]
@@ -510,6 +519,9 @@ func reset() -> void:
 	label = ""
 	say_t = 0.0
 	flinch = 0.0
+	focus = 0.0
+	sweeps = 0
+	halo_hit = 0.0
 	for t: Target in all_t:
 		t.hp = t.max
 		t.dead = false
@@ -676,9 +688,18 @@ func update(dt: float, P: Player, C: Combat, t: float) -> void:
 	_respect_gain(BIG - t_body.hp, 1.0 if stunned else ARMOUR)
 	t_body.hp = BIG
 	t_body.dead = false
-	_respect_gain(BIG - t_head.hp, 1.15 if stunned or channel > 0.0 else ARMOUR * 1.5)
+	var hd := BIG - t_head.hp
+	var hot := channel > 0.0 and not stunned
+	_respect_gain(hd, 1.15 if stunned else (HEAD_HOT if hot else ARMOUR * 1.5))
 	t_head.hp = BIG
 	t_head.dead = false
+	if hot and hd > 0.0 and mode == "fight":      # a shot into the glow: gold sparks, a bright tink, the halo jumps; enough of them and her focus breaks
+		focus += hd
+		halo_hit = 1.0
+		_sparks(head.global_position + Vector3(0.0, 1.6, 0.0), 10, 5.0, null, 0xffd060)
+		_cue(1500.0, 2600.0, 0.08, 0.06, &"square")
+		if focus >= FOCUS and mv == "sweep":
+			_break_focus()
 	if mode == "fight" and phase == 1 and down_t <= 0.0 and mv != "raise":      # (the raise ends phase 1: broken emitters stay broken)
 		var all_dead := true
 		for i in 3:
@@ -745,8 +766,15 @@ func update(dt: float, P: Player, C: Combat, t: float) -> void:
 	_place_t(t_body, x, z)
 	t_body.y = y + 0.4
 	var hp := head.global_position
+	# her body's cylinder stops at her neck (2026-11-15): 6.2 m tall and wider than the head's, it swallowed all but the top of her curlers, so a shot at her glowing head never reached it.
+	# While she channels, the glowing head is the weak point and a generous one: down to her shoulders and wider (from a tile below her, a shot at the halo would otherwise clip her shoulders first).
+	var glowing := channel > 0.0
+	var neck_y := hp.y - (1.2 if glowing else 0.0)
+	t_body.h = clampf(neck_y - t_body.y, 2.0, 6.2)
 	_place_t(t_head, hp.x, hp.z)
-	t_head.y = hp.y
+	t_head.y = neck_y
+	t_head.h = 4.4 if glowing else 3.2
+	t_head.r = 2.1 if glowing else 1.4
 	for i in 3:
 		var te := t_emit[i]
 		var p := emitters[i].mesh.global_position
@@ -776,7 +804,7 @@ func _fight(dt: float, P: Player, C: Combat, t: float) -> void:
 	dizzy_t = maxf(0.0, dizzy_t - dt)
 	channel = maxf(0.0, channel - dt)
 	# where she floats
-	var hold := mv == "down" or mv == "slam" or mv == "raise" or mv == "house"
+	var hold := mv == "down" or mv == "slam" or mv == "raise" or mv == "house" or (mv == "dizzy" and ph == 2)      # (her focus broken in phase 2, she stops drifting and sags to the high tiles)
 	if not hold:
 		orbit_a += dt * (0.12 if ph == 2 else 0.18)
 		var R := 5.0 if ph == 2 else 10.5
@@ -906,10 +934,16 @@ func _fight(dt: float, P: Player, C: Combat, t: float) -> void:
 		"sweep":
 			var warn := 1.1
 			var T1 := TAU / SWEEP_SPEED
-			label = "THE SWEEP: GET HIGH"
+			label = "SWEEP: GET HIGH, SHOOT HER HEAD"
 			channel = 0.3
 			if first:
 				sweep_a = atan2(P.x, P.z) + PI * 0.6
+				focus = 0.0
+				sweeps += 1
+				if sweeps == 1:
+					_line("alert", "Don't you DARE interrupt me while I'm concentrating.")
+				elif sweeps % 2 == 1:
+					_line("shoot", "Hold STILL, sweetheart.")
 				_cue(200.0, 900.0, warn, 0.1, &"sawtooth")
 				_hiss()
 			var a := sweep_a if m < warn else sweep_a + (m - warn) * SWEEP_SPEED
@@ -962,7 +996,7 @@ func _fight(dt: float, P: Player, C: Combat, t: float) -> void:
 				_line("pain", "Ohhh... my curlers...")
 		"dizzy":
 			label = "DIZZY: NOW!"
-			y += (PF + 1.2 - y) * minf(1.0, dt * 2.0)
+			y += ((PF + 3.4 if ph == 2 else PF + 1.2) - y) * minf(1.0, dt * 2.0)      # (phase 2: down to the high tiles, not into the pit)
 			if dizzy_t <= 0.0:
 				gap = 0.8
 				_begin("gap")
@@ -987,6 +1021,8 @@ func _fight(dt: float, P: Player, C: Combat, t: float) -> void:
 				_thud(1.0)
 				_shake(0.7)
 				_tiles_up()
+				for e: Emitter in emitters:      # her chair's emitters are done with: phase 2 has none to shoot, so none should glow
+					e.mesh.visible = false
 			if m > 2.6:
 				phase = 2
 				idx = -1
@@ -1015,7 +1051,23 @@ func _fight(dt: float, P: Player, C: Combat, t: float) -> void:
 		_hit_player(P, C, PIT_DPS * 0.5, P.x, P.z, 0.0)
 		P.vy = 11.0
 		P.grounded = false
-		L.toast("THE PIT BURNS: GET ON A TILE")
+		L.toast("THE PIT BURNS: CLIMB OUT")      # (its burn bounces you up to grab a ledge: the pedestal's edge or a low tile; or walk in under the pedestal to the Spine Beam)
+
+
+## her focus breaks (enough shots on her glowing head during one sweep): the beam dies, she clutches her curlers and is DIZZY, every hit counting in full
+func _break_focus() -> void:
+	focus = 0.0
+	channel = 0.0
+	sweep.visible = false
+	sweep_light.light_energy = 0.0
+	dizzy_t = DIZZY_T
+	_begin("dizzy")
+	_thud(1.0)
+	_shake(0.5)
+	_sparks(head.global_position + Vector3(0.0, 1.6, 0.0), 40, 9.0, null, 0xffd060)
+	_sparks(head.global_position + Vector3(0.0, 1.6, 0.0), 16, 5.0, null, 0xffffff)
+	MsSound.play([["noise", 0.0, {"type": &"highpass", "f0": 2500.0, "f1": 6000.0, "gain": 0.25, "dur": 0.35}], ["tone", 0.0, {"type": &"triangle", "f0": 1800.0, "f1": 200.0, "gain": 0.12, "dur": 0.7}]], 0.6)      # the halo shatters
+	_line("pain", "My HEAD! ...You broke my CONCENTRATION!")
 
 
 func _hit_player(P: Player, C: Combat, dmg: float, sx: float, sz: float, push: float) -> void:
@@ -1196,7 +1248,7 @@ func _spin_floor(da: float, P: Player) -> void:      # phase 3: the floor (tiles
 		tl.g.position.x = tl.home.x
 		tl.g.position.z = tl.home.z
 		tl.g.rotation.y += da
-	if P != null and P.grounded and absf(P.y - PF) < 0.15 and U.hyp(P.x, P.z) < 20.5:
+	if P != null and P.grounded and absf(P.y - PF) < 0.15 and U.hyp(P.x, P.z) < MsArena.LEDGE_R:      # (the gift ledge round the wall stays put)
 		var a := atan2(P.x, P.z) + da
 		var r := U.hyp(P.x, P.z)
 		P.x = sin(a) * r
@@ -1677,7 +1729,15 @@ func _pose(dt_in: float, t: float, P: Player) -> void:
 		bm_a.emission_energy_multiplier = (1.6 if on else 0.35) * spt
 	if bm_b != null:
 		bm_b.emission_energy_multiplier = (0.35 if on else 1.6) * spt
-	MsKit.opa(head_glow, 0.35 + 0.25 * sin(t * 12.0) if channel > 0.0 else (0.2 if dizzy_t > 0.0 or down_t > 0.0 else 0.0))
+	halo_hit = maxf(0.0, halo_hit - dt * 4.0)
+	MsKit.opa(head_glow, 0.45 + 0.25 * sin(t * 12.0) + 0.5 * halo_hit if channel > 0.0 else (0.2 if dizzy_t > 0.0 or down_t > 0.0 else 0.0))
+	var crack := clampf(focus / FOCUS, 0.0, 1.0)
+	halo.visible = channel > 0.0
+	if halo.visible:      # the halo turns, jumps on every hit, and shudders harder the closer her focus is to breaking
+		MsKit.opa(halo, 0.7 + 0.2 * sin(t * 10.0) + 0.3 * halo_hit)
+		MsKit.tint(halo, MsKit.lin(0xffd060).lerp(Color(1.0, 0.35, 0.25), crack * 0.8).lerp(Color.WHITE, halo_hit * 0.7))
+		halo.rotation = Vector3(sin(t * 23.0) * 0.18 * crack, t * 3.0, cos(t * 19.0) * 0.18 * crack)
+		halo.scale = Vector3.ONE * (1.0 + 0.25 * halo_hit + 0.05 * sin(t * 6.0))
 	stars.visible = dizzy_t > 0.0 or down_t > 0.0
 	if stars.visible:
 		var si := 0
@@ -1758,6 +1818,8 @@ func resume(ph: int) -> void:
 	y = PF + 6.5 if ph == 2 else PF + 2.4
 	if ph == 2:
 		_tiles_up()
+	for e: Emitter in emitters:
+		e.mesh.visible = ph == 1
 	for te: Target in t_emit:
 		te.hp = te.max
 		te.dead = false

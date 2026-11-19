@@ -45,6 +45,7 @@ func _init() -> void:
 	RenderingServer.global_shader_parameter_add(&"prog_exposure", RenderingServer.GLOBAL_VAR_TYPE_FLOAT, 1.0)     # (levels/shaders/common.gdshaderinc)
 	RenderingServer.global_shader_parameter_add(&"prog_tone_on", RenderingServer.GLOBAL_VAR_TYPE_FLOAT, 0.0)
 	RenderingServer.global_shader_parameter_add(&"prog_smog", RenderingServer.GLOBAL_VAR_TYPE_VEC3, Vector3.ZERO)     # FOINT CITY's haze colour (levels/hub/hub_level.gd)
+	FlashLights.declare()      # the brief lights of play, for the painted world (core/flash_lights.gd)
 
 
 ## JS hemisphereLights[0].skyColor / groundColor: linear colour times intensity.

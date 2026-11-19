@@ -4,8 +4,10 @@ render_mode blend_mix, depth_draw_always, cull_back, diffuse_burley, specular_sc
 #include "res://levels/shaders/car_look.gdshaderinc"
 
 uniform vec3 tint : source_color = vec3(0.02, 0.02, 0.035);
-uniform float alpha = 0.9;
-uniform float coat = 1.6;
+// 2026-11-11 (user: the car interiors looked like flat red slabs): the glass was 0.9 opaque and mirrored the red sky and its stepped skyline (car_city) at coat 1.6, so it read as
+// a red painted panel with blocky edges and the cabin behind it (seats, wheel, the driver) was 10% visible. Now the cabin shows through and the sky is a sheen on the glass, not its colour.
+uniform float alpha = 0.5;
+uniform float coat = 0.7;
 uniform float rim = 0.0;      // a clear bubble (the alien craft's domes): how much it closes up toward its edge, so its shape still reads
 varying vec3 v_cp;
 varying vec3 v_cn;
@@ -26,5 +28,6 @@ void fragment() {
 	ROUGHNESS = mix(0.08, 0.6, d);
 	EMISSION = car_emission(ALBEDO, 0.2 * (1.0 - d), coat * (1.0 - 0.7 * d), 0.3, NORMAL, NORMAL, VIEW, INV_VIEW_MATRIX);
 	float edge = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 2.5) * rim;
-	ALPHA = mix(mix(alpha, 0.95, edge), 0.97, d);
+	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);      // (a glancing view of glass mirrors more and shows less of what is behind it)
+	ALPHA = mix(mix(mix(alpha, 0.9, fres), 0.95, edge), 0.97, d);
 }

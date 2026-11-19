@@ -102,7 +102,7 @@ func spawn(options: Dictionary = {}) -> Clone:
 	var character: String = options.get("character", an.B.id if an != null else Game.char_pick)
 	if not Builds.BUILDS.has(character):
 		return _fail("Character is not loaded: " + character)
-	var B := Builds.play_build(character)
+	var B := Builds.character_build(character)
 	var mode: String = options.get("mode", "follow")
 	if mode not in ["follow", "patrol", "idle"]:
 		return _fail("Clone mode must be follow, patrol, or idle")
@@ -137,7 +137,7 @@ func spawn(options: Dictionary = {}) -> Clone:
 	if not found:
 		return _fail("No clear clone spawn location; choose another position")
 	var state := ClonePlayer.new(world)
-	var animation := Prog3Animator.create(B)
+	var animation := Animator.create(B)
 	state.x = loc.x
 	state.y = loc.y
 	state.z = loc.z

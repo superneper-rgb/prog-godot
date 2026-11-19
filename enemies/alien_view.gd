@@ -21,6 +21,7 @@ const CH_MUZZLE := 1
 const CH_GUN := 2
 const CH_PALM := 3
 const CH_RING := 4
+const GLOW_JOINTS := {"palmRing": CH_RING, "mote0": CH_RING, "mote1": CH_RING, "mote2": CH_RING, "mote3": CH_RING}      # ENGINE DIFFERENCE: the batch has 5 glow channels, so the motes (JS 0xe2b8ff, opacity = charge) share the ring's
 
 var phase := 0.0
 var last_state: StringName = &""
@@ -76,8 +77,16 @@ var j_thumb_r: int
 ## glb: assets/objects/<glb>.glb, exported by tools/export/enemy_alien.expr.js (one per kind, same joints).
 static func get_model(glb: String) -> CreatureModel:
 	if not _models.has(glb):
-		_models[glb] = CreatureModel.build("res://assets/objects/%s.glb" % glb, _fill_glow, {"palmRing": CH_RING, "mote0": CH_RING, "mote1": CH_RING, "mote2": CH_RING, "mote3": CH_RING})      # ENGINE DIFFERENCE: the batch has 5 glow channels, so the motes (JS 0xe2b8ff, opacity = charge) share the ring's
+		_models[glb] = CreatureModel.build("res://assets/objects/%s.glb" % glb, _fill_glow, GLOW_JOINTS)
 	return _models[glb]
+
+
+## A model dressed in code from an exported one (enemies/green_alien_boston.gd: the punk alien in other clothes), kept under its own name for get_model. Frees `root` if the name is already built.
+static func put_model(glb: String, root: Node3D) -> void:
+	if _models.has(glb):
+		root.free()
+		return
+	_models[glb] = CreatureModel.build_from(root, glb, _fill_glow, GLOW_JOINTS)
 
 
 static func _fill_glow(s: RobotGfx.SpriteSoup, m: CreatureModel) -> void:
